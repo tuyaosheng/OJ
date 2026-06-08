@@ -135,6 +135,19 @@ export default {
   getChapters () {
     return ajax('chapters', 'get')
   },
+  getActiveClassSessions () {
+    return ajax('class_session/active', 'get')
+  },
+  reportActivity (sessionId, problemId) {
+    return ajax('class_session/activity', 'post', {
+      data: { session_id: sessionId, problem_id: problemId || null }
+    })
+  },
+  getClassProgress (sessionId) {
+    return ajax('class_session/progress', 'get', {
+      params: { session_id: sessionId }
+    })
+  },
   getProblem (problemID) {
     return ajax('problem', 'get', {
       params: {

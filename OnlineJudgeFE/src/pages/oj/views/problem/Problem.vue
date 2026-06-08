@@ -251,6 +251,7 @@
         captchaRequired: false,
         graphVisible: false,
         videoVisible: false,
+        classSessionId: null,
         submissionExists: false,
         captchaCode: '',
         captchaSrc: '',
@@ -302,6 +303,17 @@
     mounted () {
       this.$store.commit(types.CHANGE_CONTEST_ITEM_VISIBLE, {menu: false})
       this.init()
+      // 若带有课堂参数则上报当前查看的题目
+      const sessionId = this.$route.query.class_session
+      if (sessionId) {
+        this.classSessionId = sessionId
+      } else {
+        // 查询是否有进行中的课堂
+        api.getActiveClassSessions().then(res => {
+          const sessions = res.data.data || []
+          if (sessions.length > 0) this.classSessionId = sessions[0].id
+        }).catch(() => {})
+      }
     },
     methods: {
       ...mapActions(['changeDomTitle']),
@@ -314,6 +326,9 @@
           this.$Loading.finish()
           let problem = res.data.data
           this.changeDomTitle({title: problem.title})
+          if (this.classSessionId) {
+            api.reportActivity(this.classSessionId, problem.id).catch(() => {})
+          }
           api.submissionExists(problem.id).then(res => {
             this.submissionExists = res.data.data
           })

@@ -3,7 +3,8 @@ from django.conf.urls import url
 from ..views.admin import (ContestProblemAPI, ProblemAPI, TestCaseAPI, MakeContestProblemPublicAPIView,
                            CompileSPJAPI, AddContestProblemAPI, ExportProblemAPI, ImportProblemAPI,
                            FPSProblemImport, ProblemVideoAPI, ChapterAdminAPI, ChapterProblemAdminAPI,
-                           BatchAddChapterProblemAPI)
+                           BatchAddChapterProblemAPI, ClassSessionAdminAPI, ClassDashboardAPI,
+                           IPBindingAdminAPI)
 
 urlpatterns = [
     url(r"^test_case/?$", TestCaseAPI.as_view(), name="test_case_api"),
@@ -19,4 +20,7 @@ urlpatterns = [
     url(r"^chapter/?$", ChapterAdminAPI.as_view(), name="chapter_admin_api"),
     url(r"^chapter/problem/?$", ChapterProblemAdminAPI.as_view(), name="chapter_problem_admin_api"),
     url(r"^chapter/problem/batch/?$", BatchAddChapterProblemAPI.as_view(), name="chapter_problem_batch_api"),
+    url(r"^class_session/?$", ClassSessionAdminAPI.as_view(), name="class_session_admin_api"),
+    url(r"^class_dashboard/?$", ClassDashboardAPI.as_view(), name="class_dashboard_api"),
+    url(r"^ip_binding/?$", IPBindingAdminAPI.as_view(), name="ip_binding_admin_api"),
 ]

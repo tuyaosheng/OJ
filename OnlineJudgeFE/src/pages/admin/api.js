@@ -332,7 +332,18 @@ export default {
     return ajax('admin/chapter/problem/batch', 'post', {
       data: { chapter_id: chapterId, problem_ids: problemIds }
     })
-  }
+  },
+  getClassSessions () { return ajax('admin/class_session', 'get') },
+  createClassSession (data) { return ajax('admin/class_session', 'post', { data }) },
+  editClassSession (data) { return ajax('admin/class_session', 'put', { data }) },
+  deleteClassSession (id) { return ajax('admin/class_session', 'delete', { params: { id } }) },
+  getClassDashboard (sessionId) {
+    return ajax('admin/class_dashboard', 'get', { params: { session_id: sessionId } })
+  },
+  getIPBindings () { return ajax('admin/ip_binding', 'get') },
+  saveIPBinding (data) { return ajax('admin/ip_binding', 'post', { data }) },
+  editIPBinding (data) { return ajax('admin/ip_binding', 'put', { data }) },
+  deleteIPBinding (id) { return ajax('admin/ip_binding', 'delete', { params: { id } }) }
 }
 
 /**

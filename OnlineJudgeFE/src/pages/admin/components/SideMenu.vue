@@ -19,6 +19,7 @@
       <el-menu-item index="/problem/create">{{$t('m.Create_Problem')}}</el-menu-item>
       <el-menu-item index="/problem/batch_ops">{{$t('m.Export_Import_Problem')}}</el-menu-item>
       <el-menu-item index="/problem/chapters">章节管理</el-menu-item>
+      <el-menu-item index="/problem/class_session">课堂管理</el-menu-item>
 
     </el-submenu>
     <el-submenu index="contest">

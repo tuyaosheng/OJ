@@ -2,10 +2,18 @@
   <Row type="flex" :gutter="18">
     <Col :span=19>
 
-    <!-- 视图切换 -->
+    <!-- 视图切换 + 课堂入口 -->
     <div class="view-switch">
       <Button :type="viewMode==='list'?'primary':'ghost'" @click="viewMode='list'" icon="ios-list">列表模式</Button>
       <Button :type="viewMode==='chapter'?'primary':'ghost'" @click="switchChapterView" icon="ios-bookmarks" style="margin-left:8px;">章节模式</Button>
+      <template v-if="activeSessions.length">
+        <Button v-for="s in activeSessions" :key="s.id"
+                type="error" icon="ios-school"
+                style="margin-left:12px;"
+                @click="$router.push({name:'class-mode',params:{sessionId:s.id}})">
+          进入课堂：{{ s.title }}
+        </Button>
+      </template>
     </div>
 
     <!-- 章节模式 -->
@@ -229,6 +237,7 @@
         chapters: [],
         chapterLoading: false,
         expandedChapters: new Set(),
+        activeSessions: [],
         routeName: '',
         query: {
           keyword: '',
@@ -241,6 +250,9 @@
     },
     mounted () {
       this.init()
+      api.getActiveClassSessions().then(res => {
+        this.activeSessions = res.data.data || []
+      }).catch(() => {})
     },
     methods: {
       init (simulate = false) {

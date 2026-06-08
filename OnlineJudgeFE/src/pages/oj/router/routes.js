@@ -11,6 +11,7 @@ import {
   OIRank,
   Problem,
   ProblemList,
+  ClassMode,
   ResetPassword,
   SubmissionDetails,
   SubmissionList,
@@ -50,6 +51,12 @@ export default [
     path: '/problem',
     meta: {title: 'Problem List'},
     component: ProblemList
+  },
+  {
+    name: 'class-mode',
+    path: '/class/:sessionId',
+    meta: {title: '上课模式'},
+    component: ClassMode
   },
   {
     name: 'problem-details',

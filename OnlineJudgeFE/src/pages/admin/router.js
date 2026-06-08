@@ -2,7 +2,8 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 // 引入 view 组件
 import { Announcement, Conf, Contest, ContestList, Home, JudgeServer, Login,
-  Problem, ProblemList, User, PruneTestCase, Dashboard, ProblemImportOrExport, ChapterList } from './views'
+  Problem, ProblemList, User, PruneTestCase, Dashboard, ProblemImportOrExport,
+  ChapterList, ClassSession, ClassDashboard } from './views'
 Vue.use(VueRouter)
 
 export default new VueRouter({
@@ -73,6 +74,16 @@ export default new VueRouter({
           path: '/problem/chapters',
           name: 'chapter-list',
           component: ChapterList
+        },
+        {
+          path: '/problem/class_session',
+          name: 'class-session',
+          component: ClassSession
+        },
+        {
+          path: '/class_dashboard',
+          name: 'class-dashboard',
+          component: ClassDashboard
         },
         {
           path: '/contest/create',

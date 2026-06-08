@@ -102,6 +102,41 @@ class Chapter(models.Model):
         ordering = ("order", "create_time")
 
 
+class ClassSession(models.Model):
+    chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name="sessions")
+    title = models.TextField()
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    create_time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "class_session"
+        ordering = ("-start_time",)
+
+
+class StudentActivity(models.Model):
+    session = models.ForeignKey(ClassSession, on_delete=models.CASCADE, related_name="activities")
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ip_address = models.TextField(default="")
+    current_problem = models.ForeignKey("Problem", null=True, blank=True, on_delete=models.SET_NULL)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "student_activity"
+        unique_together = (("session", "user"),)
+
+
+class IPBinding(models.Model):
+    ip_address = models.TextField(unique=True)
+    hostname = models.TextField()
+    note = models.TextField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "ip_binding"
+
+
 class ChapterProblem(models.Model):
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name="chapter_problems")
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE)

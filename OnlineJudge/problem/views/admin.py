@@ -25,7 +25,8 @@ from utils.api import APIView, CSRFExemptAPIView, validate_serializer, APIError
 from utils.constants import Difficulty
 from utils.shortcuts import rand_str, natural_sort_key
 from utils.tasks import delete_files
-from ..models import Problem, ProblemRuleType, ProblemTag, Chapter, ChapterProblem
+from django.utils import timezone
+from ..models import Problem, ProblemRuleType, ProblemTag, Chapter, ChapterProblem, ClassSession, StudentActivity, IPBinding
 from ..serializers import (CreateContestProblemSerializer, CompileSPJSerializer,
                            CreateProblemSerializer, EditProblemSerializer, EditContestProblemSerializer,
                            ProblemAdminSerializer, TestCaseUploadForm, ContestProblemMakePublicSerializer,
@@ -34,7 +35,9 @@ from ..serializers import (CreateContestProblemSerializer, CompileSPJSerializer,
                            FPSProblemSerializer, CreateOrEditChapterSerializer, EditChapterSerializer,
                            ChapterSerializer, ChapterDetailSerializer,
                            AddChapterProblemSerializer, BatchAddChapterProblemSerializer,
-                           ChapterProblemOrderSerializer)
+                           ChapterProblemOrderSerializer,
+                           ClassSessionSerializer, CreateOrEditClassSessionSerializer, EditClassSessionSerializer,
+                           IPBindingSerializer, CreateOrEditIPBindingSerializer, EditIPBindingSerializer)
 from ..utils import TEMPLATE_BASE, build_problem_template
 
 
@@ -817,6 +820,176 @@ class ProblemVideoAPI(CSRFExemptAPIView):
                 os.remove(old_path)
             problem.video = None
             problem.save(update_fields=["video"])
+        return self.success()
+
+
+class ClassSessionAdminAPI(APIView):
+    @problem_permission_required
+    @validate_serializer(CreateOrEditClassSessionSerializer)
+    def post(self, request):
+        data = request.data
+        try:
+            chapter = Chapter.objects.get(id=data["chapter_id"])
+        except Chapter.DoesNotExist:
+            return self.error("Chapter does not exist")
+        session = ClassSession.objects.create(
+            title=data["title"],
+            chapter=chapter,
+            start_time=data["start_time"],
+            end_time=data["end_time"],
+            created_by=request.user
+        )
+        return self.success(ClassSessionSerializer(session).data)
+
+    @problem_permission_required
+    def get(self, request):
+        session_id = request.GET.get("id")
+        if session_id:
+            try:
+                session = ClassSession.objects.get(id=session_id)
+                return self.success(ClassSessionSerializer(session).data)
+            except ClassSession.DoesNotExist:
+                return self.error("Session does not exist")
+        sessions = ClassSession.objects.select_related("chapter").all()
+        return self.success(ClassSessionSerializer(sessions, many=True).data)
+
+    @problem_permission_required
+    @validate_serializer(EditClassSessionSerializer)
+    def put(self, request):
+        data = request.data
+        try:
+            session = ClassSession.objects.get(id=data["id"])
+            chapter = Chapter.objects.get(id=data["chapter_id"])
+        except (ClassSession.DoesNotExist, Chapter.DoesNotExist) as e:
+            return self.error(str(e))
+        session.title = data["title"]
+        session.chapter = chapter
+        session.start_time = data["start_time"]
+        session.end_time = data["end_time"]
+        session.save()
+        return self.success(ClassSessionSerializer(session).data)
+
+    @problem_permission_required
+    def delete(self, request):
+        session_id = request.GET.get("id")
+        if not session_id:
+            return self.error("id is required")
+        ClassSession.objects.filter(id=session_id).delete()
+        return self.success()
+
+
+class ClassDashboardAPI(APIView):
+    """大屏进度看板数据接口"""
+    @problem_permission_required
+    def get(self, request):
+        session_id = request.GET.get("session_id")
+        if not session_id:
+            return self.error("session_id is required")
+        try:
+            session = ClassSession.objects.select_related("chapter").get(id=session_id)
+        except ClassSession.DoesNotExist:
+            return self.error("Session does not exist")
+
+        # 章节内题目
+        cps = session.chapter.chapter_problems.select_related("problem").order_by("order")
+        problems = [{"id": cp.problem.id, "_id": cp.problem._id, "title": cp.problem.title} for cp in cps]
+        problem_ids = [p["id"] for p in problems]
+
+        # IP绑定表
+        ip_map = {b.ip_address: {"hostname": b.hostname, "note": b.note}
+                  for b in IPBinding.objects.all()}
+
+        # 学生当前活动
+        activities = StudentActivity.objects.filter(session=session).select_related("user", "current_problem")
+        student_map = {}
+        for act in activities:
+            student_map[act.user.id] = {
+                "user_id": act.user.id,
+                "username": act.user.username,
+                "ip": act.ip_address,
+                "binding": ip_map.get(act.ip_address, {}),
+                "current_problem_id": act.current_problem_id,
+                "current_problem_display": act.current_problem._id if act.current_problem else None,
+                "updated_at": act.updated_at.isoformat(),
+            }
+
+        # 提交记录（本次课堂时间窗口内，针对章节题目）
+        from submission.models import Submission, JudgeStatus
+        submissions = Submission.objects.filter(
+            problem_id__in=problem_ids,
+            create_time__gte=session.start_time,
+            create_time__lte=session.end_time
+        ).values("user_id", "problem_id", "result")
+
+        # 每个学生每道题的最好结果
+        solved = {}  # {user_id: {problem_id: status}}  0=AC, else=attempted
+        for sub in submissions:
+            uid, pid, result = sub["user_id"], sub["problem_id"], sub["result"]
+            if uid not in solved:
+                solved[uid] = {}
+            if pid not in solved[uid] or solved[uid][pid] != 0:
+                solved[uid][pid] = 0 if result == JudgeStatus.ACCEPTED else 1
+
+        # 合并：补充所有出现过的用户
+        all_user_ids = set(student_map.keys()) | set(solved.keys())
+        from account.models import User
+        users_qs = User.objects.filter(id__in=all_user_ids).values("id", "username")
+        for u in users_qs:
+            if u["id"] not in student_map:
+                student_map[u["id"]] = {
+                    "user_id": u["id"],
+                    "username": u["username"],
+                    "ip": "",
+                    "binding": {},
+                    "current_problem_id": None,
+                    "current_problem_display": None,
+                    "updated_at": None,
+                }
+
+        students = list(student_map.values())
+        for s in students:
+            s["solved"] = solved.get(s["user_id"], {})
+
+        return self.success({
+            "session": ClassSessionSerializer(session).data,
+            "problems": problems,
+            "students": students,
+        })
+
+
+class IPBindingAdminAPI(APIView):
+    @problem_permission_required
+    @validate_serializer(CreateOrEditIPBindingSerializer)
+    def post(self, request):
+        data = request.data
+        binding, created = IPBinding.objects.update_or_create(
+            ip_address=data["ip_address"],
+            defaults={"hostname": data["hostname"], "note": data.get("note", "")}
+        )
+        return self.success(IPBindingSerializer(binding).data)
+
+    @problem_permission_required
+    def get(self, request):
+        return self.success(IPBindingSerializer(IPBinding.objects.all(), many=True).data)
+
+    @problem_permission_required
+    @validate_serializer(EditIPBindingSerializer)
+    def put(self, request):
+        data = request.data
+        try:
+            binding = IPBinding.objects.get(id=data["id"])
+        except IPBinding.DoesNotExist:
+            return self.error("Binding does not exist")
+        binding.ip_address = data["ip_address"]
+        binding.hostname = data["hostname"]
+        binding.note = data.get("note", "")
+        binding.save()
+        return self.success(IPBindingSerializer(binding).data)
+
+    @problem_permission_required
+    def delete(self, request):
+        bid = request.GET.get("id")
+        IPBinding.objects.filter(id=bid).delete()
         return self.success()
 
 

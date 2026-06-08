@@ -7,7 +7,7 @@ from utils.api import UsernameSerializer, serializers
 from utils.constants import Difficulty
 from utils.serializers import LanguageNameMultiChoiceField, SPJLanguageNameChoiceField, LanguageNameChoiceField
 
-from .models import Problem, ProblemRuleType, ProblemTag, ProblemIOMode, Chapter, ChapterProblem
+from .models import Problem, ProblemRuleType, ProblemTag, ProblemIOMode, Chapter, ChapterProblem, ClassSession, IPBinding
 from .utils import parse_problem_template
 
 
@@ -257,6 +257,56 @@ class AddChapterProblemSerializer(serializers.Serializer):
 class BatchAddChapterProblemSerializer(serializers.Serializer):
     chapter_id = serializers.IntegerField()
     problem_ids = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
+
+
+class ClassSessionSerializer(serializers.ModelSerializer):
+    chapter_title = serializers.SerializerMethodField()
+    is_active = serializers.SerializerMethodField()
+
+    def get_chapter_title(self, obj):
+        return obj.chapter.title
+
+    def get_is_active(self, obj):
+        from django.utils import timezone
+        now = timezone.now()
+        return obj.start_time <= now <= obj.end_time
+
+    class Meta:
+        model = ClassSession
+        fields = ("id", "title", "chapter", "chapter_title", "start_time", "end_time",
+                  "create_time", "is_active")
+
+
+class CreateOrEditClassSessionSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=256)
+    chapter_id = serializers.IntegerField()
+    start_time = serializers.DateTimeField()
+    end_time = serializers.DateTimeField()
+
+    def validate(self, attrs):
+        if attrs["end_time"] <= attrs["start_time"]:
+            raise serializers.ValidationError("end_time must be after start_time")
+        return attrs
+
+
+class EditClassSessionSerializer(CreateOrEditClassSessionSerializer):
+    id = serializers.IntegerField()
+
+
+class IPBindingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IPBinding
+        fields = "__all__"
+
+
+class CreateOrEditIPBindingSerializer(serializers.Serializer):
+    ip_address = serializers.CharField(max_length=64)
+    hostname = serializers.CharField(max_length=256)
+    note = serializers.CharField(allow_blank=True, allow_null=True, required=False)
+
+
+class EditIPBindingSerializer(CreateOrEditIPBindingSerializer):
+    id = serializers.IntegerField()
 
 
 class AddContestProblemSerializer(serializers.Serializer):
