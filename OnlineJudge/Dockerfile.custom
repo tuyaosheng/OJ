@@ -1,0 +1,14 @@
+FROM registry.cn-hongkong.aliyuncs.com/oj-image/backend:1.6.1
+
+COPY ./account /app/account
+COPY ./announcement /app/announcement
+COPY ./conf /app/conf
+COPY ./contest /app/contest
+COPY ./fps /app/fps
+COPY ./judge /app/judge
+COPY ./oj /app/oj
+COPY ./options /app/options
+COPY ./problem /app/problem
+COPY ./submission /app/submission
+COPY ./utils /app/utils
+COPY ./manage.py /app/manage.py

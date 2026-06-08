@@ -259,6 +259,35 @@
         <el-form-item :label="$t('m.Source')">
           <el-input :placeholder="$t('m.Source')" v-model="problem.source"></el-input>
         </el-form-item>
+
+        <!-- 题解视频（选填） -->
+        <el-form-item label="题解视频（选填）">
+          <div v-if="!problem.id" style="color:#909399;font-size:13px;">
+            请先保存题目后，再上传题解视频。
+          </div>
+          <div v-else>
+            <div v-if="problem.video" style="margin-bottom:10px;">
+              <video :src="problem.video" controls style="max-width:480px;max-height:270px;border-radius:6px;background:#000;"></video>
+              <div style="margin-top:8px;">
+                <el-button type="danger" size="small" icon="el-icon-delete" @click="deleteVideo" :loading="videoDeleting">删除视频</el-button>
+              </div>
+            </div>
+            <el-upload
+              v-else
+              action="/api/admin/problem/video"
+              name="file"
+              :data="{problem_id: problem.id}"
+              :show-file-list="false"
+              accept="video/mp4,video/webm,video/ogg"
+              :on-success="onVideoUploaded"
+              :on-error="onVideoError"
+              :before-upload="beforeVideoUpload">
+              <el-button size="small" type="primary" icon="el-icon-upload">上传题解视频</el-button>
+              <span slot="tip" style="margin-left:10px;color:#909399;font-size:12px;">支持 mp4/webm/ogg，最大 500MB</span>
+            </el-upload>
+          </div>
+        </el-form-item>
+
         <save @click.native="submit()">Save</save>
       </el-form>
     </Panel>
@@ -306,6 +335,7 @@
         spjMode: '',
         disableRuleType: false,
         routeName: '',
+        videoDeleting: false,
         error: {
           tags: '',
           spj: '',
@@ -481,6 +511,42 @@
       },
       uploadFailed () {
         this.$error('Upload failed')
+      },
+      beforeVideoUpload (file) {
+        const allowed = ['video/mp4', 'video/webm', 'video/ogg']
+        if (!allowed.includes(file.type)) {
+          this.$error('仅支持 mp4/webm/ogg 格式')
+          return false
+        }
+        if (file.size > 500 * 1024 * 1024) {
+          this.$error('视频大小不能超过 500MB')
+          return false
+        }
+        return true
+      },
+      onVideoUploaded (response) {
+        if (response.error) {
+          this.$error('上传失败：' + response.data)
+        } else {
+          this.problem.video = response.data.video
+          this.$success('题解视频上传成功')
+        }
+      },
+      onVideoError () {
+        this.$error('视频上传失败，请重试')
+      },
+      deleteVideo () {
+        this.$confirm('确定删除题解视频吗？', '提示', {type: 'warning'}).then(() => {
+          this.videoDeleting = true
+          api.deleteProblemVideo(this.problem.id).then(() => {
+            this.problem.video = null
+            this.$success('视频已删除')
+          }).catch(() => {
+            this.$error('删除失败')
+          }).finally(() => {
+            this.videoDeleting = false
+          })
+        }).catch(() => {})
       },
       compileSPJ () {
         let data = {

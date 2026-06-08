@@ -296,6 +296,11 @@ export default {
     return ajax('export_problem', 'post', {
       data
     })
+  },
+  deleteProblemVideo (problemId) {
+    return ajax('admin/problem/video', 'delete', {
+      params: {problem_id: problemId}
+    })
   }
 }
 

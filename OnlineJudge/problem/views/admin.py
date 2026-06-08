@@ -6,6 +6,10 @@ import tempfile
 import zipfile
 from wsgiref.util import FileWrapper
 
+VIDEO_UPLOAD_DIR = None  # 在首次使用时从 settings 读取
+ALLOWED_VIDEO_TYPES = {"video/mp4", "video/webm", "video/ogg"}
+MAX_VIDEO_SIZE = 500 * 1024 * 1024  # 500MB
+
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
@@ -623,6 +627,74 @@ class ImportProblemAPI(CSRFExemptAPIView, TestCaseZipProcessor):
                             tag_obj, _ = ProblemTag.objects.get_or_create(name=tag_name)
                             problem_obj.tags.add(tag_obj)
         return self.success({"import_count": count})
+
+
+class ProblemVideoAPI(CSRFExemptAPIView):
+    """上传或删除题目题解视频，仅管理员可操作，video 字段非必填"""
+    request_parsers = ()
+
+    def _video_dir(self):
+        video_dir = os.path.join(settings.UPLOAD_DIR, "videos")
+        os.makedirs(video_dir, exist_ok=True)
+        return video_dir
+
+    def _video_url(self, filename):
+        return f"{settings.UPLOAD_PREFIX}/videos/{filename}"
+
+    @problem_permission_required
+    def post(self, request):
+        problem_id = request.POST.get("problem_id")
+        if not problem_id:
+            return self.error("problem_id is required")
+        try:
+            problem = Problem.objects.get(id=problem_id)
+            ensure_created_by(problem, request.user)
+        except Problem.DoesNotExist:
+            return self.error("Problem does not exist")
+
+        video_file = request.FILES.get("file")
+        if not video_file:
+            return self.error("No file uploaded")
+        if video_file.content_type not in ALLOWED_VIDEO_TYPES:
+            return self.error("Only mp4/webm/ogg video formats are supported")
+        if video_file.size > MAX_VIDEO_SIZE:
+            return self.error("Video file size must be under 500MB")
+
+        # 删除旧视频
+        if problem.video:
+            old_path = os.path.join(settings.DATA_DIR, problem.video.lstrip("/"))
+            if os.path.isfile(old_path):
+                os.remove(old_path)
+
+        ext = os.path.splitext(video_file.name)[1] or ".mp4"
+        filename = f"problem_{problem_id}_{rand_str(8)}{ext}"
+        save_path = os.path.join(self._video_dir(), filename)
+        with open(save_path, "wb") as f:
+            for chunk in video_file.chunks(8192):
+                f.write(chunk)
+
+        problem.video = self._video_url(filename)
+        problem.save(update_fields=["video"])
+        return self.success({"video": problem.video})
+
+    @problem_permission_required
+    def delete(self, request):
+        problem_id = request.GET.get("problem_id")
+        if not problem_id:
+            return self.error("problem_id is required")
+        try:
+            problem = Problem.objects.get(id=problem_id)
+            ensure_created_by(problem, request.user)
+        except Problem.DoesNotExist:
+            return self.error("Problem does not exist")
+
+        if problem.video:
+            old_path = os.path.join(settings.DATA_DIR, problem.video.lstrip("/"))
+            if os.path.isfile(old_path):
+                os.remove(old_path)
+            problem.video = None
+            problem.save(update_fields=["video"])
+        return self.success()
 
 
 class FPSProblemImport(CSRFExemptAPIView):

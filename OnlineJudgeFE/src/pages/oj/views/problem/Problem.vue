@@ -176,6 +176,18 @@
         </ul>
       </Card>
 
+      <Card v-if="problem.video" id="video-solution" style="margin-bottom:20px;">
+        <div slot="title">
+          <Icon type="ios-videocam"></Icon>
+          <span class="card-title">题解视频</span>
+        </div>
+        <div style="text-align:center;">
+          <Button type="primary" @click="videoVisible=true" icon="ios-play">
+            观看题解视频
+          </Button>
+        </div>
+      </Card>
+
       <Card id="pieChart" :padding="0" v-if="!this.contestID || OIContestRealTimePermission">
         <div slot="title">
           <Icon type="ios-analytics"></Icon>
@@ -194,6 +206,21 @@
       </div>
       <div slot="footer">
         <Button type="ghost" @click="graphVisible=false">{{$t('m.Close')}}</Button>
+      </div>
+    </Modal>
+
+    <Modal v-model="videoVisible" title="题解视频" width="700" @on-visible-change="onVideoModalChange">
+      <div style="text-align:center;background:#000;border-radius:6px;overflow:hidden;">
+        <video v-if="videoVisible"
+               :src="problem.video"
+               controls
+               autoplay
+               style="width:100%;max-height:400px;outline:none;">
+          您的浏览器不支持视频播放。
+        </video>
+      </div>
+      <div slot="footer">
+        <Button type="ghost" @click="videoVisible=false">关闭</Button>
       </div>
     </Modal>
   </div>
@@ -223,6 +250,7 @@
         statusVisible: false,
         captchaRequired: false,
         graphVisible: false,
+        videoVisible: false,
         submissionExists: false,
         captchaCode: '',
         captchaSrc: '',
@@ -467,6 +495,11 @@
       },
       onCopyError (e) {
         this.$error('Failed to copy code')
+      },
+      onVideoModalChange (visible) {
+        if (!visible) {
+          this.videoVisible = false
+        }
       }
     },
     computed: {
