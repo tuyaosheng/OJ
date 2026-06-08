@@ -2,15 +2,36 @@
   <div class="view">
     <Panel :title="$t('m.User_User') ">
       <div slot="header">
-        <el-row :gutter="20">
-          <el-col :span="8">
-            <el-button v-show="selectedUsers.length"
-                       type="warning" icon="el-icon-fa-trash"
-                       @click="deleteUsers(selectedUserIDs)">Delete
-            </el-button>
+        <el-row :gutter="10" type="flex" align="middle">
+          <el-col :span="6">
+            <el-input v-model="keyword" prefix-icon="el-icon-search" placeholder="搜索用户名/姓名" size="small"></el-input>
           </el-col>
-          <el-col :span="selectedUsers.length ? 16: 24">
-            <el-input v-model="keyword" prefix-icon="el-icon-search" placeholder="Keywords"></el-input>
+          <el-col :span="4">
+            <el-select v-model="filterIdentity" size="small" placeholder="身份筛选" clearable style="width:100%;"
+                       @change="getUserList(1)">
+              <el-option label="全部" value=""></el-option>
+              <el-option label="学生" value="student"></el-option>
+              <el-option label="教师" value="teacher"></el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="4">
+            <el-select v-model="filterGrade" size="small" placeholder="年级筛选" clearable style="width:100%;"
+                       @change="getUserList(1)">
+              <el-option label="全部年级" value=""></el-option>
+              <el-option v-for="g in [1,2,3,4,5,6,7,8]" :key="g" :label="`${g}年级`" :value="g"></el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="10" style="display:flex;gap:8px;justify-content:flex-end;">
+            <el-button type="success" size="small" icon="el-icon-plus" @click="teacherDialogVisible=true">
+              新建教师账号
+            </el-button>
+            <el-button type="warning" size="small" icon="el-icon-upload2" @click="upgradeDialogVisible=true">
+              批量升年级
+            </el-button>
+            <el-button v-if="selectedUsers.length" type="danger" size="small"
+                       icon="el-icon-delete" @click="deleteUsers(selectedUserIDs)">
+              删除选中
+            </el-button>
           </el-col>
         </el-row>
       </div>
@@ -39,17 +60,21 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="real_name" label="Real Name"></el-table-column>
-
-        <el-table-column prop="email" label="Email"></el-table-column>
-
-        <el-table-column prop="admin_type" label="User Type">
+        <el-table-column prop="real_name" label="姓名"></el-table-column>
+        <el-table-column label="身份" width="75" align="center">
           <template slot-scope="scope">
-            {{ scope.row.admin_type }}
+            <el-tag v-if="scope.row.identity==='student'" type="primary" size="mini" effect="plain">学生</el-tag>
+            <el-tag v-else-if="scope.row.identity==='teacher'" type="success" size="mini" effect="plain">教师</el-tag>
+            <el-tag v-else type="info" size="mini" effect="plain">—</el-tag>
           </template>
         </el-table-column>
-
-        <el-table-column fixed="right" label="Option" width="200">
+        <el-table-column label="年级" width="65" prop="grade" align="center">
+          <template slot-scope="scope">{{ scope.row.grade ? scope.row.grade + '年级' : '—' }}</template>
+        </el-table-column>
+        <el-table-column label="班级" min-width="120" prop="class_name" show-overflow-tooltip>
+          <template slot-scope="scope">{{ scope.row.class_name || '—' }}</template>
+        </el-table-column>
+        <el-table-column fixed="right" label="操作" width="200">
           <template slot-scope="{row}">
             <icon-btn name="Edit" icon="edit" @click.native="openUserDialog(row.id)"></icon-btn>
             <icon-btn name="Delete" icon="trash" @click.native="deleteUsers([row.id])"></icon-btn>
@@ -172,6 +197,46 @@
         </el-form-item>
       </el-form>
     </Panel>
+    <!-- 新建教师对话框 -->
+    <el-dialog title="新建教师账号" :visible.sync="teacherDialogVisible" width="440px" :close-on-click-modal="false">
+      <el-form :model="teacherForm" label-width="90px">
+        <el-form-item label="用户名" required>
+          <el-input v-model="teacherForm.username" placeholder="请输入用户名"></el-input>
+        </el-form-item>
+        <el-form-item label="姓名">
+          <el-input v-model="teacherForm.real_name" placeholder="真实姓名（选填）"></el-input>
+        </el-form-item>
+        <el-form-item label="初始密码" required>
+          <el-input v-model="teacherForm.password" type="password" placeholder="至少6位"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱">
+          <el-input v-model="teacherForm.email" placeholder="邮箱（选填）"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer">
+        <el-button @click="teacherDialogVisible=false">取消</el-button>
+        <el-button type="primary" @click="createTeacher" :loading="creatingTeacher">创建</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 批量升年级对话框 -->
+    <el-dialog title="批量升年级" :visible.sync="upgradeDialogVisible" width="440px" :close-on-click-modal="false">
+      <div style="font-size:14px;color:#606266;line-height:1.8;margin-bottom:16px;">
+        此操作将所有在校学生的年级 <b>+1</b>，每学年执行一次。<br/>
+        可设置最高年级，超过后该学生账号将被自动禁用（视为毕业）。
+      </div>
+      <el-form label-width="100px">
+        <el-form-item label="最高年级">
+          <el-input-number v-model="maxGrade" :min="0" :max="8" placeholder="0=不限制" style="width:160px;"></el-input-number>
+          <span style="color:#909399;font-size:12px;margin-left:10px;">0 = 不自动禁用</span>
+        </el-form-item>
+      </el-form>
+      <div slot="footer">
+        <el-button @click="upgradeDialogVisible=false">取消</el-button>
+        <el-button type="warning" @click="batchUpgrade" :loading="upgrading">执行升年级</el-button>
+      </div>
+    </el-dialog>
+
     <!--对话框-->
     <el-dialog :title="$t('m.User_Info')" :visible.sync="showUserDialog" :close-on-click-modal="false">
       <el-form :model="user" label-width="120px" label-position="left">
@@ -280,6 +345,14 @@
         // 当前页码
         currentPage: 0,
         selectedUsers: [],
+        filterIdentity: '',
+        filterGrade: '',
+        teacherDialogVisible: false,
+        creatingTeacher: false,
+        teacherForm: { username: '', real_name: '', password: '', email: '' },
+        upgradeDialogVisible: false,
+        upgrading: false,
+        maxGrade: 0,
         formGenerateUser: {
           prefix: '',
           suffix: '',
@@ -323,10 +396,48 @@
         api.getUserList((page - 1) * this.pageSize, this.pageSize, this.keyword).then(res => {
           this.loadingTable = false
           this.total = res.data.data.total
-          this.userList = res.data.data.results
+          let list = res.data.data.results
+          if (this.filterIdentity) {
+            list = list.filter(u => u.identity === this.filterIdentity)
+          }
+          if (this.filterGrade) {
+            list = list.filter(u => u.grade === this.filterGrade)
+          }
+          this.userList = list
         }, res => {
           this.loadingTable = false
         })
+      },
+      createTeacher () {
+        if (!this.teacherForm.username || !this.teacherForm.password) {
+          this.$error('用户名和密码为必填项')
+          return
+        }
+        this.creatingTeacher = true
+        api.createTeacher(this.teacherForm).then(() => {
+          this.$success('教师账号创建成功')
+          this.teacherDialogVisible = false
+          this.teacherForm = { username: '', real_name: '', password: '', email: '' }
+          this.getUserList(1)
+        }).catch(() => {
+          this.$error('创建失败，用户名可能已存在')
+        }).finally(() => { this.creatingTeacher = false })
+      },
+      batchUpgrade () {
+        this.$confirm(
+          `确定执行批量升年级？所有在校学生年级+1${this.maxGrade ? `，达到${this.maxGrade}年级的学生将被禁用` : ''}。`,
+          '确认操作', { type: 'warning' }
+        ).then(() => {
+          this.upgrading = true
+          api.batchUpgradeGrade(this.maxGrade || null).then(res => {
+            const { upgraded, graduated } = res.data.data
+            this.$success(`升年级完成：${upgraded}人升级，${graduated}人已禁用（毕业）`)
+            this.upgradeDialogVisible = false
+            this.getUserList(1)
+          }).catch(() => {
+            this.$error('操作失败')
+          }).finally(() => { this.upgrading = false })
+        }).catch(() => {})
       },
       deleteUsers (ids) {
         this.$confirm('Sure to delete the user? The associated resources created by this user will be deleted as well, like problem, contest, announcement, etc.', 'confirm', {

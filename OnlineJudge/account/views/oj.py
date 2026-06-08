@@ -18,7 +18,7 @@ from utils.api import APIView, validate_serializer, CSRFExemptAPIView
 from utils.captcha import Captcha
 from utils.shortcuts import rand_str, img2base64, datetime2str
 from ..decorators import login_required
-from ..models import User, UserProfile, AdminType
+from ..models import User, UserProfile, AdminType, UserIdentity
 from ..serializers import (ApplyResetPasswordSerializer, ResetPasswordSerializer,
                            UserChangePasswordSerializer, UserLoginSerializer,
                            UserRegisterSerializer, UsernameOrEmailCheckSerializer,
@@ -209,26 +209,24 @@ class UsernameOrEmailCheck(APIView):
 class UserRegisterAPI(APIView):
     @validate_serializer(UserRegisterSerializer)
     def post(self, request):
-        """
-        User register api
-        """
         if not SysOptions.allow_register:
             return self.error("Register function has been disabled by admin")
-
         data = request.data
         data["username"] = data["username"].lower()
-        data["email"] = data["email"].lower()
         captcha = Captcha(request)
         if not captcha.check(data["captcha"]):
             return self.error("Invalid captcha")
         if User.objects.filter(username=data["username"]).exists():
             return self.error("Username already exists")
-        if User.objects.filter(email=data["email"]).exists():
-            return self.error("Email already exists")
-        user = User.objects.create(username=data["username"], email=data["email"])
+        user = User.objects.create(username=data["username"], email=None)
         user.set_password(data["password"])
         user.save()
-        UserProfile.objects.create(user=user)
+        UserProfile.objects.create(
+            user=user,
+            identity=UserIdentity.STUDENT,
+            grade=data["grade"],
+            class_name=data["class_name"]
+        )
         return self.success("Succeeded")
 
 

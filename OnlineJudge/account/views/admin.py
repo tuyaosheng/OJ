@@ -12,9 +12,9 @@ from utils.api import APIView, validate_serializer
 from utils.shortcuts import rand_str
 
 from ..decorators import super_admin_required
-from ..models import AdminType, ProblemPermission, User, UserProfile
+from ..models import AdminType, ProblemPermission, User, UserProfile, UserIdentity
 from ..serializers import EditUserSerializer, UserAdminSerializer, GenerateUserSerializer
-from ..serializers import ImportUserSeralizer
+from ..serializers import ImportUserSeralizer, CreateTeacherSerializer
 
 
 class UserAdminAPI(APIView):
@@ -200,3 +200,46 @@ class GenerateUserAPI(APIView):
             #    duplicate key value violates unique constraint "user_username_key"
             #    DETAIL:  Key (username)=(root11) already exists.
             return self.error(str(e).split("\n")[1])
+
+
+class CreateTeacherAPI(APIView):
+    @super_admin_required
+    @validate_serializer(CreateTeacherSerializer)
+    def post(self, request):
+        data = request.data
+        username = data["username"].lower()
+        if User.objects.filter(username=username).exists():
+            return self.error("Username already exists")
+        user = User.objects.create(username=username, email=data.get("email") or None)
+        user.set_password(data["password"])
+        user.save()
+        UserProfile.objects.create(
+            user=user,
+            identity=UserIdentity.TEACHER,
+            real_name=data.get("real_name", "")
+        )
+        return self.success(UserAdminSerializer(user).data)
+
+
+class BatchUpgradeGradeAPI(APIView):
+    @super_admin_required
+    def post(self, request):
+        """所有学生年级 +1，用于每学年升级操作"""
+        max_grade = request.data.get("max_grade")
+        profiles = UserProfile.objects.filter(
+            identity=UserIdentity.STUDENT,
+            grade__isnull=False,
+            user__is_disabled=False
+        ).select_related("user")
+        updated = 0
+        graduated = 0
+        for p in profiles:
+            if max_grade and p.grade >= int(max_grade):
+                p.user.is_disabled = True
+                p.user.save(update_fields=["is_disabled"])
+                graduated += 1
+            else:
+                p.grade += 1
+                p.save(update_fields=["grade"])
+                updated += 1
+        return self.success({"upgraded": updated, "graduated": graduated})

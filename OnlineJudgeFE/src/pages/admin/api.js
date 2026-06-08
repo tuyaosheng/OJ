@@ -340,6 +340,12 @@ export default {
   getClassDashboard (sessionId) {
     return ajax('admin/class_dashboard', 'get', { params: { session_id: sessionId } })
   },
+  createTeacher (data) { return ajax('admin/create_teacher', 'post', { data }) },
+  batchUpgradeGrade (maxGrade) {
+    return ajax('admin/batch_upgrade_grade', 'post', {
+      data: maxGrade ? { max_grade: maxGrade } : {}
+    })
+  },
   getIPBindings () { return ajax('admin/ip_binding', 'get') },
   saveIPBinding (data) { return ajax('admin/ip_binding', 'post', { data }) },
   editIPBinding (data) { return ajax('admin/ip_binding', 'put', { data }) },

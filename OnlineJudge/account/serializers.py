@@ -2,7 +2,7 @@ from django import forms
 
 from utils.api import serializers, UsernameSerializer
 
-from .models import AdminType, ProblemPermission, User, UserProfile
+from .models import AdminType, ProblemPermission, User, UserProfile, UserIdentity
 
 
 class UserLoginSerializer(serializers.Serializer):
@@ -19,7 +19,8 @@ class UsernameOrEmailCheckSerializer(serializers.Serializer):
 class UserRegisterSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=32)
     password = serializers.CharField(min_length=6)
-    email = serializers.EmailField(max_length=64)
+    grade = serializers.IntegerField(min_value=1, max_value=8)
+    class_name = serializers.CharField(max_length=64)
     captcha = serializers.CharField()
 
 
@@ -50,14 +51,34 @@ class ImportUserSeralizer(serializers.Serializer):
 
 class UserAdminSerializer(serializers.ModelSerializer):
     real_name = serializers.SerializerMethodField()
+    identity = serializers.SerializerMethodField()
+    grade = serializers.SerializerMethodField()
+    class_name = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ["id", "username", "email", "admin_type", "problem_permission", "real_name",
-                  "create_time", "last_login", "two_factor_auth", "open_api", "is_disabled"]
+                  "create_time", "last_login", "two_factor_auth", "open_api", "is_disabled",
+                  "identity", "grade", "class_name"]
 
     def get_real_name(self, obj):
         return obj.userprofile.real_name
+
+    def get_identity(self, obj):
+        return obj.userprofile.identity
+
+    def get_grade(self, obj):
+        return obj.userprofile.grade
+
+    def get_class_name(self, obj):
+        return obj.userprofile.class_name
+
+
+class CreateTeacherSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=32)
+    password = serializers.CharField(min_length=6)
+    real_name = serializers.CharField(max_length=32, allow_blank=True, required=False)
+    email = serializers.EmailField(max_length=64, allow_blank=True, required=False)
 
 
 class UserSerializer(serializers.ModelSerializer):

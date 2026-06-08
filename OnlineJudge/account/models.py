@@ -66,8 +66,17 @@ class User(AbstractBaseUser):
         db_table = "user"
 
 
+class UserIdentity(object):
+    STUDENT = "student"
+    TEACHER = "teacher"
+    OTHER = ""
+
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    identity = models.TextField(default=UserIdentity.OTHER)
+    grade = models.IntegerField(null=True, blank=True)    # 年级：1,2,3,4...
+    class_name = models.TextField(null=True, blank=True)  # 班级名称
     # acm_problems_status examples:
     # {
     #     "problems": {
