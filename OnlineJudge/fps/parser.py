@@ -42,11 +42,20 @@ class FPSParser(object):
                    "time_limit": {"unit": None, "value": None},
                    "samples": [], "images": [], "append": [],
                    "template": [], "prepend": [], "test_cases": [],
-                   "hint": None, "source": None, "spj": None, "solution": []}
+                   "hint": None, "source": None, "spj": None, "solution": [],
+                   # 扩展字段
+                   "id": None, "tags": []}
         for item in node:
             tag = item.tag
             if tag in ["title", "description", "input", "output", "hint", "source"]:
                 problem[item.tag] = item.text
+            elif tag == "id":
+                # 自定义扩展：题目显示ID，可选
+                problem["id"] = item.text.strip() if item.text else None
+            elif tag == "tag":
+                # 自定义扩展：标签，可多个 <tag>C++</tag>
+                if item.text and item.text.strip():
+                    problem["tags"].append(item.text.strip())
             elif tag == "time_limit":
                 unit = item.attrib.get("unit", "s")
                 if unit not in ["s", "ms"]:
@@ -95,7 +104,13 @@ class FPSParser(object):
             elif tag == "test_input":
                 if not test_case_start:
                     raise ValueError("Invalid xml, error 'test_input' tag order")
-                problem["test_cases"].append({"input": item.text, "output": None})
+                # 支持 score 属性：<test_input score="25">...</test_input>
+                score = item.attrib.get("score")
+                problem["test_cases"].append({
+                    "input": item.text,
+                    "output": None,
+                    "score": int(score) if score is not None else None
+                })
                 test_case_start = False
             elif tag == "test_output":
                 if test_case_start:

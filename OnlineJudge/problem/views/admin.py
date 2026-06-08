@@ -718,30 +718,60 @@ class FPSProblemImport(CSRFExemptAPIView):
                 our_lang = "Python3"
             template[our_lang] = TEMPLATE_BASE.format(prepend.get(lang, ""), t["code"], append.get(lang, ""))
         spj = problem_data["spj"] is not None
-        problem = Problem.objects.create(_id=f"fps-{rand_str(4)}",
-                                         title=problem_data["title"],
-                                         description=problem_data["description"],
-                                         input_description=problem_data["input"],
-                                         output_description=problem_data["output"],
-                                         hint=problem_data["hint"],
-                                         test_case_score=problem_data["test_case_score"],
-                                         time_limit=time_limit,
-                                         memory_limit=problem_data["memory_limit"]["value"],
-                                         samples=problem_data["samples"],
-                                         template=template,
-                                         rule_type=ProblemRuleType.OI,
-                                         source=problem_data.get("source", ""),
-                                         spj=spj,
-                                         spj_code=problem_data["spj"]["code"] if spj else None,
-                                         spj_language=problem_data["spj"]["language"] if spj else None,
-                                         spj_version=rand_str(8) if spj else "",
-                                         visible=False,
-                                         languages=SysOptions.language_names,
-                                         created_by=creator,
-                                         difficulty=Difficulty.MID,
-                                         test_case_id=problem_data["test_case_id"])
-        tag, _ = ProblemTag.objects.get_or_create(name="C++")
-        problem.tags.add(tag)
+
+        # 显示ID：优先使用FPS中的<id>，否则自动生成
+        display_id = problem_data.get("id") or f"fps-{rand_str(4)}"
+        # 若该ID已存在则追加随机后缀避免冲突
+        if Problem.objects.filter(_id=display_id, contest_id__isnull=True).exists():
+            display_id = f"{display_id}-{rand_str(4)}"
+
+        # 分数：优先使用FPS中各测试点的score属性，否则平均分配100分
+        score_list = problem_data["test_case_score"]
+        has_custom_score = any(item.get("score") is not None for item in score_list)
+        if not has_custom_score:
+            n = len(score_list)
+            base = 100 // n if n else 0
+            remainder = 100 - base * n if n else 0
+            for i, item in enumerate(score_list):
+                item["score"] = base + (1 if i < remainder else 0)
+        else:
+            for item in score_list:
+                if item.get("score") is None:
+                    item["score"] = 0
+
+        total_score = sum(item["score"] for item in score_list)
+
+        problem = Problem.objects.create(
+            _id=display_id,
+            title=problem_data["title"],
+            description=problem_data["description"],
+            input_description=problem_data["input"],
+            output_description=problem_data["output"],
+            hint=problem_data["hint"],
+            test_case_score=score_list,
+            time_limit=time_limit,
+            memory_limit=problem_data["memory_limit"]["value"],
+            samples=problem_data["samples"],
+            template=template,
+            rule_type=ProblemRuleType.OI,
+            source=problem_data.get("source", ""),
+            spj=spj,
+            spj_code=problem_data["spj"]["code"] if spj else None,
+            spj_language=problem_data["spj"]["language"] if spj else None,
+            spj_version=rand_str(8) if spj else "",
+            visible=False,
+            languages=SysOptions.language_names,
+            created_by=creator,
+            difficulty=Difficulty.MID,
+            total_score=total_score,
+            test_case_id=problem_data["test_case_id"]
+        )
+
+        # 标签：优先使用FPS中的<tag>，否则默认加"C++"
+        tag_names = problem_data.get("tags") or ["C++"]
+        for tag_name in tag_names:
+            tag_obj, _ = ProblemTag.objects.get_or_create(name=tag_name)
+            problem.tags.add(tag_obj)
 
     def post(self, request):
         form = UploadProblemForm(request.POST, request.FILES)
@@ -764,16 +794,26 @@ class FPSProblemImport(CSRFExemptAPIView):
                 test_case_id = rand_str()
                 test_case_dir = os.path.join(settings.TEST_CASE_DIR, test_case_id)
                 os.mkdir(test_case_dir)
+                # 保留原始test_cases中的score属性，供_create_problem分配分数使用
+                original_scores = {i: tc.get("score") for i, tc in enumerate(_problem.get("test_cases", []))}
                 score = []
-                for item in helper.save_test_case(_problem, test_case_dir)["test_cases"].values():
-                    score.append({"score": 0, "input_name": item["input_name"],
-                                  "output_name": item.get("output_name")})
+                for idx, item in enumerate(helper.save_test_case(_problem, test_case_dir)["test_cases"].values()):
+                    score.append({
+                        "score": original_scores.get(idx),  # None表示未指定，后续自动分配
+                        "input_name": item["input_name"],
+                        "output_name": item.get("output_name")
+                    })
                 problem_data = helper.save_image(_problem, settings.UPLOAD_DIR, settings.UPLOAD_PREFIX)
+                # 把扩展字段传给_create_problem
+                problem_data["id"] = _problem.get("id")
+                problem_data["tags"] = _problem.get("tags", [])
                 s = FPSProblemSerializer(data=problem_data)
                 if not s.is_valid():
                     return self.error(f"Parse FPS file error: {s.errors}")
                 problem_data = s.data
                 problem_data["test_case_id"] = test_case_id
                 problem_data["test_case_score"] = score
+                problem_data["id"] = _problem.get("id")
+                problem_data["tags"] = _problem.get("tags", [])
                 self._create_problem(problem_data, request.user)
         return self.success({"import_count": len(problems)})
