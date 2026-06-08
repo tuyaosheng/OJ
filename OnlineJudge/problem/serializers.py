@@ -254,6 +254,11 @@ class AddChapterProblemSerializer(serializers.Serializer):
     problem_id = serializers.IntegerField()
 
 
+class BatchAddChapterProblemSerializer(serializers.Serializer):
+    chapter_id = serializers.IntegerField()
+    problem_ids = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
+
+
 class AddContestProblemSerializer(serializers.Serializer):
     contest_id = serializers.IntegerField()
     problem_id = serializers.IntegerField()

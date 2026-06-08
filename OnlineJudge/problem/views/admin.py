@@ -33,7 +33,8 @@ from ..serializers import (CreateContestProblemSerializer, CompileSPJSerializer,
                            ExportProblemRequestSerialzier, UploadProblemForm, ImportProblemSerializer,
                            FPSProblemSerializer, CreateOrEditChapterSerializer, EditChapterSerializer,
                            ChapterSerializer, ChapterDetailSerializer,
-                           AddChapterProblemSerializer, ChapterProblemOrderSerializer)
+                           AddChapterProblemSerializer, BatchAddChapterProblemSerializer,
+                           ChapterProblemOrderSerializer)
 from ..utils import TEMPLATE_BASE, build_problem_template
 
 
@@ -721,6 +722,34 @@ class ChapterProblemAdminAPI(APIView):
         for idx, pid in enumerate(problem_ids):
             ChapterProblem.objects.filter(chapter=chapter, problem_id=pid).update(order=idx)
         return self.success()
+
+
+class BatchAddChapterProblemAPI(APIView):
+    @problem_permission_required
+    @validate_serializer(BatchAddChapterProblemSerializer)
+    def post(self, request):
+        data = request.data
+        try:
+            chapter = Chapter.objects.get(id=data["chapter_id"])
+        except Chapter.DoesNotExist:
+            return self.error("Chapter does not exist")
+        problem_ids = data["problem_ids"]
+        problems = Problem.objects.filter(id__in=problem_ids, contest_id__isnull=True)
+        existing = set(ChapterProblem.objects.filter(
+            chapter=chapter, problem_id__in=problem_ids
+        ).values_list("problem_id", flat=True))
+        base_order = chapter.chapter_problems.count()
+        new_entries = []
+        for i, problem in enumerate(problems):
+            if problem.id not in existing:
+                new_entries.append(ChapterProblem(
+                    chapter=chapter, problem=problem, order=base_order + i
+                ))
+        ChapterProblem.objects.bulk_create(new_entries)
+        return self.success({
+            "added": len(new_entries),
+            "skipped": len(problem_ids) - len(new_entries)
+        })
 
 
 class ProblemVideoAPI(CSRFExemptAPIView):

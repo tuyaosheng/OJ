@@ -43,34 +43,78 @@
 
     <!-- 管理题目对话框 -->
     <el-dialog :title="'「' + currentChapter.title + '」— 题目管理'"
-               :visible.sync="problemDialogVisible" width="800px" @open="loadChapterDetail">
-      <el-row :gutter="16">
-        <el-col :span="14">
-          <div class="section-label">章节内题目</div>
-          <el-table :data="currentProblems" size="small" v-loading="detailLoading">
+               :visible.sync="problemDialogVisible" width="1100px"
+               @open="onProblemDialogOpen">
+      <el-row :gutter="20">
+
+        <!-- 左侧：已加入章节的题目 -->
+        <el-col :span="11">
+          <div class="section-label">
+            已加入本章节
+            <span class="count-badge">{{ currentProblems.length }}</span>
+          </div>
+          <el-table :data="currentProblems" size="small" v-loading="detailLoading" max-height="440">
             <el-table-column label="ID" prop="_id" width="80"></el-table-column>
             <el-table-column label="题目名称" prop="title" show-overflow-tooltip></el-table-column>
-            <el-table-column label="操作" width="70">
+            <el-table-column label="移除" width="60" align="center">
               <template slot-scope="scope">
-                <el-button size="mini" type="danger" icon="el-icon-delete"
+                <el-button size="mini" type="danger" icon="el-icon-close" circle
                            @click="removeProblem(scope.row)"></el-button>
               </template>
             </el-table-column>
           </el-table>
         </el-col>
-        <el-col :span="10">
-          <div class="section-label">添加题目</div>
-          <el-input v-model="searchKeyword" placeholder="搜索题目ID或名称"
-                    prefix-icon="el-icon-search" size="small"
-                    @input="searchProblems"></el-input>
-          <div class="search-result">
-            <div v-for="p in searchResults" :key="p.id" class="search-item"
-                 @click="addProblem(p)">
-              <span class="pid">{{ p._id }}</span>
-              <span class="ptitle">{{ p.title }}</span>
-              <i class="el-icon-plus"></i>
-            </div>
-            <div v-if="searchResults.length === 0 && searchKeyword" class="no-result">未找到题目</div>
+
+        <!-- 分割线 -->
+        <el-col :span="1" style="display:flex;align-items:center;justify-content:center;min-height:440px;">
+          <div style="width:1px;height:100%;background:#ebeef5;"></div>
+        </el-col>
+
+        <!-- 右侧：全部题目，多选批量加入 -->
+        <el-col :span="12">
+          <div class="section-label">
+            从题库中选择
+            <span v-if="selectedProblems.length" class="count-badge selected">已选 {{ selectedProblems.length }} 题</span>
+          </div>
+
+          <!-- 搜索栏 -->
+          <div class="search-bar">
+            <el-input v-model="searchKeyword" placeholder="搜索题目ID或名称" size="small"
+                      prefix-icon="el-icon-search" clearable
+                      @input="onSearchInput" @clear="loadAllProblems" style="flex:1"></el-input>
+          </div>
+
+          <!-- 题目多选表格 -->
+          <el-table ref="problemTable"
+                    :data="allProblems"
+                    size="small"
+                    v-loading="allLoading"
+                    max-height="360"
+                    @selection-change="onSelectionChange">
+            <el-table-column type="selection" width="45"
+                             :selectable="isSelectable"></el-table-column>
+            <el-table-column label="ID" prop="_id" width="75"></el-table-column>
+            <el-table-column label="题目名称" prop="title" show-overflow-tooltip></el-table-column>
+            <el-table-column label="难度" width="70">
+              <template slot-scope="scope">
+                <el-tag :type="difficultyTag(scope.row.difficulty)" size="mini">
+                  {{ difficultyLabel(scope.row.difficulty) }}
+                </el-tag>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <!-- 分页 -->
+          <div class="list-footer">
+            <el-pagination small layout="prev, pager, next" :total="allTotal"
+                           :page-size="allLimit" :current-page.sync="allPage"
+                           @current-change="loadAllProblems"></el-pagination>
+            <el-button type="primary" size="small"
+                       :disabled="selectedProblems.length === 0"
+                       :loading="batchAdding"
+                       @click="batchAdd">
+              批量加入（{{ selectedProblems.length }}）
+            </el-button>
           </div>
         </el-col>
       </el-row>
@@ -88,6 +132,7 @@
         chapters: [],
         loading: false,
         saving: false,
+        batchAdding: false,
         chapterDialogVisible: false,
         problemDialogVisible: false,
         dialogMode: 'create',
@@ -95,9 +140,15 @@
         currentChapter: {},
         currentProblems: [],
         detailLoading: false,
+        // 右侧全量题目表格
+        allProblems: [],
+        allLoading: false,
+        allTotal: 0,
+        allPage: 1,
+        allLimit: 15,
         searchKeyword: '',
-        searchResults: [],
-        searchTimer: null
+        searchTimer: null,
+        selectedProblems: []
       }
     },
     mounted () {
@@ -111,6 +162,7 @@
           this.loading = false
         }).catch(() => { this.loading = false })
       },
+
       openCreateDialog () {
         this.dialogMode = 'create'
         this.chapterForm = { title: '', description: '', order: this.chapters.length }
@@ -144,11 +196,17 @@
           })
         }).catch(() => {})
       },
+
       openProblemDialog (row) {
         this.currentChapter = row
+        this.selectedProblems = []
         this.searchKeyword = ''
-        this.searchResults = []
+        this.allPage = 1
         this.problemDialogVisible = true
+      },
+      onProblemDialogOpen () {
+        this.loadChapterDetail()
+        this.loadAllProblems()
       },
       loadChapterDetail () {
         this.detailLoading = true
@@ -157,33 +215,64 @@
           this.detailLoading = false
         }).catch(() => { this.detailLoading = false })
       },
-      searchProblems () {
+      loadAllProblems (page) {
+        if (typeof page === 'number') this.allPage = page
+        this.allLoading = true
+        const offset = (this.allPage - 1) * this.allLimit
+        api.getProblemList({
+          keyword: this.searchKeyword,
+          limit: this.allLimit,
+          offset
+        }).then(res => {
+          this.allProblems = res.data.data.results || []
+          this.allTotal = res.data.data.total || 0
+          this.allLoading = false
+        }).catch(() => { this.allLoading = false })
+      },
+      onSearchInput () {
         clearTimeout(this.searchTimer)
-        if (!this.searchKeyword.trim()) {
-          this.searchResults = []
-          return
-        }
-        this.searchTimer = setTimeout(() => {
-          api.getProblemList({ keyword: this.searchKeyword, limit: 10, offset: 0 }).then(res => {
-            const existing = new Set(this.currentProblems.map(p => p.id))
-            this.searchResults = (res.data.data.results || []).filter(p => !existing.has(p.id))
-          })
-        }, 400)
+        this.allPage = 1
+        this.searchTimer = setTimeout(() => this.loadAllProblems(), 400)
       },
-      addProblem (problem) {
-        api.addChapterProblem({ chapter_id: this.currentChapter.id, problem_id: problem.id }).then(() => {
-          this.currentProblems.push(problem)
-          this.searchResults = this.searchResults.filter(p => p.id !== problem.id)
-          this.loadChapters()
-        }).catch(err => {
-          this.$error(err.data.data || '添加失败')
-        })
+      onSelectionChange (val) {
+        this.selectedProblems = val
       },
+      // 已在章节中的题目禁用勾选
+      isSelectable (row) {
+        const existing = new Set(this.currentProblems.map(p => p.id))
+        return !existing.has(row.id)
+      },
+
       removeProblem (problem) {
         api.removeChapterProblem(this.currentChapter.id, problem.id).then(() => {
           this.currentProblems = this.currentProblems.filter(p => p.id !== problem.id)
           this.loadChapters()
+          // 刷新右侧表格的禁用状态
+          this.$refs.problemTable && this.$refs.problemTable.clearSelection()
         })
+      },
+
+      batchAdd () {
+        if (!this.selectedProblems.length) return
+        const ids = this.selectedProblems.map(p => p.id)
+        this.batchAdding = true
+        api.batchAddChapterProblems(this.currentChapter.id, ids).then(res => {
+          const { added, skipped } = res.data.data
+          this.$success(`成功添加 ${added} 道题目${skipped ? `，${skipped} 道已跳过` : ''}`)
+          this.selectedProblems = []
+          this.$refs.problemTable && this.$refs.problemTable.clearSelection()
+          this.loadChapterDetail()
+          this.loadChapters()
+        }).catch(() => {
+          this.$error('批量添加失败')
+        }).finally(() => { this.batchAdding = false })
+      },
+
+      difficultyTag (d) {
+        return d === 'Low' ? 'success' : d === 'High' ? 'danger' : 'warning'
+      },
+      difficultyLabel (d) {
+        return d === 'Low' ? '低' : d === 'High' ? '高' : '中'
       }
     }
   }
@@ -193,44 +282,34 @@
   .section-label {
     font-weight: 600;
     color: #303133;
-    margin-bottom: 8px;
-    font-size: 13px;
-  }
-  .search-result {
-    margin-top: 8px;
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #ebeef5;
-    border-radius: 4px;
-  }
-  .search-item {
+    margin-bottom: 10px;
+    font-size: 14px;
     display: flex;
     align-items: center;
-    padding: 8px 12px;
-    cursor: pointer;
-    font-size: 13px;
-    border-bottom: 1px solid #f5f7fa;
-    transition: background 0.2s;
-    &:hover { background: #f0f7ff; }
-    .pid {
-      width: 60px;
-      color: #1565c0;
-      font-weight: 600;
-      flex-shrink: 0;
-    }
-    .ptitle {
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      color: #303133;
-    }
-    i { color: #67c23a; margin-left: 8px; }
+    gap: 8px;
   }
-  .no-result {
-    padding: 20px;
-    text-align: center;
-    color: #909399;
-    font-size: 13px;
+
+  .count-badge {
+    display: inline-block;
+    background: #1565c0;
+    color: #fff;
+    border-radius: 10px;
+    padding: 1px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    &.selected { background: #67c23a; }
+  }
+
+  .search-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .list-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
   }
 </style>

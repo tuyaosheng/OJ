@@ -327,6 +327,11 @@ export default {
   },
   updateChapterProblemOrder (data) {
     return ajax('admin/chapter/problem', 'put', { data })
+  },
+  batchAddChapterProblems (chapterId, problemIds) {
+    return ajax('admin/chapter/problem/batch', 'post', {
+      data: { chapter_id: chapterId, problem_ids: problemIds }
+    })
   }
 }
 
