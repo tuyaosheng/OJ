@@ -1,0 +1,243 @@
+<template>
+  <div id="header">
+    <Menu theme="light" mode="horizontal" @on-select="handleRoute" :active-name="activeMenu" class="oj-menu">
+      <div class="logo"><span>{{website.website_name}}</span></div>
+      <Menu-item name="/">
+        <Icon type="home"></Icon>
+        {{$t('m.Home')}}
+      </Menu-item>
+      <Menu-item name="/problem">
+        <Icon type="ios-keypad"></Icon>
+        {{$t('m.NavProblems')}}
+      </Menu-item>
+      <Menu-item name="/contest">
+        <Icon type="trophy"></Icon>
+        {{$t('m.Contests')}}
+      </Menu-item>
+      <Menu-item name="/status">
+        <Icon type="ios-pulse-strong"></Icon>
+        {{$t('m.NavStatus')}}
+      </Menu-item>
+      <Submenu name="rank">
+        <template slot="title">
+          <Icon type="podium"></Icon>
+          {{$t('m.Rank')}}
+        </template>
+        <Menu-item name="/acm-rank">
+          {{$t('m.ACM_Rank')}}
+        </Menu-item>
+        <Menu-item name="/oi-rank">
+          {{$t('m.OI_Rank')}}
+        </Menu-item>
+      </Submenu>
+      <Submenu name="about">
+        <template slot="title">
+          <Icon type="information-circled"></Icon>
+          {{$t('m.About')}}
+        </template>
+        <Menu-item name="/about">
+          {{$t('m.Judger')}}
+        </Menu-item>
+        <Menu-item name="/FAQ">
+          {{$t('m.FAQ')}}
+        </Menu-item>
+      </Submenu>
+      <template v-if="!isAuthenticated">
+        <div class="btn-menu">
+          <Button type="ghost"
+                  ref="loginBtn"
+                  shape="circle"
+                  @click="handleBtnClick('login')">{{$t('m.Login')}}
+          </Button>
+          <Button v-if="website.allow_register"
+                  type="ghost"
+                  shape="circle"
+                  @click="handleBtnClick('register')"
+                  style="margin-left: 5px;">{{$t('m.Register')}}
+          </Button>
+        </div>
+      </template>
+      <template v-else>
+        <Dropdown class="drop-menu" @on-click="handleRoute" placement="bottom" trigger="click">
+          <Button type="text" class="drop-menu-title">{{ user.username }}
+            <Icon type="arrow-down-b"></Icon>
+          </Button>
+          <Dropdown-menu slot="list">
+            <Dropdown-item name="/user-home">{{$t('m.MyHome')}}</Dropdown-item>
+            <Dropdown-item name="/status?myself=1">{{$t('m.MySubmissions')}}</Dropdown-item>
+            <Dropdown-item name="/setting/profile">{{$t('m.Settings')}}</Dropdown-item>
+            <Dropdown-item v-if="isAdminRole" name="/admin">{{$t('m.Management')}}</Dropdown-item>
+            <Dropdown-item divided name="/logout">{{$t('m.Logout')}}</Dropdown-item>
+          </Dropdown-menu>
+        </Dropdown>
+      </template>
+    </Menu>
+    <Modal v-model="modalVisible" :width="400">
+      <div slot="header" class="modal-title">{{$t('m.Welcome_to')}} {{website.website_name_shortcut}}</div>
+      <component :is="modalStatus.mode" v-if="modalVisible"></component>
+      <div slot="footer" style="display: none"></div>
+    </Modal>
+  </div>
+</template>
+
+<script>
+  import { mapGetters, mapActions } from 'vuex'
+  import login from '@oj/views/user/Login'
+  import register from '@oj/views/user/Register'
+
+  export default {
+    components: {
+      login,
+      register
+    },
+    mounted () {
+      this.getProfile()
+    },
+    methods: {
+      ...mapActions(['getProfile', 'changeModalStatus']),
+      handleRoute (route) {
+        if (route && route.indexOf('admin') < 0) {
+          this.$router.push(route)
+        } else {
+          window.open('/admin/')
+        }
+      },
+      handleBtnClick (mode) {
+        this.changeModalStatus({
+          visible: true,
+          mode: mode
+        })
+      }
+    },
+    computed: {
+      ...mapGetters(['website', 'modalStatus', 'user', 'isAuthenticated', 'isAdminRole']),
+      // 跟随路由变化
+      activeMenu () {
+        return '/' + this.$route.path.split('/')[1]
+      },
+      modalVisible: {
+        get () {
+          return this.modalStatus.visible
+        },
+        set (value) {
+          this.changeModalStatus({visible: value})
+        }
+      }
+    }
+  }
+</script>
+
+<style lang="less" scoped>
+  #header {
+    min-width: 900px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: auto;
+    width: 100%;
+    z-index: 1000;
+    background: linear-gradient(135deg, #1a237e 0%, #1565c0 60%, #0288d1 100%);
+    box-shadow: 0 2px 12px 0 rgba(21, 101, 192, 0.4);
+
+    .logo {
+      margin-left: 2%;
+      margin-right: 2%;
+      font-size: 20px;
+      font-weight: 700;
+      float: left;
+      line-height: 60px;
+      color: #fff;
+      letter-spacing: 1px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+
+    .drop-menu {
+      float: right;
+      margin-right: 30px;
+      position: absolute;
+      right: 10px;
+      &-title {
+        font-size: 15px;
+        color: rgba(255,255,255,0.9) !important;
+      }
+    }
+    .btn-menu {
+      font-size: 14px;
+      float: right;
+      margin-right: 10px;
+      line-height: 60px;
+    }
+  }
+
+  .modal {
+    &-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+  }
+</style>
+
+<style lang="less">
+  #header .oj-menu {
+    background: transparent !important;
+    border-bottom: none !important;
+
+    &.ivu-menu-light {
+      background: transparent !important;
+    }
+
+    > li.ivu-menu-item {
+      color: rgba(255, 255, 255, 0.9) !important;
+      font-size: 15px;
+      transition: all 0.3s;
+      border-bottom: 2px solid transparent !important;
+      &:hover {
+        color: #fff !important;
+        background: rgba(255,255,255,0.12) !important;
+        border-bottom-color: #40c4ff !important;
+      }
+      &.ivu-menu-item-active,
+      &.ivu-menu-item-selected {
+        color: #fff !important;
+        background: rgba(255,255,255,0.18) !important;
+        border-bottom-color: #40c4ff !important;
+      }
+    }
+
+    > li.ivu-menu-submenu {
+      border-bottom: 2px solid transparent !important;
+      &:hover,
+      &.ivu-menu-opened,
+      &.ivu-menu-submenu-active {
+        border-bottom-color: #40c4ff !important;
+      }
+      > .ivu-menu-submenu-title {
+        color: rgba(255, 255, 255, 0.9) !important;
+        font-size: 15px;
+        &:hover {
+          color: #fff !important;
+          background: rgba(255,255,255,0.12) !important;
+        }
+        > i.ivu-icon {
+          color: rgba(255,255,255,0.8) !important;
+        }
+      }
+    }
+  }
+
+  #header .btn-menu {
+    .ivu-btn-ghost {
+      color: #fff !important;
+      border-color: rgba(255,255,255,0.6) !important;
+      background: transparent !important;
+      &:hover {
+        background: rgba(255,255,255,0.15) !important;
+        border-color: #fff !important;
+      }
+    }
+  }
+
+  #header .drop-menu-title.ivu-btn {
+    color: rgba(255,255,255,0.9) !important;
+  }
+</style>

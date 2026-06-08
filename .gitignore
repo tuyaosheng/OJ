@@ -1,0 +1,36 @@
+# 数据目录（数据库、测试用例、日志等不入库）
+OnlineJudgeDeploy/data/
+OnlineJudgeDeploy (旧系统，包括数据)/
+
+# 备份文件
+*.sql
+*.dump
+*.tar.gz
+
+# 前端依赖和构建产物
+OnlineJudgeFE/node_modules/
+OnlineJudgeFE/dist/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# 环境变量
+.env
+.env.local
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.user
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# Claude内部目录
+.claude/
