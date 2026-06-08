@@ -76,7 +76,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item :label="$t('m.Tag')" :error="error.tags" required>
+            <el-form-item :label="$t('m.Tag')" :error="error.tags">
               <span class="tags">
                 <el-tag
                   v-for="tag in problem.tags"
@@ -320,10 +320,12 @@
         contest: {},
         problem: {
           languages: [],
+          rule_type: 'OI',
           io_mode: {'io_mode': 'Standard IO', 'input': 'input.txt', 'output': 'output.txt'}
         },
         reProblem: {
           languages: [],
+          rule_type: 'OI',
           io_mode: {'io_mode': 'Standard IO', 'input': 'input.txt', 'output': 'output.txt'}
         },
         testCaseUploaded: false,
@@ -584,11 +586,7 @@
             return
           }
         }
-        if (!this.problem.tags.length) {
-          this.error.tags = 'Please add at least one tag'
-          this.$error(this.error.tags)
-          return
-        }
+        // 标签非必填，允许为空
         if (this.problem.spj) {
           if (!this.problem.spj_code) {
             this.error.spj = 'Spj code is required'

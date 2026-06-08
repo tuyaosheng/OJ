@@ -50,23 +50,71 @@
 <style scoped lang="less">
   .vertical_menu {
     overflow: auto;
-    width: 205px;
+    width: 215px;
     height: 100%;
     position: fixed !important;
     z-index: 100;
     top: 0;
     bottom: 0;
     left: 0;
+    background: linear-gradient(180deg, #1a237e 0%, #1565c0 100%) !important;
+    border-right: none !important;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+
     .logo {
-      margin: 20px 0;
+      margin: 24px 0 16px;
       text-align: center;
       img {
-        background-color: #fff;
+        background-color: rgba(255,255,255,0.15);
         border-radius: 50%;
-        border: 3px solid #fff;
-        width: 75px;
-        height: 75px;
+        border: 3px solid rgba(255,255,255,0.4);
+        width: 72px;
+        height: 72px;
       }
+    }
+
+    /deep/ .el-menu {
+      background: transparent !important;
+      border-right: none !important;
+    }
+    /deep/ .el-menu-item {
+      color: rgba(255,255,255,0.85) !important;
+      font-size: 14px;
+      height: 46px;
+      line-height: 46px;
+      &:hover {
+        background: rgba(255,255,255,0.12) !important;
+        color: #fff !important;
+      }
+      &.is-active {
+        background: rgba(255,255,255,0.2) !important;
+        color: #fff !important;
+        border-right: 3px solid #40c4ff;
+      }
+      i { color: rgba(255,255,255,0.7) !important; margin-right: 8px; }
+    }
+    /deep/ .el-submenu__title {
+      color: rgba(255,255,255,0.85) !important;
+      font-size: 14px;
+      height: 46px;
+      line-height: 46px;
+      &:hover {
+        background: rgba(255,255,255,0.12) !important;
+        color: #fff !important;
+      }
+      i { color: rgba(255,255,255,0.7) !important; }
+    }
+    /deep/ .el-submenu .el-menu {
+      background: rgba(0,0,0,0.15) !important;
+      .el-menu-item {
+        height: 40px;
+        line-height: 40px;
+        padding-left: 48px !important;
+        font-size: 13px;
+      }
+    }
+    /deep/ .el-submenu__icon-arrow {
+      color: rgba(255,255,255,0.6) !important;
     }
   }
 </style>

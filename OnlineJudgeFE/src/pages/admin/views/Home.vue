@@ -94,9 +94,10 @@
     font-weight: 400;
     height: 100%;
     -webkit-font-smoothing: antialiased;
-    background-color: #EDECEC;
+    background-color: #f0f2f5;
     overflow-y: scroll;
     min-width: 1000px;
+    font-family: "PingFang SC", "Microsoft YaHei", "微软雅黑", "Helvetica Neue", Arial, sans-serif;
   }
 
   * {
@@ -105,26 +106,38 @@
 
   #header {
     text-align: right;
-    padding-left: 210px;
+    padding-left: 220px;
     padding-right: 30px;
-    line-height: 50px;
-    height: 50px;
-    background: #F9FAFC;
+    line-height: 56px;
+    height: 56px;
+    background: #fff;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    font-size: 14px;
+    color: #303133;
     .screen-full {
-      margin-right: 8px;
+      margin-right: 10px;
+      color: #606266;
+    }
+    span {
+      cursor: pointer;
+      color: #1565c0;
+      font-weight: 500;
+      &:hover { color: #0288d1; }
     }
   }
 
   .content-app {
-    padding-top: 20px;
-    padding-right: 10px;
-    padding-left: 210px;
+    padding-top: 24px;
+    padding-right: 20px;
+    padding-left: 230px;
+    padding-bottom: 20px;
   }
 
   .footer {
-    margin: 15px;
+    margin: 20px 0 10px;
     text-align: center;
-    font-size: small;
+    font-size: 12px;
+    color: #909399;
   }
 
   @keyframes fadeInUp {

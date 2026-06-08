@@ -40,9 +40,13 @@
   .panel {
     margin-bottom: 20px;
     background-color: #fff;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    transition: box-shadow 0.3s;
+    &:hover {
+      box-shadow: 0 4px 20px rgba(0,0,0,0.11);
+    }
     &.small {
       max-width: 830px;
       min-width: 700px;
@@ -54,17 +58,18 @@
       z-index: 10;
       > .title {
         margin: 0;
-        color: #333;
-        border-color: #ddd;
-        font-size: 18px;
-        font-weight: 300;
-        letter-spacing: 0.025em;
-        height: 60px;
-        line-height: 45px;
-        padding: 10px 15px;
-        border-bottom: 1px solid #eee;
-        border-top-left-radius: 3px;
-        border-top-right-radius: 3px;
+        color: #1a237e;
+        font-size: 16px;
+        font-weight: 600;
+        height: 54px;
+        line-height: 54px;
+        padding: 0 20px;
+        border-bottom: 1px solid #f0f0f0;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        background: linear-gradient(90deg, #e8f0fe 0%, #fff 100%);
+        border-left: 4px solid #1565c0;
+        letter-spacing: 0.3px;
       }
       > .header_right {
         position: absolute;
@@ -74,7 +79,7 @@
       }
     }
     .body {
-      padding: 15px;
+      padding: 20px;
     }
   }
 </style>

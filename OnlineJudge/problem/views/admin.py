@@ -718,28 +718,30 @@ class FPSProblemImport(CSRFExemptAPIView):
                 our_lang = "Python3"
             template[our_lang] = TEMPLATE_BASE.format(prepend.get(lang, ""), t["code"], append.get(lang, ""))
         spj = problem_data["spj"] is not None
-        Problem.objects.create(_id=f"fps-{rand_str(4)}",
-                               title=problem_data["title"],
-                               description=problem_data["description"],
-                               input_description=problem_data["input"],
-                               output_description=problem_data["output"],
-                               hint=problem_data["hint"],
-                               test_case_score=problem_data["test_case_score"],
-                               time_limit=time_limit,
-                               memory_limit=problem_data["memory_limit"]["value"],
-                               samples=problem_data["samples"],
-                               template=template,
-                               rule_type=ProblemRuleType.ACM,
-                               source=problem_data.get("source", ""),
-                               spj=spj,
-                               spj_code=problem_data["spj"]["code"] if spj else None,
-                               spj_language=problem_data["spj"]["language"] if spj else None,
-                               spj_version=rand_str(8) if spj else "",
-                               visible=False,
-                               languages=SysOptions.language_names,
-                               created_by=creator,
-                               difficulty=Difficulty.MID,
-                               test_case_id=problem_data["test_case_id"])
+        problem = Problem.objects.create(_id=f"fps-{rand_str(4)}",
+                                         title=problem_data["title"],
+                                         description=problem_data["description"],
+                                         input_description=problem_data["input"],
+                                         output_description=problem_data["output"],
+                                         hint=problem_data["hint"],
+                                         test_case_score=problem_data["test_case_score"],
+                                         time_limit=time_limit,
+                                         memory_limit=problem_data["memory_limit"]["value"],
+                                         samples=problem_data["samples"],
+                                         template=template,
+                                         rule_type=ProblemRuleType.OI,
+                                         source=problem_data.get("source", ""),
+                                         spj=spj,
+                                         spj_code=problem_data["spj"]["code"] if spj else None,
+                                         spj_language=problem_data["spj"]["language"] if spj else None,
+                                         spj_version=rand_str(8) if spj else "",
+                                         visible=False,
+                                         languages=SysOptions.language_names,
+                                         created_by=creator,
+                                         difficulty=Difficulty.MID,
+                                         test_case_id=problem_data["test_case_id"])
+        tag, _ = ProblemTag.objects.get_or_create(name="C++")
+        problem.tags.add(tag)
 
     def post(self, request):
         form = UploadProblemForm(request.POST, request.FILES)
