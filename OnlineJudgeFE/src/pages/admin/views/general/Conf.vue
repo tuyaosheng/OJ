@@ -37,6 +37,29 @@
                  v-if="saved" :loading="loadingBtnTest">Send Test Email</el-button>
     </Panel>
 
+    <Panel title="网站 Logo">
+      <el-form label-position="left" label-width="100px">
+        <el-form-item label="当前 Logo">
+          <div v-if="websiteConfig.website_logo" style="margin-bottom:10px;">
+            <img :src="websiteConfig.website_logo" style="max-height:60px;max-width:200px;border-radius:4px;border:1px solid #eee;padding:4px;background:#fff;" />
+            <el-button type="danger" size="small" icon="el-icon-delete" style="margin-left:12px;" @click="deleteLogo" :loading="logoBtnLoading">删除 Logo</el-button>
+          </div>
+          <div v-else style="color:#909399;font-size:13px;margin-bottom:10px;">暂未设置 Logo</div>
+          <el-upload
+            action="/api/admin/website/logo"
+            name="file"
+            :show-file-list="false"
+            accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
+            :on-success="onLogoUploaded"
+            :on-error="onLogoError"
+            :before-upload="beforeLogoUpload">
+            <el-button size="small" type="primary" icon="el-icon-upload">{{ websiteConfig.website_logo ? '更换 Logo' : '上传 Logo' }}</el-button>
+            <span slot="tip" style="margin-left:10px;color:#909399;font-size:12px;">支持 jpg/png/gif/webp/svg，最大 5MB；同时作为浏览器标签图标</span>
+          </el-upload>
+        </el-form-item>
+      </el-form>
+    </Panel>
+
     <Panel :title="$t('m.Website_Config')">
       <el-form label-position="left" label-width="100px" ref="form" :model="websiteConfig">
         <el-row :gutter="20">
@@ -98,6 +121,7 @@
         init: false,
         saved: false,
         loadingBtnTest: false,
+        logoBtnLoading: false,
         smtp: {
           server: 'smtp.example.com',
           port: 25,
@@ -154,6 +178,42 @@
         api.editWebsiteConfig(this.websiteConfig).then(() => {
         }).catch(() => {
         })
+      },
+      beforeLogoUpload (file) {
+        const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
+        if (!allowed.includes(file.type)) {
+          this.$error('仅支持 jpg/png/gif/webp/svg 格式')
+          return false
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          this.$error('图片大小不能超过 5MB')
+          return false
+        }
+        return true
+      },
+      onLogoUploaded (response) {
+        if (response.error) {
+          this.$error('上传失败：' + response.data)
+        } else {
+          this.$set(this.websiteConfig, 'website_logo', response.data.logo)
+          this.$success('Logo 上传成功')
+        }
+      },
+      onLogoError () {
+        this.$error('Logo 上传失败，请重试')
+      },
+      deleteLogo () {
+        this.$confirm('确定删除网站 Logo 吗？', '提示', { type: 'warning' }).then(() => {
+          this.logoBtnLoading = true
+          api.deleteSiteLogo().then(() => {
+            this.$set(this.websiteConfig, 'website_logo', '')
+            this.$success('Logo 已删除')
+          }).catch(() => {
+            this.$error('删除失败')
+          }).finally(() => {
+            this.logoBtnLoading = false
+          })
+        }).catch(() => {})
       }
     }
   }

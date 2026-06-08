@@ -1,14 +1,18 @@
 FROM registry.cn-hongkong.aliyuncs.com/oj-image/backend:1.6.1
 
-COPY ./account /app/account
-COPY ./announcement /app/announcement
-COPY ./conf /app/conf
-COPY ./contest /app/contest
-COPY ./fps /app/fps
-COPY ./judge /app/judge
-COPY ./oj /app/oj
-COPY ./options /app/options
-COPY ./problem /app/problem
-COPY ./submission /app/submission
-COPY ./utils /app/utils
-COPY ./manage.py /app/manage.py
+# 后端 Python 源码
+COPY ./OnlineJudge/account /app/account
+COPY ./OnlineJudge/announcement /app/announcement
+COPY ./OnlineJudge/conf /app/conf
+COPY ./OnlineJudge/contest /app/contest
+COPY ./OnlineJudge/fps /app/fps
+COPY ./OnlineJudge/judge /app/judge
+COPY ./OnlineJudge/oj /app/oj
+COPY ./OnlineJudge/options /app/options
+COPY ./OnlineJudge/problem /app/problem
+COPY ./OnlineJudge/submission /app/submission
+COPY ./OnlineJudge/utils /app/utils
+COPY ./OnlineJudge/manage.py /app/manage.py
+
+# 定制前端构建产物（覆盖镜像内置的官方前端）
+COPY ./OnlineJudgeFE/dist /app/dist

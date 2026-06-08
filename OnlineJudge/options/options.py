@@ -97,6 +97,7 @@ class OptionKeys:
     website_name = "website_name"
     website_name_shortcut = "website_name_shortcut"
     website_footer = "website_footer"
+    website_logo = "website_logo"
     allow_register = "allow_register"
     submission_list_show_all = "submission_list_show_all"
     smtp_config = "smtp_config"
@@ -110,6 +111,7 @@ class OptionDefaultValue:
     website_name = "Online Judge"
     website_name_shortcut = "oj"
     website_footer = "Online Judge Footer"
+    website_logo = ""
     allow_register = True
     submission_list_show_all = True
     smtp_config = {}
@@ -212,6 +214,14 @@ class _SysOptionsMeta(type):
     @website_footer.setter
     def website_footer(cls, value):
         cls._set_option(OptionKeys.website_footer, value)
+
+    @my_property(ttl=DEFAULT_SHORT_TTL)
+    def website_logo(cls):
+        return cls._get_option(OptionKeys.website_logo)
+
+    @website_logo.setter
+    def website_logo(cls, value):
+        cls._set_option(OptionKeys.website_logo, value)
 
     @my_property
     def allow_register(cls):

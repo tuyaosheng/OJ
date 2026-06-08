@@ -1,7 +1,10 @@
 <template>
   <div id="header">
     <Menu theme="light" mode="horizontal" @on-select="handleRoute" :active-name="activeMenu" class="oj-menu">
-      <div class="logo"><span>{{website.website_name}}</span></div>
+      <div class="logo">
+        <img v-if="website.website_logo" :src="website.website_logo" class="logo-img" />
+        <span>{{website.website_name}}</span>
+      </div>
       <Menu-item name="/">
         <Icon type="home"></Icon>
         {{$t('m.Home')}}
@@ -93,8 +96,23 @@
     mounted () {
       this.getProfile()
     },
+    watch: {
+      'website.website_logo' (val) {
+        this.setFavicon(val)
+      }
+    },
     methods: {
       ...mapActions(['getProfile', 'changeModalStatus']),
+      setFavicon (url) {
+        if (!url) return
+        let link = document.querySelector("link[rel~='icon']")
+        if (!link) {
+          link = document.createElement('link')
+          link.rel = 'icon'
+          document.head.appendChild(link)
+        }
+        link.href = url
+      },
       handleRoute (route) {
         if (route && route.indexOf('admin') < 0) {
           this.$router.push(route)
@@ -146,6 +164,17 @@
       font-weight: 700;
       float: left;
       line-height: 60px;
+      display: flex;
+      align-items: center;
+      .logo-img {
+        height: 36px;
+        width: auto;
+        max-width: 120px;
+        margin-right: 8px;
+        border-radius: 4px;
+        object-fit: contain;
+        vertical-align: middle;
+      }
       color: #fff;
       letter-spacing: 1px;
       text-shadow: 0 1px 4px rgba(0,0,0,0.2);

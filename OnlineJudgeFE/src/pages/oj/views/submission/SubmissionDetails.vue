@@ -37,8 +37,41 @@
         </Button>
       </div>
     </Col>
-  </Row>
 
+    <!-- 管理员：测试点数据弹窗 -->
+    <Modal v-model="tcModal" :title="'测试点 #' + (tcModalIndex + 1) + ' 数据'" width="800" footer-hide>
+      <div v-if="tcDetailLoading" style="text-align:center;padding:40px;">
+        <Spin size="large"></Spin>
+      </div>
+      <div v-else-if="currentDetail">
+        <div class="tc-section">
+          <div class="tc-label">
+            输入
+            <span v-if="currentDetail.input_truncated" class="tc-truncated">（内容较长，已截断至 2000 字符）</span>
+          </div>
+          <pre class="tc-pre">{{ currentDetail.input || '（空）' }}</pre>
+        </div>
+        <div class="tc-section">
+          <div class="tc-label">
+            预期输出
+            <span v-if="currentDetail.expected_truncated" class="tc-truncated">（内容较长，已截断至 2000 字符）</span>
+          </div>
+          <pre class="tc-pre">{{ currentDetail.expected_output || '（空）' }}</pre>
+        </div>
+        <div class="tc-section">
+          <div class="tc-label">
+            实际输出
+            <span v-if="currentDetail.actual_truncated" class="tc-truncated">（内容较长，已截断至 2000 字符）</span>
+          </div>
+          <pre class="tc-pre" :class="{'tc-no-output': !currentDetail.actual_output}">
+            {{ currentDetail.actual_output || '（未保存，仅新提交有记录）' }}</pre>
+        </div>
+      </div>
+      <div v-else style="text-align:center;color:#999;padding:30px;">
+        数据加载失败
+      </div>
+    </Modal>
+  </Row>
 </template>
 
 <script>
@@ -98,7 +131,13 @@
           }
         },
         isConcat: false,
-        loading: false
+        loading: false,
+        adminColAdded: false,
+        testCaseDetails: [],
+        tcDetailLoading: false,
+        tcDetailLoaded: false,
+        tcModal: false,
+        tcModalIndex: 0
       }
     },
     mounted () {
@@ -111,8 +150,7 @@
           this.loading = false
           let data = res.data.data
           if (data.info && data.info.data && !this.isConcat) {
-            // score exist means the submission is OI problem submission
-            if (data.info.data[0].score !== undefined) {
+            if (data.info.data[0] && data.info.data[0].score !== undefined) {
               this.isConcat = true
               const scoreColumn = {
                 title: this.$i18n.t('m.Score'),
@@ -141,10 +179,38 @@
               this.columns = this.columns.concat(adminColumn)
             }
           }
+          if (this.isAdminRole && !this.adminColAdded) {
+            this.adminColAdded = true
+            this.columns.push({
+              title: '操作',
+              align: 'center',
+              width: 100,
+              render: (h, params) => {
+                return h('Button', {
+                  props: { size: 'small', type: 'default' },
+                  on: { click: () => { this.openTCDetail(params.index) } }
+                }, '查看数据')
+              }
+            })
+          }
           this.submission = data
         }, () => {
           this.loading = false
         })
+      },
+      openTCDetail (index) {
+        this.tcModalIndex = index
+        this.tcModal = true
+        if (!this.tcDetailLoaded && !this.tcDetailLoading) {
+          this.tcDetailLoading = true
+          api.getSubmissionTestCaseDetail(this.submission.id).then(res => {
+            this.testCaseDetails = res.data.data
+            this.tcDetailLoaded = true
+            this.tcDetailLoading = false
+          }).catch(() => {
+            this.tcDetailLoading = false
+          })
+        }
       },
       shareSubmission (shared) {
         let data = {id: this.submission.id, shared: shared}
@@ -168,6 +234,9 @@
       },
       isAdminRole () {
         return this.$store.getters.isAdminRole
+      },
+      currentDetail () {
+        return this.testCaseDetails[this.tcModalIndex] || null
       }
     }
   }
@@ -209,5 +278,42 @@
   pre {
     border: none;
     background: none;
+  }
+
+  .tc-section {
+    margin-bottom: 16px;
+  }
+
+  .tc-label {
+    font-weight: 600;
+    font-size: 13px;
+    color: #515a6e;
+    margin-bottom: 6px;
+  }
+
+  .tc-truncated {
+    font-weight: normal;
+    font-size: 12px;
+    color: #e6a23c;
+    margin-left: 6px;
+  }
+
+  .tc-pre {
+    background: #f7f8fa;
+    border: 1px solid #e8eaec;
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 200px;
+    overflow-y: auto;
+    margin: 0;
+  }
+
+  .tc-no-output {
+    color: #999;
+    font-style: italic;
   }
 </style>

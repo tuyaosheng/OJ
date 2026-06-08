@@ -144,22 +144,41 @@ OJ/
 
 ---
 
-## 后端构建说明
+## 构建说明
 
-原版 docker-compose 使用官方预构建镜像。修改后端代码后需用自定义 Dockerfile：
+### 修改后端后重新构建
 
 ```powershell
-# 构建自定义镜像（以官方镜像为基础，覆盖 Python 源码）
-cd OnlineJudge
-docker build -f Dockerfile.custom -t oj-backend-custom:latest .
+# 必须从 monorepo 根目录构建（Dockerfile 会同时打包前端 dist）
+cd E:\QingDaoOJ
+docker build -f OnlineJudge/Dockerfile.custom -t oj-backend-custom:latest .
 
 # 重启 backend 容器
-cd ..\OnlineJudgeDeploy
+cd OnlineJudgeDeploy
 docker-compose up -d --no-deps oj-backend
 
-# 运行迁移
+# 如有新 migration
 docker exec onlinejudgedeploy-oj-backend-1 python manage.py migrate
 ```
+
+### 修改前端后重新构建
+
+```powershell
+# 第一步：构建前端（必须先 build:dll 再 build，否则 DLL 哈希不一致导致页面空白）
+cd E:\QingDaoOJ\OnlineJudgeFE
+$env:NODE_OPTIONS="--openssl-legacy-provider"
+$env:NODE_ENV="production"
+npm run build:dll
+npm run build
+
+# 第二步：重新构建 Docker 镜像（同上）
+cd E:\QingDaoOJ
+docker build -f OnlineJudge/Dockerfile.custom -t oj-backend-custom:latest .
+cd OnlineJudgeDeploy
+docker-compose up -d --no-deps oj-backend
+```
+
+> **注意**：`Dockerfile.custom` 的构建上下文必须是 `E:\QingDaoOJ`（monorepo 根目录），不能在 `OnlineJudge/` 子目录里运行 docker build。
 
 `docker-compose.yml` 中 `oj-backend` 的 image 已改为 `oj-backend-custom:latest`。
 
@@ -189,7 +208,7 @@ docker exec onlinejudgedeploy-oj-backend-1 python manage.py migrate
 ```powershell
 cd E:\QingDaoOJ\OnlineJudgeDeploy
 docker-compose up -d
-# 访问 http://localhost
+# 访问 http://127.0.0.1（必须用 IP，不能用 localhost，WSL 占用了 IPv6 的 localhost:80）
 ```
 
 ### 启动前端开发服务器

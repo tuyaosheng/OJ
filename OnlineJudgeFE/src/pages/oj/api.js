@@ -255,6 +255,11 @@ export default {
       }
     })
   },
+  getSubmissionTestCaseDetail (submissionId) {
+    return ajax('admin/submission/test_case_detail', 'get', {
+      params: { submission_id: submissionId }
+    })
+  },
   updateSubmission (data) {
     return ajax('submission', 'put', {
       data

@@ -91,7 +91,7 @@ class WebsiteConfigAPI(APIView):
     def get(self, request):
         ret = {key: getattr(SysOptions, key) for key in
                ["website_base_url", "website_name", "website_name_shortcut",
-                "website_footer", "allow_register", "submission_list_show_all"]}
+                "website_footer", "website_logo", "allow_register", "submission_list_show_all"]}
         return self.success(ret)
 
     @super_admin_required
@@ -102,6 +102,47 @@ class WebsiteConfigAPI(APIView):
                 with XSSHtml() as parser:
                     v = parser.clean(v)
             setattr(SysOptions, k, v)
+        return self.success()
+
+
+class LogoUploadAPI(APIView):
+    @super_admin_required
+    def post(self, request):
+        f = request.FILES.get("file")
+        if not f:
+            return self.error("No file uploaded")
+        allowed = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"]
+        if f.content_type not in allowed:
+            return self.error("仅支持 jpg/png/gif/webp/svg 格式")
+        if f.size > 5 * 1024 * 1024:
+            return self.error("图片大小不能超过 5MB")
+
+        old_logo = SysOptions.website_logo
+        if old_logo:
+            old_path = settings.DATA_DIR + old_logo
+            if os.path.exists(old_path):
+                os.remove(old_path)
+
+        logo_dir = os.path.join(settings.UPLOAD_DIR, "logo")
+        os.makedirs(logo_dir, exist_ok=True)
+        ext = os.path.splitext(f.name)[1].lower() or ".png"
+        filename = f"site_logo_{int(time.time())}{ext}"
+        with open(os.path.join(logo_dir, filename), "wb") as out:
+            for chunk in f.chunks():
+                out.write(chunk)
+
+        url = f"{settings.UPLOAD_PREFIX}/logo/{filename}"
+        SysOptions.website_logo = url
+        return self.success({"logo": url})
+
+    @super_admin_required
+    def delete(self, request):
+        old_logo = SysOptions.website_logo
+        if old_logo:
+            old_path = settings.DATA_DIR + old_logo
+            if os.path.exists(old_path):
+                os.remove(old_path)
+        SysOptions.website_logo = ""
         return self.success()
 
 

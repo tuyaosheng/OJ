@@ -297,6 +297,9 @@ export default {
       data
     })
   },
+  deleteSiteLogo () {
+    return ajax('admin/website/logo', 'delete')
+  },
   deleteProblemVideo (problemId) {
     return ajax('admin/problem/video', 'delete', {
       params: {problem_id: problemId}

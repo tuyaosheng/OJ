@@ -254,20 +254,19 @@
           title: this.$i18n.t('m.Option'),
           fixed: 'right',
           align: 'center',
-          width: 90,
+          width: 170,
           render: (h, params) => {
-            return h('Button', {
-              props: {
-                type: 'primary',
-                size: 'small',
-                loading: params.row.loading
-              },
-              on: {
-                click: () => {
-                  this.handleRejudge(params.row.id, params.index)
-                }
-              }
-            }, this.$i18n.t('m.Rejudge'))
+            return h('div', [
+              h('Button', {
+                props: { type: 'primary', size: 'small', loading: params.row.loading },
+                style: { marginRight: '6px' },
+                on: { click: () => { this.handleRejudge(params.row.id, params.index) } }
+              }, this.$i18n.t('m.Rejudge')),
+              h('Button', {
+                props: { size: 'small' },
+                on: { click: () => { this.$router.push('/status/' + params.row.id) } }
+              }, '详情')
+            ])
           }
         }
         this.columns.push(judgeColumn)

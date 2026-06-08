@@ -16,6 +16,34 @@
             </el-form-item>
           </el-col>
         </el-row>
+        <!-- 题解视频（选填） -->
+        <el-form-item label="题解视频（选填）">
+          <div v-if="!problem.id" style="color:#909399;font-size:13px;">
+            请先保存题目后，再上传题解视频。
+          </div>
+          <div v-else>
+            <div v-if="problem.video" style="margin-bottom:10px;">
+              <video :src="problem.video" controls style="max-width:480px;max-height:270px;border-radius:6px;background:#000;"></video>
+              <div style="margin-top:8px;">
+                <el-button type="danger" size="small" icon="el-icon-delete" @click="deleteVideo" :loading="videoDeleting">删除视频</el-button>
+              </div>
+            </div>
+            <el-upload
+              v-else
+              action="/api/admin/problem/video"
+              name="file"
+              :data="{problem_id: problem.id}"
+              :show-file-list="false"
+              accept="video/mp4,video/webm,video/ogg"
+              :on-success="onVideoUploaded"
+              :on-error="onVideoError"
+              :before-upload="beforeVideoUpload">
+              <el-button size="small" type="primary" icon="el-icon-upload">上传题解视频</el-button>
+              <span slot="tip" style="margin-left:10px;color:#909399;font-size:12px;">支持 mp4/webm/ogg，最大 500MB</span>
+            </el-upload>
+          </div>
+        </el-form-item>
+
         <el-row :gutter="20">
           <el-col :span="24">
             <el-form-item prop="description" :label="$t('m.Description')" required>
@@ -258,34 +286,6 @@
 
         <el-form-item :label="$t('m.Source')">
           <el-input :placeholder="$t('m.Source')" v-model="problem.source"></el-input>
-        </el-form-item>
-
-        <!-- 题解视频（选填） -->
-        <el-form-item label="题解视频（选填）">
-          <div v-if="!problem.id" style="color:#909399;font-size:13px;">
-            请先保存题目后，再上传题解视频。
-          </div>
-          <div v-else>
-            <div v-if="problem.video" style="margin-bottom:10px;">
-              <video :src="problem.video" controls style="max-width:480px;max-height:270px;border-radius:6px;background:#000;"></video>
-              <div style="margin-top:8px;">
-                <el-button type="danger" size="small" icon="el-icon-delete" @click="deleteVideo" :loading="videoDeleting">删除视频</el-button>
-              </div>
-            </div>
-            <el-upload
-              v-else
-              action="/api/admin/problem/video"
-              name="file"
-              :data="{problem_id: problem.id}"
-              :show-file-list="false"
-              accept="video/mp4,video/webm,video/ogg"
-              :on-success="onVideoUploaded"
-              :on-error="onVideoError"
-              :before-upload="beforeVideoUpload">
-              <el-button size="small" type="primary" icon="el-icon-upload">上传题解视频</el-button>
-              <span slot="tip" style="margin-left:10px;color:#909399;font-size:12px;">支持 mp4/webm/ogg，最大 500MB</span>
-            </el-upload>
-          </div>
         </el-form-item>
 
         <save @click.native="submit()">Save</save>
