@@ -7,7 +7,7 @@ from utils.api import UsernameSerializer, serializers
 from utils.constants import Difficulty
 from utils.serializers import LanguageNameMultiChoiceField, SPJLanguageNameChoiceField, LanguageNameChoiceField
 
-from .models import Problem, ProblemRuleType, ProblemTag, ProblemIOMode
+from .models import Problem, ProblemRuleType, ProblemTag, ProblemIOMode, Chapter, ChapterProblem
 from .utils import parse_problem_template
 
 
@@ -195,6 +195,63 @@ class ExportProblemSerializer(serializers.ModelSerializer):
                   "input_description", "output_description",
                   "test_case_score", "hint", "time_limit", "memory_limit", "samples",
                   "template", "spj", "rule_type", "source", "template")
+
+
+class ChapterProblemBriefSerializer(serializers.ModelSerializer):
+    tags = serializers.SlugRelatedField(many=True, slug_field="name", read_only=True)
+
+    class Meta:
+        model = Problem
+        fields = ("id", "_id", "title", "difficulty", "submission_number",
+                  "accepted_number", "tags", "my_status")
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["my_status"] = None
+        return data
+
+
+class ChapterSerializer(serializers.ModelSerializer):
+    problem_count = serializers.SerializerMethodField()
+
+    def get_problem_count(self, obj):
+        return obj.chapter_problems.count()
+
+    class Meta:
+        model = Chapter
+        fields = ("id", "title", "description", "order", "problem_count", "create_time")
+
+
+class ChapterDetailSerializer(serializers.ModelSerializer):
+    problems = serializers.SerializerMethodField()
+
+    def get_problems(self, obj):
+        cps = obj.chapter_problems.select_related("problem").order_by("order")
+        return ChapterProblemBriefSerializer([cp.problem for cp in cps], many=True).data
+
+    class Meta:
+        model = Chapter
+        fields = ("id", "title", "description", "order", "problems", "create_time")
+
+
+class CreateOrEditChapterSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=256)
+    description = serializers.CharField(allow_blank=True, allow_null=True, required=False)
+    order = serializers.IntegerField(default=0)
+
+
+class EditChapterSerializer(CreateOrEditChapterSerializer):
+    id = serializers.IntegerField()
+
+
+class ChapterProblemOrderSerializer(serializers.Serializer):
+    chapter_id = serializers.IntegerField()
+    problem_ids = serializers.ListField(child=serializers.IntegerField())
+
+
+class AddChapterProblemSerializer(serializers.Serializer):
+    chapter_id = serializers.IntegerField()
+    problem_id = serializers.IntegerField()
 
 
 class AddContestProblemSerializer(serializers.Serializer):

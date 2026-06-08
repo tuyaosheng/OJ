@@ -132,6 +132,9 @@ export default {
   pickone () {
     return ajax('pickone', 'get')
   },
+  getChapters () {
+    return ajax('chapters', 'get')
+  },
   getProblem (problemID) {
     return ajax('problem', 'get', {
       params: {

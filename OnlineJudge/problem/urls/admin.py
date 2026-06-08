@@ -2,7 +2,7 @@ from django.conf.urls import url
 
 from ..views.admin import (ContestProblemAPI, ProblemAPI, TestCaseAPI, MakeContestProblemPublicAPIView,
                            CompileSPJAPI, AddContestProblemAPI, ExportProblemAPI, ImportProblemAPI,
-                           FPSProblemImport, ProblemVideoAPI)
+                           FPSProblemImport, ProblemVideoAPI, ChapterAdminAPI, ChapterProblemAdminAPI)
 
 urlpatterns = [
     url(r"^test_case/?$", TestCaseAPI.as_view(), name="test_case_api"),
@@ -15,4 +15,6 @@ urlpatterns = [
     url(r"^export_problem/?$", ExportProblemAPI.as_view(), name="export_problem_api"),
     url(r"^import_problem/?$", ImportProblemAPI.as_view(), name="import_problem_api"),
     url(r"^import_fps/?$", FPSProblemImport.as_view(), name="fps_problem_api"),
+    url(r"^chapter/?$", ChapterAdminAPI.as_view(), name="chapter_admin_api"),
+    url(r"^chapter/problem/?$", ChapterProblemAdminAPI.as_view(), name="chapter_problem_admin_api"),
 ]

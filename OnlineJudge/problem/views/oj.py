@@ -2,8 +2,8 @@ import random
 from django.db.models import Q, Count
 from utils.api import APIView
 from account.decorators import check_contest_permission
-from ..models import ProblemTag, Problem, ProblemRuleType
-from ..serializers import ProblemSerializer, TagSerializer, ProblemSafeSerializer
+from ..models import ProblemTag, Problem, ProblemRuleType, Chapter
+from ..serializers import ProblemSerializer, TagSerializer, ProblemSafeSerializer, ChapterDetailSerializer
 from contest.models import ContestRuleType
 
 
@@ -80,6 +80,24 @@ class ProblemAPI(APIView):
         # 根据profile 为做过的题目添加标记
         data = self.paginate_data(request, problems, ProblemSerializer)
         self._add_problem_status(request, data)
+        return self.success(data)
+
+
+class ChapterAPI(APIView):
+    def get(self, request):
+        chapters = Chapter.objects.prefetch_related("chapter_problems__problem__tags").all()
+        data = ChapterDetailSerializer(chapters, many=True).data
+        if request.user.is_authenticated:
+            profile = request.user.userprofile
+            acm_status = profile.acm_problems_status.get("problems", {})
+            oi_status = profile.oi_problems_status.get("problems", {})
+            for chapter in data:
+                for p in chapter["problems"]:
+                    pid = str(p["id"])
+                    if p.get("rule_type") == ProblemRuleType.ACM:
+                        p["my_status"] = acm_status.get(pid, {}).get("status")
+                    else:
+                        p["my_status"] = oi_status.get(pid, {}).get("status")
         return self.success(data)
 
 

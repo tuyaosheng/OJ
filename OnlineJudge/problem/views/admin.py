@@ -25,13 +25,15 @@ from utils.api import APIView, CSRFExemptAPIView, validate_serializer, APIError
 from utils.constants import Difficulty
 from utils.shortcuts import rand_str, natural_sort_key
 from utils.tasks import delete_files
-from ..models import Problem, ProblemRuleType, ProblemTag
+from ..models import Problem, ProblemRuleType, ProblemTag, Chapter, ChapterProblem
 from ..serializers import (CreateContestProblemSerializer, CompileSPJSerializer,
                            CreateProblemSerializer, EditProblemSerializer, EditContestProblemSerializer,
                            ProblemAdminSerializer, TestCaseUploadForm, ContestProblemMakePublicSerializer,
                            AddContestProblemSerializer, ExportProblemSerializer,
                            ExportProblemRequestSerialzier, UploadProblemForm, ImportProblemSerializer,
-                           FPSProblemSerializer)
+                           FPSProblemSerializer, CreateOrEditChapterSerializer, EditChapterSerializer,
+                           ChapterSerializer, ChapterDetailSerializer,
+                           AddChapterProblemSerializer, ChapterProblemOrderSerializer)
 from ..utils import TEMPLATE_BASE, build_problem_template
 
 
@@ -627,6 +629,98 @@ class ImportProblemAPI(CSRFExemptAPIView, TestCaseZipProcessor):
                             tag_obj, _ = ProblemTag.objects.get_or_create(name=tag_name)
                             problem_obj.tags.add(tag_obj)
         return self.success({"import_count": count})
+
+
+class ChapterAdminAPI(APIView):
+    @problem_permission_required
+    @validate_serializer(CreateOrEditChapterSerializer)
+    def post(self, request):
+        data = request.data
+        chapter = Chapter.objects.create(
+            title=data["title"],
+            description=data.get("description", ""),
+            order=data.get("order", 0),
+            created_by=request.user
+        )
+        return self.success(ChapterSerializer(chapter).data)
+
+    @problem_permission_required
+    def get(self, request):
+        chapter_id = request.GET.get("id")
+        if chapter_id:
+            try:
+                chapter = Chapter.objects.get(id=chapter_id)
+                return self.success(ChapterDetailSerializer(chapter).data)
+            except Chapter.DoesNotExist:
+                return self.error("Chapter does not exist")
+        chapters = Chapter.objects.all()
+        return self.success(ChapterSerializer(chapters, many=True).data)
+
+    @problem_permission_required
+    @validate_serializer(EditChapterSerializer)
+    def put(self, request):
+        data = request.data
+        try:
+            chapter = Chapter.objects.get(id=data["id"])
+        except Chapter.DoesNotExist:
+            return self.error("Chapter does not exist")
+        chapter.title = data["title"]
+        chapter.description = data.get("description", chapter.description)
+        chapter.order = data.get("order", chapter.order)
+        chapter.save()
+        return self.success(ChapterSerializer(chapter).data)
+
+    @problem_permission_required
+    def delete(self, request):
+        chapter_id = request.GET.get("id")
+        if not chapter_id:
+            return self.error("Parameter id is required")
+        try:
+            Chapter.objects.get(id=chapter_id).delete()
+        except Chapter.DoesNotExist:
+            return self.error("Chapter does not exist")
+        return self.success()
+
+
+class ChapterProblemAdminAPI(APIView):
+    @problem_permission_required
+    @validate_serializer(AddChapterProblemSerializer)
+    def post(self, request):
+        data = request.data
+        try:
+            chapter = Chapter.objects.get(id=data["chapter_id"])
+            problem = Problem.objects.get(id=data["problem_id"], contest_id__isnull=True)
+        except Chapter.DoesNotExist:
+            return self.error("Chapter does not exist")
+        except Problem.DoesNotExist:
+            return self.error("Problem does not exist")
+        if ChapterProblem.objects.filter(chapter=chapter, problem=problem).exists():
+            return self.error("Problem already in this chapter")
+        max_order = chapter.chapter_problems.count()
+        ChapterProblem.objects.create(chapter=chapter, problem=problem, order=max_order)
+        return self.success(ChapterDetailSerializer(chapter).data)
+
+    @problem_permission_required
+    def delete(self, request):
+        chapter_id = request.GET.get("chapter_id")
+        problem_id = request.GET.get("problem_id")
+        if not chapter_id or not problem_id:
+            return self.error("chapter_id and problem_id are required")
+        ChapterProblem.objects.filter(chapter_id=chapter_id, problem_id=problem_id).delete()
+        return self.success()
+
+    @problem_permission_required
+    @validate_serializer(ChapterProblemOrderSerializer)
+    def put(self, request):
+        data = request.data
+        try:
+            chapter = Chapter.objects.get(id=data["chapter_id"])
+        except Chapter.DoesNotExist:
+            return self.error("Chapter does not exist")
+        problem_ids = data["problem_ids"]
+        for idx, pid in enumerate(problem_ids):
+            ChapterProblem.objects.filter(chapter=chapter, problem_id=pid).update(order=idx)
+        return self.success()
 
 
 class ProblemVideoAPI(CSRFExemptAPIView):

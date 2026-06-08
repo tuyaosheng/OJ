@@ -301,6 +301,32 @@ export default {
     return ajax('admin/problem/video', 'delete', {
       params: {problem_id: problemId}
     })
+  },
+  getChapterList () {
+    return ajax('admin/chapter', 'get')
+  },
+  getChapter (id) {
+    return ajax('admin/chapter', 'get', { params: { id } })
+  },
+  createChapter (data) {
+    return ajax('admin/chapter', 'post', { data })
+  },
+  editChapter (data) {
+    return ajax('admin/chapter', 'put', { data })
+  },
+  deleteChapter (id) {
+    return ajax('admin/chapter', 'delete', { params: { id } })
+  },
+  addChapterProblem (data) {
+    return ajax('admin/chapter/problem', 'post', { data })
+  },
+  removeChapterProblem (chapterId, problemId) {
+    return ajax('admin/chapter/problem', 'delete', {
+      params: { chapter_id: chapterId, problem_id: problemId }
+    })
+  },
+  updateChapterProblemOrder (data) {
+    return ajax('admin/chapter/problem', 'put', { data })
   }
 }
 

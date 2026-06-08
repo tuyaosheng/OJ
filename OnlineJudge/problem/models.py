@@ -88,6 +88,30 @@ class Problem(models.Model):
         unique_together = (("_id", "contest"),)
         ordering = ("create_time",)
 
+
+class Chapter(models.Model):
+    title = models.TextField()
+    description = models.TextField(null=True, blank=True)
+    order = models.IntegerField(default=0)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    create_time = models.DateTimeField(auto_now_add=True)
+    problems = models.ManyToManyField(Problem, through="ChapterProblem", blank=True)
+
+    class Meta:
+        db_table = "chapter"
+        ordering = ("order", "create_time")
+
+
+class ChapterProblem(models.Model):
+    chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name="chapter_problems")
+    problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
+    order = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = "chapter_problem"
+        ordering = ("order",)
+        unique_together = (("chapter", "problem"),)
+
     def add_submission_number(self):
         self.submission_number = models.F("submission_number") + 1
         self.save(update_fields=["submission_number"])

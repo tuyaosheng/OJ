@@ -1,7 +1,67 @@
 <template>
   <Row type="flex" :gutter="18">
     <Col :span=19>
-    <Panel shadow>
+
+    <!-- 视图切换 -->
+    <div class="view-switch">
+      <Button :type="viewMode==='list'?'primary':'ghost'" @click="viewMode='list'" icon="ios-list">列表模式</Button>
+      <Button :type="viewMode==='chapter'?'primary':'ghost'" @click="switchChapterView" icon="ios-bookmarks" style="margin-left:8px;">章节模式</Button>
+    </div>
+
+    <!-- 章节模式 -->
+    <div v-if="viewMode==='chapter'">
+      <Spin v-if="chapterLoading" fix size="large"></Spin>
+      <div v-if="!chapterLoading && chapters.length === 0" style="text-align:center;padding:60px;color:#909399;">
+        暂无章节，请管理员在后台添加章节并分配题目。
+      </div>
+      <div v-for="chapter in chapters" :key="chapter.id" class="chapter-card">
+        <div class="chapter-header" @click="toggleChapter(chapter.id)">
+          <span class="chapter-title">
+            <Icon :type="expandedChapters.has(chapter.id)?'ios-arrow-down':'ios-arrow-forward'" style="margin-right:6px;"/>
+            {{ chapter.title }}
+          </span>
+          <span class="chapter-meta">{{ chapter.problems.length }} 道题</span>
+        </div>
+        <div v-if="chapter.description" class="chapter-desc">{{ chapter.description }}</div>
+        <transition name="chapter-slide">
+          <div v-show="expandedChapters.has(chapter.id)" class="chapter-problems">
+            <div v-if="chapter.problems.length === 0" class="empty-tip">该章节暂无题目</div>
+            <table v-else class="problem-table">
+              <thead>
+                <tr>
+                  <th style="width:80px">编号</th>
+                  <th>题目名称</th>
+                  <th style="width:80px">难度</th>
+                  <th style="width:80px">通过率</th>
+                  <th style="width:60px">状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="p in chapter.problems" :key="p.id"
+                    @click="$router.push({name:'problem-details',params:{problemID:p._id}})"
+                    class="problem-row">
+                  <td><span class="pid">{{ p._id }}</span></td>
+                  <td class="ptitle">{{ p.title }}</td>
+                  <td>
+                    <Tag :color="difficultyColor(p.difficulty)" size="small">
+                      {{ $t('m.'+p.difficulty) }}
+                    </Tag>
+                  </td>
+                  <td>{{ getACRate(p.accepted_number, p.submission_number) }}</td>
+                  <td>
+                    <Icon v-if="p.my_status===0" type="checkmark-circled" color="#67c23a" size="18" title="已通过"/>
+                    <Icon v-else-if="p.my_status!==null&&p.my_status!==undefined" type="minus-circled" color="#e6a23c" size="18" title="尝试过"/>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </transition>
+      </div>
+    </div>
+
+    <!-- 列表模式（原有） -->
+    <Panel shadow v-if="viewMode==='list'">
       <div slot="title">{{$t('m.Problem_List')}}</div>
       <div slot="extra">
         <ul class="filter">
@@ -45,7 +105,7 @@
              :loading="loadings.table"
              disabled-hover></Table>
     </Panel>
-    <Pagination
+    <Pagination v-if="viewMode==='list'"
       :total="total" :page-size.sync="query.limit" @on-change="pushRouter" @on-page-size-change="pushRouter" :current.sync="query.page" :show-sizer="true"></Pagination>
 
     </Col>
@@ -165,6 +225,10 @@
           table: true,
           tag: true
         },
+        viewMode: 'list',
+        chapters: [],
+        chapterLoading: false,
+        expandedChapters: new Set(),
         routeName: '',
         query: {
           keyword: '',
@@ -267,6 +331,32 @@
           this.$success('Good Luck')
           this.$router.push({name: 'problem-details', params: {problemID: res.data.data}})
         })
+      },
+      switchChapterView () {
+        this.viewMode = 'chapter'
+        if (this.chapters.length === 0) {
+          this.chapterLoading = true
+          api.getChapters().then(res => {
+            this.chapters = res.data.data
+            // 默认展开第一个章节
+            if (this.chapters.length > 0) {
+              this.expandedChapters = new Set([this.chapters[0].id])
+            }
+            this.chapterLoading = false
+          }).catch(() => { this.chapterLoading = false })
+        }
+      },
+      toggleChapter (id) {
+        const s = new Set(this.expandedChapters)
+        if (s.has(id)) {
+          s.delete(id)
+        } else {
+          s.add(id)
+        }
+        this.expandedChapters = s
+      },
+      difficultyColor (d) {
+        return d === 'Low' ? 'green' : d === 'High' ? 'yellow' : 'blue'
       }
     },
     computed: {
@@ -334,5 +424,99 @@
       display: inline-flex;
       align-items: center;
     }
+  }
+
+  .view-switch {
+    margin-bottom: 14px;
+  }
+
+  .chapter-card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: box-shadow 0.3s;
+    &:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.11); }
+  }
+
+  .chapter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    cursor: pointer;
+    background: linear-gradient(90deg, #e8f0fe 0%, #fff 100%);
+    border-left: 4px solid #1565c0;
+    user-select: none;
+    &:hover { background: linear-gradient(90deg, #d0e4fc 0%, #f5f9ff 100%); }
+  }
+
+  .chapter-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a237e;
+  }
+
+  .chapter-meta {
+    font-size: 13px;
+    color: #909399;
+  }
+
+  .chapter-desc {
+    padding: 8px 20px;
+    font-size: 13px;
+    color: #606266;
+    background: #fafbff;
+    border-bottom: 1px solid #eef0f6;
+  }
+
+  .chapter-problems {
+    padding: 4px 0;
+  }
+
+  .empty-tip {
+    padding: 20px;
+    text-align: center;
+    color: #909399;
+    font-size: 13px;
+  }
+
+  .problem-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    thead tr {
+      background: #f5f7fa;
+      th {
+        padding: 10px 16px;
+        text-align: left;
+        color: #606266;
+        font-weight: 600;
+        font-size: 13px;
+      }
+    }
+    tbody .problem-row {
+      cursor: pointer;
+      transition: background 0.2s;
+      td { padding: 10px 16px; border-bottom: 1px solid #f0f0f0; }
+      &:hover td { background: #f0f7ff; }
+      &:last-child td { border-bottom: none; }
+    }
+    .pid { color: #1565c0; font-weight: 600; }
+    .ptitle { color: #303133; }
+  }
+
+  .chapter-slide-enter-active, .chapter-slide-leave-active {
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+  .chapter-slide-enter, .chapter-slide-leave-to {
+    max-height: 0;
+    opacity: 0;
+  }
+  .chapter-slide-enter-to, .chapter-slide-leave {
+    max-height: 2000px;
+    opacity: 1;
   }
 </style>
