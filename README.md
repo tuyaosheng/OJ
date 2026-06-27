@@ -24,6 +24,27 @@
 | **章节模块** | 按知识点组织题目；用户端支持列表/章节两种视图切换 |
 | **上课模式** | 基于章节创建限时课堂，学生进入专注视图；管理员大屏实时查看全班进度 |
 | **用户分类** | 区分教师/学生；学生注册填年级班级；批量升年级（一键+1） |
+| **AI 代码诊断** | 学生对未通过的提交点击"AI 诊断"，大模型分析错误原因；按天限次（管理员可配）；教师可查看全部诊断记录 |
+
+---
+
+## AI 代码诊断详解
+
+学生提交未通过（WA / TLE / MLE / RE / CE / 部分正确）时，可在做题页点击 **"AI 诊断"** 按钮，由大模型分析错误原因并给出修改方向（保留独立完成空间，不直接给整题答案）。
+
+### 管理员端
+入口：后台 → 常规 → **AI 诊断配置**（仅超级管理员）
+- **启用开关**：关闭后学生端不显示按钮（默认关闭）
+- **每日次数上限**：每名学生每天可用次数（默认 5；教师/管理员不受限）
+- **接口配置**：OpenAI 兼容接口，填 API Base（如 `https://api.deepseek.com/v1`）、模型名、API Key
+  - 兼容 DeepSeek / 通义千问 / Kimi / 智谱，以及本地 Ollama、vLLM 等
+
+入口：后台 → 题目 → **AI 诊断记录**（教师可见）
+- 查看所有学生的诊断记录，可按用户名 / 题目筛选，点击查看诊断全文
+
+### 学生端
+- 提交判题完成且未通过时，状态区出现"AI 诊断"按钮与"今日剩余 N 次"
+- 同一条提交只诊断一次并缓存，重复查看不再消耗次数
 
 ---
 
@@ -128,6 +149,7 @@ docker exec onlinejudgedeploy-oj-backend-1 python manage.py migrate
 | problem | 0016 | Chapter / ChapterProblem 章节模型 |
 | problem | 0017 | ClassSession / StudentActivity / IPBinding 上课模式 |
 | account | 0013 | UserProfile 加 identity / grade / class_name |
+| submission | 0013 | AICodeDiagnosis AI 代码诊断记录 |
 
 ---
 

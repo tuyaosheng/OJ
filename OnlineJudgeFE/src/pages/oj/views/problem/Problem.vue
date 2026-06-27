@@ -79,6 +79,13 @@
             <div v-if="contestEnded">
               <Alert type="warning" show-icon>{{$t('m.Contest_has_ended')}}</Alert>
             </div>
+            <div v-if="canDiagnose" class="ai-diagnosis-entry">
+              <Button type="info" size="small" icon="ios-lightbulb-outline"
+                      :loading="aiLoading" @click="runAIDiagnosis">
+                AI 诊断
+              </Button>
+              <span v-if="aiRemaining !== null" class="ai-remaining">今日剩余 {{aiRemaining}} 次</span>
+            </div>
           </Col>
 
           <Col :span="12">
@@ -223,6 +230,16 @@
         <Button type="ghost" @click="videoVisible=false">关闭</Button>
       </div>
     </Modal>
+
+    <Modal v-model="aiModalVisible" title="AI 代码诊断" width="720">
+      <Alert type="warning" show-icon style="margin-bottom:12px;">
+        AI 诊断仅供参考，目的是帮你定位思路，请独立完成代码修改。
+      </Alert>
+      <div v-if="aiDiagnosis" class="markdown-body ai-diagnosis-content" v-html="aiDiagnosisHtml"></div>
+      <div slot="footer">
+        <Button type="ghost" @click="aiModalVisible=false">关闭</Button>
+      </div>
+    </Modal>
   </div>
 </template>
 
@@ -233,6 +250,7 @@
   import storage from '@/utils/storage'
   import {FormMixin} from '@oj/components/mixins'
   import {JUDGE_STATUS, CONTEST_STATUS, buildProblemCodeKey} from '@/utils/constants'
+  import marked from 'marked'
   import api from '@oj/api'
   import {pie, largePie} from './chartData'
 
@@ -251,6 +269,10 @@
         captchaRequired: false,
         graphVisible: false,
         videoVisible: false,
+        aiModalVisible: false,
+        aiLoading: false,
+        aiDiagnosis: '',
+        aiRemaining: null,
         classSessionId: null,
         submissionExists: false,
         captchaCode: '',
@@ -515,6 +537,22 @@
         if (!visible) {
           this.videoVisible = false
         }
+      },
+      runAIDiagnosis () {
+        if (!this.submissionId) {
+          return
+        }
+        this.aiLoading = true
+        api.requestAIDiagnosis(this.submissionId).then(res => {
+          this.aiLoading = false
+          this.aiDiagnosis = res.data.data.result
+          if (res.data.data.remaining !== undefined) {
+            this.aiRemaining = res.data.data.remaining
+          }
+          this.aiModalVisible = true
+        }, () => {
+          this.aiLoading = false
+        })
       }
     },
     computed: {
@@ -530,6 +568,19 @@
           text: JUDGE_STATUS[this.result.result]['name'],
           color: JUDGE_STATUS[this.result.result]['color']
         }
+      },
+      canDiagnose () {
+        if (this.contestID && !this.OIContestRealTimePermission) {
+          return false
+        }
+        if (!this.statusVisible || this.submitting || !this.submissionId) {
+          return false
+        }
+        // 非 AC 的已判完结果才可诊断（-2 CE / -1 WA / 1,2 TLE / 3 MLE / 4 RE / 8 部分正确）
+        return [-2, -1, 1, 2, 3, 4, 8].includes(this.result.result)
+      },
+      aiDiagnosisHtml () {
+        return this.aiDiagnosis ? marked(this.aiDiagnosis) : ''
       },
       submissionRoute () {
         if (this.contestID) {
@@ -640,6 +691,19 @@
         margin-left: 20px;
       }
     }
+    .ai-diagnosis-entry {
+      margin-top: 8px;
+      .ai-remaining {
+        margin-left: 10px;
+        font-size: 12px;
+        color: #999;
+      }
+    }
+  }
+  .ai-diagnosis-content {
+    max-height: 60vh;
+    overflow-y: auto;
+    line-height: 1.7;
   }
 
   #info {

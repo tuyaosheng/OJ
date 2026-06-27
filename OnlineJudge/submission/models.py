@@ -57,3 +57,20 @@ class Submission(models.Model):
 
     def __str__(self):
         return self.id
+
+
+class AICodeDiagnosis(models.Model):
+    # 一条提交只诊断一次并缓存，重复点击不再消耗次数
+    submission = models.OneToOneField(Submission, on_delete=models.CASCADE, related_name="ai_diagnosis")
+    problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
+    user_id = models.IntegerField(db_index=True)
+    username = models.TextField()
+    # 提交时的判题结果，便于教师端筛选/展示
+    submission_result = models.IntegerField(default=JudgeStatus.WRONG_ANSWER)
+    # AI 返回的诊断文本（Markdown）
+    result = models.TextField()
+    create_time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "ai_code_diagnosis"
+        ordering = ("-create_time",)

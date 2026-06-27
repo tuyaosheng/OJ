@@ -144,6 +144,36 @@ OJ/
 - 用户表格新增身份 Tag、年级、班级列
 - 顶部新增"新建教师账号"和"批量升年级"按钮
 
+### 八、AI 代码诊断（WA 归因）
+
+学生手动点击，对自己**未通过（非 AC）**的提交调用大模型分析错误原因；按天限次（管理员可配）；教师可在管理端查看所有诊断记录。
+
+**后端新增配置**（`SysOptions`，复用 options 机制，超管可改）：
+- `ai_diagnosis_enabled`：总开关（默认 `False`）
+- `ai_daily_limit`：每人每天调用次数（默认 `5`，管理员/教师不受限）
+- `ai_api_config`：`{api_base, api_key, model}`，**OpenAI 兼容**接口（DeepSeek/通义/Kimi/智谱/本地 vLLM 等通用），`api_base` 形如 `https://api.deepseek.com/v1`
+
+**后端新增模型**（`submission/migrations/0013_aicodediagnosis.py`）：
+- `AICodeDiagnosis`：`submission`(OneToOne)、`problem`、`user_id`、`username`、`submission_result`、`result`(AI 文本/Markdown)、`create_time`
+- 一条提交只诊断一次并缓存，重复点击直接返回缓存、**不消耗次数**
+
+**后端 API**：
+- 用户端 `AICodeDiagnosisAPI`（`/api/ai_diagnosis`）：
+  - `POST {submission_id}`：仅限**本人**的**非 AC 已判完**提交（CE/WA/TLE/MLE/RE/部分正确）；按"今日本人记录数 < `ai_daily_limit`"限流；用 `requests` 调 `/chat/completions`
+  - `GET ?submission_id=`：返回本人该提交已有诊断 + 今日剩余次数
+  - prompt 设计：拼题面+样例+语言+代码+判题结果+未通过测试点编号（不泄露测试数据），system 提示"指出 bug 与修改方向，可给关键提示/伪代码，但**不直接给整题完整正确代码**"
+- 管理端：
+  - `AIDiagnosisConfigAPI`（超管，`/api/admin/ai_diagnosis/config`）：GET/POST 配置，`api_key` 不回显（只返回 `api_key_set`），POST 时 `api_key` 留空表示不修改
+  - `AIDiagnosisListAPI`（教师/admin_role，`/api/admin/ai_diagnosis/list`）：分页列出全部诊断，可按 `username` / 题目显示 ID 筛选
+
+**前端用户端**（`Problem.vue`）：
+- 判题完且结果非 AC 时，状态区出现"AI 诊断"按钮 + "今日剩余 N 次"
+- 结果用 `marked` 渲染进 Modal，附"仅供参考、请独立完成"提示
+
+**前端管理端**：
+- `AIConfig.vue`（路由 `/ai/config`，侧边栏"常规 → AI 诊断配置"）：开关、每日次数、API Base、模型、API Key 表单
+- `AIDiagnosisList.vue`（路由 `/ai/diagnosis`，侧边栏"题目 → AI 诊断记录"）：按用户/题目筛选、分页、弹窗查看诊断全文
+
 ---
 
 ## 构建说明

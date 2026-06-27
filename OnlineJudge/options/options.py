@@ -104,6 +104,9 @@ class OptionKeys:
     judge_server_token = "judge_server_token"
     throttling = "throttling"
     languages = "languages"
+    ai_diagnosis_enabled = "ai_diagnosis_enabled"
+    ai_daily_limit = "ai_daily_limit"
+    ai_api_config = "ai_api_config"
 
 
 class OptionDefaultValue:
@@ -119,6 +122,10 @@ class OptionDefaultValue:
     throttling = {"ip": {"capacity": 100, "fill_rate": 0.1, "default_capacity": 50},
                   "user": {"capacity": 20, "fill_rate": 0.03, "default_capacity": 10}}
     languages = languages
+    ai_diagnosis_enabled = False
+    ai_daily_limit = 5
+    # OpenAI 兼容接口配置：api_base 形如 https://api.deepseek.com/v1
+    ai_api_config = {"api_base": "", "api_key": "", "model": ""}
 
 
 class _SysOptionsMeta(type):
@@ -270,6 +277,30 @@ class _SysOptionsMeta(type):
     @languages.setter
     def languages(cls, value):
         cls._set_option(OptionKeys.languages, value)
+
+    @my_property(ttl=DEFAULT_SHORT_TTL)
+    def ai_diagnosis_enabled(cls):
+        return cls._get_option(OptionKeys.ai_diagnosis_enabled)
+
+    @ai_diagnosis_enabled.setter
+    def ai_diagnosis_enabled(cls, value):
+        cls._set_option(OptionKeys.ai_diagnosis_enabled, value)
+
+    @my_property(ttl=DEFAULT_SHORT_TTL)
+    def ai_daily_limit(cls):
+        return cls._get_option(OptionKeys.ai_daily_limit)
+
+    @ai_daily_limit.setter
+    def ai_daily_limit(cls, value):
+        cls._set_option(OptionKeys.ai_daily_limit, value)
+
+    @my_property(ttl=DEFAULT_SHORT_TTL)
+    def ai_api_config(cls):
+        return cls._get_option(OptionKeys.ai_api_config)
+
+    @ai_api_config.setter
+    def ai_api_config(cls, value):
+        cls._set_option(OptionKeys.ai_api_config, value)
 
     @my_property(ttl=DEFAULT_SHORT_TTL)
     def spj_languages(cls):

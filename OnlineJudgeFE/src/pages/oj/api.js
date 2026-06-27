@@ -260,6 +260,16 @@ export default {
       params: { submission_id: submissionId }
     })
   },
+  getAIDiagnosis (submissionId) {
+    return ajax('ai_diagnosis', 'get', {
+      params: { submission_id: submissionId }
+    })
+  },
+  requestAIDiagnosis (submissionId) {
+    return ajax('ai_diagnosis', 'post', {
+      data: { submission_id: submissionId }
+    })
+  },
   updateSubmission (data) {
     return ajax('submission', 'put', {
       data

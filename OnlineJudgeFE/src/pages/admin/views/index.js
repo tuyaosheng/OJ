@@ -14,9 +14,11 @@ import ProblemImportOrExport from './problem/ImportAndExport.vue'
 import ChapterList from './problem/ChapterList.vue'
 import ClassSession from './problem/ClassSession.vue'
 import ClassDashboard from './problem/ClassDashboard.vue'
+import AIConfig from './general/AIConfig.vue'
+import AIDiagnosisList from './problem/AIDiagnosisList.vue'
 
 export {
   Announcement, User, Conf, JudgeServer, Problem, ProblemList, Contest,
   ContestList, Login, Home, PruneTestCase, Dashboard, ProblemImportOrExport,
-  ChapterList, ClassSession, ClassDashboard
+  ChapterList, ClassSession, ClassDashboard, AIConfig, AIDiagnosisList
 }

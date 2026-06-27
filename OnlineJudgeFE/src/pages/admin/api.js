@@ -352,7 +352,10 @@ export default {
   getIPBindings () { return ajax('admin/ip_binding', 'get') },
   saveIPBinding (data) { return ajax('admin/ip_binding', 'post', { data }) },
   editIPBinding (data) { return ajax('admin/ip_binding', 'put', { data }) },
-  deleteIPBinding (id) { return ajax('admin/ip_binding', 'delete', { params: { id } }) }
+  deleteIPBinding (id) { return ajax('admin/ip_binding', 'delete', { params: { id } }) },
+  getAIDiagnosisConfig () { return ajax('admin/ai_diagnosis/config', 'get') },
+  setAIDiagnosisConfig (data) { return ajax('admin/ai_diagnosis/config', 'post', { data }) },
+  getAIDiagnosisList (params) { return ajax('admin/ai_diagnosis/list', 'get', { params }) }
 }
 
 /**

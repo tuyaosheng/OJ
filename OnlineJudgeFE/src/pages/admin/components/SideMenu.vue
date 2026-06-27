@@ -12,6 +12,7 @@
       <el-menu-item index="/conf">{{$t('m.System_Config')}}</el-menu-item>
       <el-menu-item index="/judge-server">{{$t('m.Judge_Server')}}</el-menu-item>
       <el-menu-item index="/prune-test-case">{{$t('m.Prune_Test_Case')}}</el-menu-item>
+      <el-menu-item index="/ai/config">AI 诊断配置</el-menu-item>
     </el-submenu>
     <el-submenu index="problem" v-if="hasProblemPermission">
       <template slot="title"><i class="el-icon-fa-bars"></i>{{$t('m.Problem')}}</template>
@@ -20,6 +21,7 @@
       <el-menu-item index="/problem/batch_ops">{{$t('m.Export_Import_Problem')}}</el-menu-item>
       <el-menu-item index="/problem/chapters">章节管理</el-menu-item>
       <el-menu-item index="/problem/class_session">课堂管理</el-menu-item>
+      <el-menu-item index="/ai/diagnosis">AI 诊断记录</el-menu-item>
 
     </el-submenu>
     <el-submenu index="contest">
