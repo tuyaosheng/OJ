@@ -273,6 +273,8 @@
         aiLoading: false,
         aiDiagnosis: '',
         aiRemaining: null,
+        aiEnabled: false,
+        aiAllowedResults: [],
         classSessionId: null,
         submissionExists: false,
         captchaCode: '',
@@ -451,6 +453,7 @@
               this.submitting = false
               this.submitted = false
               clearTimeout(this.refreshStatus)
+              this.loadAIStatus()
               this.init()
             } else {
               this.refreshStatus = setTimeout(checkStatus, 2000)
@@ -538,6 +541,17 @@
           this.videoVisible = false
         }
       },
+      loadAIStatus () {
+        if (!this.submissionId) {
+          return
+        }
+        api.getAIDiagnosis(this.submissionId).then(res => {
+          let d = res.data.data
+          this.aiEnabled = d.enabled
+          this.aiAllowedResults = d.allowed_results || []
+          this.aiRemaining = d.remaining
+        }).catch(() => {})
+      },
       runAIDiagnosis () {
         if (!this.submissionId) {
           return
@@ -576,8 +590,12 @@
         if (!this.statusVisible || this.submitting || !this.submissionId) {
           return false
         }
-        // 非 AC 的已判完结果才可诊断（-2 CE / -1 WA / 1,2 TLE / 3 MLE / 4 RE / 8 部分正确）
-        return [-2, -1, 1, 2, 3, 4, 8].includes(this.result.result)
+        if (!this.aiEnabled) {
+          return false
+        }
+        // 非 AC 的已判完结果 + 管理员开放了该状态才可诊断（-2 CE / -1 WA / 1,2 TLE / 3 MLE / 4 RE / 8 部分正确）
+        return [-2, -1, 1, 2, 3, 4, 8].includes(this.result.result) &&
+          this.aiAllowedResults.includes(this.result.result)
       },
       aiDiagnosisHtml () {
         return this.aiDiagnosis ? marked(this.aiDiagnosis) : ''

@@ -314,9 +314,9 @@ class AICodeDiagnosisAPI(APIView):
         result = None
         submission_id = request.GET.get("submission_id")
         if submission_id:
-            diagnosis = AICodeDiagnosis.objects.filter(submission_id=submission_id,
-                                                       user_id=request.user.id).first()
-            if diagnosis:
+            diagnosis = AICodeDiagnosis.objects.filter(submission_id=submission_id).first()
+            # 本人或管理员可查看已生成的诊断（与 POST 缓存逻辑一致）
+            if diagnosis and (diagnosis.user_id == request.user.id or request.user.is_admin_role()):
                 result = diagnosis.result
         limit = SysOptions.ai_daily_limit
         used = AICodeDiagnosis.objects.filter(user_id=request.user.id,
@@ -326,6 +326,7 @@ class AICodeDiagnosisAPI(APIView):
             "result": result,
             "daily_limit": limit,
             "remaining": max(limit - used, 0),
+            "allowed_results": SysOptions.ai_allowed_results,
         })
 
     @login_required
@@ -350,6 +351,9 @@ class AICodeDiagnosisAPI(APIView):
             return self.error("该提交已通过，无需诊断")
         if submission.result not in AI_DIAGNOSABLE_RESULTS:
             return self.error("该提交尚未判题完成，请稍后再试")
+        # 管理员可配置只对部分判题状态开放诊断
+        if submission.result not in set(SysOptions.ai_allowed_results or []):
+            return self.error("该类型的提交未开放 AI 诊断")
 
         # 已诊断过：直接返回缓存，不消耗次数
         existing = AICodeDiagnosis.objects.filter(submission_id=submission.id).first()

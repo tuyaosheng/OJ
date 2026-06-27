@@ -17,6 +17,21 @@
       </Alert>
     </Col>
 
+    <Col v-if="canDiagnose && aiEnabled && aiResultAllowed" :span="20">
+      <div id="ai-diagnosis-bar">
+        <Button :type="aiHasResult ? 'success' : 'info'"
+                :icon="aiHasResult ? 'ios-checkmark-outline' : 'ios-lightbulb-outline'"
+                :loading="aiLoading" @click="runAIDiagnosis">
+          {{ aiHasResult ? '查看已生成的 AI 诊断' : 'AI 诊断' }}
+        </Button>
+        <span class="ai-tip">
+          <template v-if="aiHasResult">该提交已诊断，点击查看（不再消耗次数）</template>
+          <template v-else>代码没通过？让 AI 帮你分析错误原因</template>
+          <template v-if="aiRemaining !== null"> · 今日剩余 {{aiRemaining}} 次</template>
+        </span>
+      </div>
+    </Col>
+
     <!--后台返info就显示出来， 权限控制放后台 -->
     <Col v-if="submission.info && !isCE" :span="20">
       <Table stripe :loading="loading" :disabled-hover="true" :columns="columns" :data="submission.info.data"></Table>
@@ -71,10 +86,21 @@
         数据加载失败
       </div>
     </Modal>
+
+    <Modal v-model="aiModalVisible" title="AI 代码诊断" width="720">
+      <Alert type="warning" show-icon style="margin-bottom:12px;">
+        AI 诊断仅供参考，目的是帮你定位思路，请独立完成代码修改。
+      </Alert>
+      <div v-if="aiDiagnosis" class="markdown-body ai-diagnosis-content" v-html="aiDiagnosisHtml"></div>
+      <div slot="footer">
+        <Button type="ghost" @click="aiModalVisible=false">关闭</Button>
+      </div>
+    </Modal>
   </Row>
 </template>
 
 <script>
+  import marked from 'marked'
   import api from '@oj/api'
   import {JUDGE_STATUS} from '@/utils/constants'
   import utils from '@/utils/utils'
@@ -137,7 +163,14 @@
         tcDetailLoading: false,
         tcDetailLoaded: false,
         tcModal: false,
-        tcModalIndex: 0
+        tcModalIndex: 0,
+        aiModalVisible: false,
+        aiLoading: false,
+        aiDiagnosis: '',
+        aiEnabled: false,
+        aiHasResult: false,
+        aiRemaining: null,
+        aiAllowedResults: []
       }
     },
     mounted () {
@@ -194,9 +227,24 @@
             })
           }
           this.submission = data
+          if (this.canDiagnose) {
+            this.loadAIStatus()
+          }
         }, () => {
           this.loading = false
         })
+      },
+      loadAIStatus () {
+        api.getAIDiagnosis(this.submission.id).then(res => {
+          let d = res.data.data
+          this.aiEnabled = d.enabled
+          this.aiRemaining = d.remaining
+          this.aiAllowedResults = d.allowed_results || []
+          if (d.result) {
+            this.aiDiagnosis = d.result
+            this.aiHasResult = true
+          }
+        }).catch(() => {})
       },
       openTCDetail (index) {
         this.tcModalIndex = index
@@ -219,6 +267,25 @@
           this.$success(this.$i18n.t('m.Succeeded'))
         }, () => {
         })
+      },
+      runAIDiagnosis () {
+        // 已有诊断：直接看缓存，不再请求、不扣次数
+        if (this.aiHasResult) {
+          this.aiModalVisible = true
+          return
+        }
+        this.aiLoading = true
+        api.requestAIDiagnosis(this.submission.id).then(res => {
+          this.aiLoading = false
+          this.aiDiagnosis = res.data.data.result
+          this.aiHasResult = true
+          if (res.data.data.remaining !== undefined) {
+            this.aiRemaining = res.data.data.remaining
+          }
+          this.aiModalVisible = true
+        }, () => {
+          this.aiLoading = false
+        })
       }
     },
     computed: {
@@ -231,6 +298,18 @@
       },
       isCE () {
         return this.submission.result === -2
+      },
+      canDiagnose () {
+        // 仅本人（或管理员）可诊断自己的非 AC 提交；can_unshare 表示拥有该提交的权限
+        return this.submission.can_unshare &&
+          [-2, -1, 1, 2, 3, 4, 8].includes(Number(this.submission.result))
+      },
+      aiResultAllowed () {
+        // 该判题状态是否被管理员开放诊断
+        return this.aiAllowedResults.includes(Number(this.submission.result))
+      },
+      aiDiagnosisHtml () {
+        return this.aiDiagnosis ? marked(this.aiDiagnosis) : ''
       },
       isAdminRole () {
         return this.$store.getters.isAdminRole
@@ -273,6 +352,21 @@
     float: right;
     margin-top: 5px;
     margin-right: 10px;
+  }
+
+  #ai-diagnosis-bar {
+    margin: 4px 0;
+    .ai-tip {
+      margin-left: 12px;
+      font-size: 13px;
+      color: #999;
+    }
+  }
+
+  .ai-diagnosis-content {
+    max-height: 60vh;
+    overflow-y: auto;
+    line-height: 1.7;
   }
 
   pre {

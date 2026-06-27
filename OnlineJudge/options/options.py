@@ -107,6 +107,7 @@ class OptionKeys:
     ai_diagnosis_enabled = "ai_diagnosis_enabled"
     ai_daily_limit = "ai_daily_limit"
     ai_api_config = "ai_api_config"
+    ai_allowed_results = "ai_allowed_results"
 
 
 class OptionDefaultValue:
@@ -126,6 +127,9 @@ class OptionDefaultValue:
     ai_daily_limit = 5
     # OpenAI 兼容接口配置：api_base 形如 https://api.deepseek.com/v1
     ai_api_config = {"api_base": "", "api_key": "", "model": ""}
+    # 允许使用 AI 诊断的判题结果（JudgeStatus）。默认不含编译错误(-2)，避免在拼写/语法错误上浪费 token
+    # -1 答案错误 / 1,2 超时 / 3 内存超限 / 4 运行错误 / 8 部分正确
+    ai_allowed_results = [-1, 1, 2, 3, 4, 8]
 
 
 class _SysOptionsMeta(type):
@@ -301,6 +305,14 @@ class _SysOptionsMeta(type):
     @ai_api_config.setter
     def ai_api_config(cls, value):
         cls._set_option(OptionKeys.ai_api_config, value)
+
+    @my_property(ttl=DEFAULT_SHORT_TTL)
+    def ai_allowed_results(cls):
+        return cls._get_option(OptionKeys.ai_allowed_results)
+
+    @ai_allowed_results.setter
+    def ai_allowed_results(cls, value):
+        cls._set_option(OptionKeys.ai_allowed_results, value)
 
     @my_property(ttl=DEFAULT_SHORT_TTL)
     def spj_languages(cls):

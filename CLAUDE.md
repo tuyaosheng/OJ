@@ -152,6 +152,7 @@ OJ/
 - `ai_diagnosis_enabled`：总开关（默认 `False`）
 - `ai_daily_limit`：每人每天调用次数（默认 `5`，管理员/教师不受限）
 - `ai_api_config`：`{api_base, api_key, model}`，**OpenAI 兼容**接口（DeepSeek/通义/Kimi/智谱/本地 vLLM 等通用），`api_base` 形如 `https://api.deepseek.com/v1`
+- `ai_allowed_results`：开放诊断的判题状态码列表（默认 `[-1, 1, 2, 3, 4, 8]`，**默认不含编译错误 -2**，避免在语法错误上浪费 token）。未在列表中的状态：前端不显示按钮、后端 POST 直接拒绝
 
 **后端新增模型**（`submission/migrations/0013_aicodediagnosis.py`）：
 - `AICodeDiagnosis`：`submission`(OneToOne)、`problem`、`user_id`、`username`、`submission_result`、`result`(AI 文本/Markdown)、`create_time`
@@ -159,19 +160,21 @@ OJ/
 
 **后端 API**：
 - 用户端 `AICodeDiagnosisAPI`（`/api/ai_diagnosis`）：
-  - `POST {submission_id}`：仅限**本人**的**非 AC 已判完**提交（CE/WA/TLE/MLE/RE/部分正确）；按"今日本人记录数 < `ai_daily_limit`"限流；用 `requests` 调 `/chat/completions`
-  - `GET ?submission_id=`：返回本人该提交已有诊断 + 今日剩余次数
+  - `POST {submission_id}`：仅限**本人**（管理员可对任意提交）的**非 AC 已判完**提交（CE/WA/TLE/MLE/RE/部分正确）；且结果须在 `ai_allowed_results` 白名单内；按"今日本人记录数 < `ai_daily_limit`"限流（管理员不限）；已诊断走缓存不扣次数；用 `requests` 调 `/chat/completions`
+  - `GET ?submission_id=`：返回该提交已有诊断（**本人或管理员**可读，与 POST 缓存逻辑一致）、今日剩余次数、总开关、`allowed_results` 白名单
   - prompt 设计：拼题面+样例+语言+代码+判题结果+未通过测试点编号（不泄露测试数据），system 提示"指出 bug 与修改方向，可给关键提示/伪代码，但**不直接给整题完整正确代码**"
+  - ⚠️ **GET/POST 查询缓存须一致**：两者都按 `submission_id` 找缓存并以"本人或管理员"鉴权；早期 GET 误加 `user_id=request.user.id` 过滤，导致教师查看学生提交时预加载不到已有诊断（按钮停留"未诊断"态），已修正
 - 管理端：
-  - `AIDiagnosisConfigAPI`（超管，`/api/admin/ai_diagnosis/config`）：GET/POST 配置，`api_key` 不回显（只返回 `api_key_set`），POST 时 `api_key` 留空表示不修改
+  - `AIDiagnosisConfigAPI`（超管，`/api/admin/ai_diagnosis/config`）：GET/POST 配置（含 `allowed_results`），`api_key` 不回显（只返回 `api_key_set`），POST 时 `api_key` 留空表示不修改
   - `AIDiagnosisListAPI`（教师/admin_role，`/api/admin/ai_diagnosis/list`）：分页列出全部诊断，可按 `username` / 题目显示 ID 筛选
 
-**前端用户端**（`Problem.vue`）：
-- 判题完且结果非 AC 时，状态区出现"AI 诊断"按钮 + "今日剩余 N 次"
-- 结果用 `marked` 渲染进 Modal，附"仅供参考、请独立完成"提示
+**前端用户端**（两处入口）：
+- `Problem.vue`：做题页判题完且结果非 AC、且总开关开启、且状态在白名单内时，状态区即时出现"AI 诊断"按钮 + "今日剩余 N 次"
+- `SubmissionDetails.vue`（`/status/:id` 提交详情页，**主入口**）：打开即调 GET 预加载状态——未诊断显示蓝色"AI 诊断"，**已诊断显示绿色"查看已生成的 AI 诊断"**（点击直接看缓存、不扣次数），适用于任意历史提交
+- 结果均用 `marked` 渲染进 Modal，附"仅供参考、请独立完成"提示
 
 **前端管理端**：
-- `AIConfig.vue`（路由 `/ai/config`，侧边栏"常规 → AI 诊断配置"）：开关、每日次数、API Base、模型、API Key 表单
+- `AIConfig.vue`（路由 `/ai/config`，侧边栏"常规 → AI 诊断配置"）：开关、每日次数、**开放诊断的判题状态多选**（6 组：编译错误/答案错误/运行超时/内存超限/运行错误/部分正确，前端按 key 分组、保存时展开成结果码）、API Base、模型、API Key 表单
 - `AIDiagnosisList.vue`（路由 `/ai/diagnosis`，侧边栏"题目 → AI 诊断记录"）：按用户/题目筛选、分页、弹窗查看诊断全文
 
 ---

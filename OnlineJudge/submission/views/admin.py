@@ -103,6 +103,7 @@ class AIDiagnosisConfigAPI(APIView):
             "model": api_config.get("model", ""),
             # 出于安全，api_key 只返回是否已配置
             "api_key_set": bool(api_config.get("api_key")),
+            "allowed_results": SysOptions.ai_allowed_results,
         })
 
     @super_admin_required
@@ -114,6 +115,14 @@ class AIDiagnosisConfigAPI(APIView):
         except (TypeError, ValueError):
             return self.error("每日次数必须是整数")
         SysOptions.ai_daily_limit = max(limit, 0)
+
+        if "allowed_results" in data:
+            allowed = data.get("allowed_results") or []
+            valid = {-2, -1, 1, 2, 3, 4, 8}
+            try:
+                SysOptions.ai_allowed_results = [int(x) for x in allowed if int(x) in valid]
+            except (TypeError, ValueError):
+                return self.error("allowed_results 格式错误")
 
         api_config = dict(SysOptions.ai_api_config or {})
         api_config["api_base"] = (data.get("api_base") or "").strip()
