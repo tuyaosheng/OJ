@@ -996,7 +996,7 @@ class IPBindingAdminAPI(APIView):
 class FPSProblemImport(CSRFExemptAPIView):
     request_parsers = ()
 
-    def _create_problem(self, problem_data, creator):
+    def _create_problem(self, problem_data, creator, visible=False):
         if problem_data["time_limit"]["unit"] == "ms":
             time_limit = problem_data["time_limit"]["value"]
         else:
@@ -1055,7 +1055,7 @@ class FPSProblemImport(CSRFExemptAPIView):
             spj_code=problem_data["spj"]["code"] if spj else None,
             spj_language=problem_data["spj"]["language"] if spj else None,
             spj_version=rand_str(8) if spj else "",
-            visible=False,
+            visible=visible,
             languages=SysOptions.language_names,
             created_by=creator,
             difficulty=Difficulty.MID,
@@ -1068,8 +1068,21 @@ class FPSProblemImport(CSRFExemptAPIView):
         for tag_name in tag_names:
             tag_obj, _ = ProblemTag.objects.get_or_create(name=tag_name)
             problem.tags.add(tag_obj)
+        return problem
 
     def post(self, request):
+        # 可选：导入后直接挂到指定章节末尾
+        chapter_id = request.POST.get("chapter_id")
+        # 可选：导入后直接设为可见（默认 false，保持原行为：导入题目先隐藏）
+        make_visible = str(request.POST.get("visible", "")).lower() in ("1", "true", "on", "yes")
+
+        chapter = None
+        if chapter_id:
+            try:
+                chapter = Chapter.objects.get(id=chapter_id)
+            except Chapter.DoesNotExist:
+                return self.error("Chapter does not exist")
+
         form = UploadProblemForm(request.POST, request.FILES)
         if form.is_valid():
             file = form.cleaned_data["file"]
@@ -1085,6 +1098,7 @@ class FPSProblemImport(CSRFExemptAPIView):
             return self.error("Parse upload file error")
 
         helper = FPSHelper()
+        created_problems = []
         with transaction.atomic():
             for _problem in problems:
                 test_case_id = rand_str()
@@ -1111,5 +1125,18 @@ class FPSProblemImport(CSRFExemptAPIView):
                 problem_data["test_case_score"] = score
                 problem_data["id"] = _problem.get("id")
                 problem_data["tags"] = _problem.get("tags", [])
-                self._create_problem(problem_data, request.user)
-        return self.success({"import_count": len(problems)})
+                created = self._create_problem(problem_data, request.user, visible=make_visible)
+                created_problems.append(created)
+
+            if chapter:
+                base_order = chapter.chapter_problems.count()
+                ChapterProblem.objects.bulk_create([
+                    ChapterProblem(chapter=chapter, problem=p, order=base_order + i)
+                    for i, p in enumerate(created_problems)
+                ])
+
+        return self.success({
+            "import_count": len(problems),
+            "chapter_id": chapter.id if chapter else None,
+            "visible": make_visible
+        })

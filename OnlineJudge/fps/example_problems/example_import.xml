@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fps version="1.2" url="https://github.com/zhblue/freeproblemset/">
+	<generator name="OJ-fps-generator" url="local"/>
+	<item>
+		<id><![CDATA[ch01-001]]></id>
+		<title><![CDATA[A + B 问题]]></title>
+		<time_limit unit="ms"><![CDATA[1000]]></time_limit>
+		<memory_limit unit="mb"><![CDATA[256]]></memory_limit>
+		<tag><![CDATA[第1章 顺序结构]]></tag>
+		<tag><![CDATA[C++]]></tag>
+		<description><![CDATA[给定两个整数 A 和 B，请输出它们的和。
+]]></description>
+		<input><![CDATA[一行两个整数 A、B，用空格分隔（0 ≤ A, B ≤ 1000）。
+]]></input>
+		<output><![CDATA[一个整数，表示 A + B 的值。
+]]></output>
+		<sample_input><![CDATA[1 2
+]]></sample_input>
+		<sample_output><![CDATA[3
+]]></sample_output>
+		<test_input score="40"><![CDATA[1 2
+]]></test_input>
+		<test_output><![CDATA[3
+]]></test_output>
+		<test_input score="60"><![CDATA[500 617
+]]></test_input>
+		<test_output><![CDATA[1117
+]]></test_output>
+	</item>
+	<item>
+		<id><![CDATA[ch01-002]]></id>
+		<title><![CDATA[圆的面积]]></title>
+		<time_limit unit="ms"><![CDATA[1000]]></time_limit>
+		<memory_limit unit="mb"><![CDATA[256]]></memory_limit>
+		<tag><![CDATA[第1章 顺序结构]]></tag>
+		<tag><![CDATA[C++]]></tag>
+		<description><![CDATA[给定圆的半径 r，求圆的面积（π 取 3.14159）。结果保留两位小数。
+]]></description>
+		<input><![CDATA[一行一个整数 r（1 ≤ r ≤ 100）。
+]]></input>
+		<output><![CDATA[一个保留两位小数的实数，表示圆的面积。
+]]></output>
+		<test_input><![CDATA[1
+]]></test_input>
+		<test_output><![CDATA[3.14
+]]></test_output>
+		<test_input><![CDATA[10
+]]></test_input>
+		<test_output><![CDATA[314.16
+]]></test_output>
+	</item>
+</fps>

@@ -69,6 +69,8 @@ OJ/
   - `<tag>C++</tag>` — 自定义标签，可多个
   - `<test_input score="25">` — 单个测试点分数属性
   - 不指定分数时：100 分平均分配到所有测试点
+- **FPS 生成脚本**（`fps/fps_generator.py`）：把"每题一个文件夹"的目录（`config.json` + `statement.md` + `tests/*.in/.out`）一键打包成可导入的 FPS XML，免手写 XML。样例见 `fps/example_problems/`（源文件夹 + 生成结果 `fps/example_problems/example_import.xml`），说明见 `fps/README_批量加题.md`
+- **导入即入章 + 导入即可见**：`POST /api/admin/import_fps` 新增两个可选表单字段——`chapter_id`（导入完自动按序挂到该章节末尾）、`visible=true`（导入后直接对学生可见，默认仍为隐藏）。不传则行为与原版一致
 
 ### 四、题目标签与 Rule Type 默认值
 
