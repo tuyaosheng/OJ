@@ -6,6 +6,14 @@ OnlineJudgeDeploy (旧系统，包括数据)/
 *.sql
 *.dump
 *.tar.gz
+backups/
+
+# 教程课件 / 论文等大文件资料（不入库）
+*.ppt
+*.pptx
+*.zip
+3. 教程ppt课件*/
+论文/
 
 # 前端依赖和构建产物
 OnlineJudgeFE/node_modules/

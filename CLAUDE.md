@@ -177,6 +177,21 @@ OJ/
 - `AIConfig.vue`（路由 `/ai/config`，侧边栏"常规 → AI 诊断配置"）：开关、每日次数、**开放诊断的判题状态多选**（6 组：编译错误/答案错误/运行超时/内存超限/运行错误/部分正确，前端按 key 分组、保存时展开成结果码）、API Base、模型、API Key 表单
 - `AIDiagnosisList.vue`（路由 `/ai/diagnosis`，侧边栏"题目 → AI 诊断记录"）：按用户/题目筛选、分页、弹窗查看诊断全文
 
+### 九、教程章节初始化 + 章节序列化器 Bug 修复
+
+**教程章节批量初始化**（按《教程ppt课件(第五版)》目录，每个 PPT 一章）：
+- 共建 **30 个章节**，分三部分，用 `chapter.order` 排序，`title` 前缀 `【C++语言】/【基础算法】/【数据结构】` 以在扁平列表中区分归属：
+  - 第一部分 语言C++（C++版，9 章）：初识C++/简单程序设计/选择结构/循环结构/数组/函数和递归/文件和结构体/实用技巧与模版库/指针
+  - 第二部分 基础算法（单套，12 章）：概述/高精度/数据排序/递推/递归/搜索回溯/贪心/分治/广搜/DP基础/DP背包/DP经典
+  - 第三部分 数据结构（9 章）：栈/队列/树及二叉树/堆/图论×2/并查集/最小生成树/拓扑排序
+- **65 道题按题面考点（非标题）分类挂入**，覆盖 13 个章节（其余为空架子，待后续加题）。题库存在大量同名重复题，**每个逻辑题只挂提交数最多的那一份**，重复副本保留在题库、不入章节
+- 操作方式：直接 SQL 批量 `INSERT chapter / chapter_problem`（单事务），脚本见 `backups/` 同期备份。**改库前用 `pg_dump -Fc` 备份到 `E:\QingDaoOJ\backups\`**
+
+**章节序列化器 Bug 修复**（`problem/serializers.py` → `ChapterProblemBriefSerializer`）：
+- 症状：用户端「章节模式」/ `GET /api/chapters` 返回 `server-error`（500），日志 `ImproperlyConfigured: Field name 'my_status' is not valid for model 'Problem'`
+- 根因：`my_status` 只写进了 `Meta.fields`，却既非模型字段也未声明为序列化字段；旧代码在 `to_representation` 里手动补 `my_status`，但 DRF 在字段构建阶段（早于 `to_representation`）就会校验失败。**章节为空时嵌套题目序列化器从不执行，Bug 不暴露；一旦章节挂了题就必触发**
+- 修复：把 `my_status` 声明为 `SerializerMethodField`（`get_my_status` 返回 `None`，再由 `ChapterAPI.get` 按用户做题记录覆盖真实状态），移除 `to_representation` 手补逻辑
+
 ---
 
 ## 构建说明

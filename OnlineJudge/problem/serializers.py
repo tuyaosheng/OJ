@@ -199,16 +199,15 @@ class ExportProblemSerializer(serializers.ModelSerializer):
 
 class ChapterProblemBriefSerializer(serializers.ModelSerializer):
     tags = serializers.SlugRelatedField(many=True, slug_field="name", read_only=True)
+    my_status = serializers.SerializerMethodField()
+
+    def get_my_status(self, obj):
+        return None
 
     class Meta:
         model = Problem
         fields = ("id", "_id", "title", "difficulty", "submission_number",
                   "accepted_number", "tags", "my_status")
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data["my_status"] = None
-        return data
 
 
 class ChapterSerializer(serializers.ModelSerializer):
