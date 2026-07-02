@@ -192,6 +192,21 @@ OJ/
 - 根因：`my_status` 只写进了 `Meta.fields`，却既非模型字段也未声明为序列化字段；旧代码在 `to_representation` 里手动补 `my_status`，但 DRF 在字段构建阶段（早于 `to_representation`）就会校验失败。**章节为空时嵌套题目序列化器从不执行，Bug 不暴露；一旦章节挂了题就必触发**
 - 修复：把 `my_status` 声明为 `SerializerMethodField`（`get_my_status` 返回 `None`，再由 `ChapterAPI.get` 按用户做题记录覆盖真实状态），移除 `to_representation` 手补逻辑
 
+### 十、做题页提交体验优化（默认 C++ + 提交后跳转状态页）
+
+**默认语言改为 C++**（`OnlineJudgeFE/src/pages/oj/views/problem/Problem.vue` → `init()`）：
+- 原逻辑 `this.language = this.problem.languages[0]`——`languages` 经 `.sort()` 后首个是 `C`（`C` < `C++`），导致默认选中 C 而非 C++
+- 改为：题目允许 C++ 时默认选中 `C++`，否则回退到第一个语言
+- 本地草稿优先级不变：`beforeRouteEnter` 恢复的草稿语言仍优先于此默认值
+
+**提交后跳转到提交状态详情页**（`Problem.vue` → `submitFunc`）：
+- 提交成功后不再在做题页内联轮询显示状态，而是 `this.$router.push({name: 'submission-details', params: {id: submissionId}})` 跳到 `/status/:id`（可看整体结果 + 每个测试点通过情况）
+- 仅在 `detailsVisible` 分支（普通题目 / 有实时权限的 OI 竞赛）跳转；无实时权限的 OI 竞赛仍保留"提交成功"弹窗、不跳转（学生本就看不到状态）
+
+**提交详情页加入轮询**（`OnlineJudgeFE/src/pages/oj/views/submission/SubmissionDetails.vue`）：
+- 原页面只在 `mounted` 请求一次、无刷新，跳转过去会卡在"评测中"
+- `getSubmission` 成功后若 `result ∈ {6 Pending, 7 Judging, 9 Submitting}` 则 `setTimeout(this.getSubmission, 2000)` 继续轮询；加 `beforeDestroy` 清理定时器（`this.refreshStatus`，与 `Problem.vue` 一致，不放进 data）
+
 ---
 
 ## 构建说明

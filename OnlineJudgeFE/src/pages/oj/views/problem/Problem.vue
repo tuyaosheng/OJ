@@ -366,8 +366,10 @@
           if (this.code !== '') {
             return
           }
-          // try to load problem template
-          this.language = this.problem.languages[0]
+          // try to load problem template（优先默认 C++）
+          this.language = this.problem.languages.indexOf('C++') !== -1
+            ? 'C++'
+            : this.problem.languages[0]
           let template = this.problem.template
           if (template && template[this.language]) {
             this.code = template[this.language]
@@ -497,7 +499,12 @@
               return
             }
             this.submitted = true
-            this.checkSubmissionStatus()
+            // 提交成功后跳转到该提交的状态详情页（可查看测试点通过情况）
+            if (this.submissionId) {
+              this.$router.push({name: 'submission-details', params: {id: this.submissionId}})
+            } else {
+              this.checkSubmissionStatus()
+            }
           }, res => {
             this.getCaptchaSrc()
             if (res.data.data.startsWith('Captcha is required')) {

@@ -176,6 +176,11 @@
     mounted () {
       this.getSubmission()
     },
+    beforeDestroy () {
+      if (this.refreshStatus) {
+        clearTimeout(this.refreshStatus)
+      }
+    },
     methods: {
       getSubmission () {
         this.loading = true
@@ -227,6 +232,11 @@
             })
           }
           this.submission = data
+          // 仍在评测中（Submitting/Pending/Judging）则定时刷新
+          if ([6, 7, 9].includes(Number(data.result))) {
+            this.refreshStatus = setTimeout(this.getSubmission, 2000)
+            return
+          }
           if (this.canDiagnose) {
             this.loadAIStatus()
           }
