@@ -207,6 +207,18 @@ OJ/
 - 原页面只在 `mounted` 请求一次、无刷新，跳转过去会卡在"评测中"
 - `getSubmission` 成功后若 `result ∈ {6 Pending, 7 Judging, 9 Submitting}` 则 `setTimeout(this.getSubmission, 2000)` 继续轮询；加 `beforeDestroy` 清理定时器（`this.refreshStatus`，与 `Problem.vue` 一致，不放进 data）
 
+### 十一、章节模式视图状态记忆（返回不丢位置）
+
+**症状**：题库页在「章节模式」下点进某题，做完点返回时，页面回到「列表模式」第一页，而非原来的章节位置。
+
+**根因**：`ProblemList.vue` 的章节视图状态（`viewMode` / 展开的章节 `expandedChapters` / 滚动位置）全是纯组件内存状态，未反映到 URL。离开题库页组件即销毁，返回时重新 `mounted`，`viewMode` 复位为默认的 `'list'`。列表模式因分页在 URL query 里反而不受影响。
+
+**修复**（`OnlineJudgeFE/src/pages/oj/views/problem/ProblemList.vue`，纯前端）：用 `sessionStorage`（key `problemListViewState`）持久化视图状态：
+- **保存时机**（`saveViewState`）：点击章节内题目跳转前（`goToProblem`，同时记录 `window.scrollY`）、展开/折叠章节（`toggleChapter`）、切换列表/章节模式（`switchListView` / `switchChapterView`）
+- **恢复时机**（`restoreViewState`，`mounted` 里 `init` 之前）：若上次停在章节模式则切回章节模式 → 拉章节 → 用 `pendingExpanded` 恢复展开集合 → `$nextTick` 后 `window.scrollTo` 回到原滚动位置（放 nextTick 确保题目 DOM 高度已渲染，否则滚不到位）
+- 章节加载抽出公共方法 `loadChapters(restore)`：`restore=true` 时用记忆的展开集合，否则沿用「默认展开第一个章节」
+- 取舍：用 `sessionStorage` 而非 `localStorage`——状态仅在当前标签页会话内有效，关标签页重开回到默认列表模式；恢复逻辑只对 `viewMode==='chapter'` 生效，列表模式行为完全不变
+
 ---
 
 ## 构建说明

@@ -4,7 +4,7 @@
 
     <!-- 视图切换 + 课堂入口 -->
     <div class="view-switch">
-      <Button :type="viewMode==='list'?'primary':'ghost'" @click="viewMode='list'" icon="ios-list">列表模式</Button>
+      <Button :type="viewMode==='list'?'primary':'ghost'" @click="switchListView" icon="ios-list">列表模式</Button>
       <Button :type="viewMode==='chapter'?'primary':'ghost'" @click="switchChapterView" icon="ios-bookmarks" style="margin-left:8px;">章节模式</Button>
       <template v-if="activeSessions.length">
         <Button v-for="s in activeSessions" :key="s.id"
@@ -46,7 +46,7 @@
               </thead>
               <tbody>
                 <tr v-for="p in chapter.problems" :key="p.id"
-                    @click="$router.push({name:'problem-details',params:{problemID:p._id}})"
+                    @click="goToProblem(p._id)"
                     class="problem-row">
                   <td><span class="pid">{{ p._id }}</span></td>
                   <td class="ptitle">{{ p.title }}</td>
@@ -147,6 +147,8 @@
   import { ProblemMixin } from '@oj/components/mixins'
   import Pagination from '@oj/components/Pagination'
 
+  const VIEW_STATE_KEY = 'problemListViewState'
+
   export default {
     name: 'ProblemList',
     mixins: [ProblemMixin],
@@ -237,6 +239,8 @@
         chapters: [],
         chapterLoading: false,
         expandedChapters: new Set(),
+        pendingExpanded: null,
+        pendingScroll: 0,
         activeSessions: [],
         routeName: '',
         query: {
@@ -249,6 +253,7 @@
       }
     },
     mounted () {
+      this.restoreViewState()
       this.init()
       api.getActiveClassSessions().then(res => {
         this.activeSessions = res.data.data || []
@@ -347,16 +352,32 @@
       switchChapterView () {
         this.viewMode = 'chapter'
         if (this.chapters.length === 0) {
-          this.chapterLoading = true
-          api.getChapters().then(res => {
-            this.chapters = res.data.data
-            // 默认展开第一个章节
-            if (this.chapters.length > 0) {
-              this.expandedChapters = new Set([this.chapters[0].id])
-            }
-            this.chapterLoading = false
-          }).catch(() => { this.chapterLoading = false })
+          this.loadChapters()
         }
+        this.saveViewState()
+      },
+      switchListView () {
+        this.viewMode = 'list'
+        this.saveViewState()
+      },
+      loadChapters (restore = false) {
+        this.chapterLoading = true
+        api.getChapters().then(res => {
+          this.chapters = res.data.data
+          if (restore && this.pendingExpanded && this.pendingExpanded.length) {
+            this.expandedChapters = new Set(this.pendingExpanded)
+          } else if (this.chapters.length > 0) {
+            // 默认展开第一个章节
+            this.expandedChapters = new Set([this.chapters[0].id])
+          }
+          this.chapterLoading = false
+          if (restore && this.pendingScroll) {
+            const y = this.pendingScroll
+            this.$nextTick(() => { window.scrollTo(0, y) })
+          }
+          this.pendingExpanded = null
+          this.pendingScroll = 0
+        }).catch(() => { this.chapterLoading = false })
       },
       toggleChapter (id) {
         const s = new Set(this.expandedChapters)
@@ -366,6 +387,33 @@
           s.add(id)
         }
         this.expandedChapters = s
+        this.saveViewState()
+      },
+      goToProblem (id) {
+        this.saveViewState()
+        this.$router.push({name: 'problem-details', params: {problemID: id}})
+      },
+      saveViewState () {
+        try {
+          sessionStorage.setItem(VIEW_STATE_KEY, JSON.stringify({
+            viewMode: this.viewMode,
+            expanded: Array.from(this.expandedChapters),
+            scroll: window.scrollY || window.pageYOffset || 0
+          }))
+        } catch (e) {}
+      },
+      restoreViewState () {
+        try {
+          const raw = sessionStorage.getItem(VIEW_STATE_KEY)
+          if (!raw) return
+          const s = JSON.parse(raw)
+          if (s.viewMode === 'chapter') {
+            this.viewMode = 'chapter'
+            this.pendingExpanded = s.expanded || []
+            this.pendingScroll = s.scroll || 0
+            this.loadChapters(true)
+          }
+        } catch (e) {}
       },
       difficultyColor (d) {
         return d === 'Low' ? 'green' : d === 'High' ? 'yellow' : 'blue'
