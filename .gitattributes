@@ -1,0 +1,8 @@
+# 判题测试数据必须保持 LF 换行。
+# 否则在 Windows 上 clone 时 git 会自动转成 CRLF，
+# 让 .in/.out 里混进 \r，可能导致判题结果不一致（尤其是按行/按字符比对时）。
+题库/**/*.in   text eol=lf
+题库/**/*.out  text eol=lf
+
+# 标程也统一 LF（要送进 Linux 判题容器编译）
+题库/**/*.cpp  text eol=lf

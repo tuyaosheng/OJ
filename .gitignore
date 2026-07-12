@@ -19,6 +19,14 @@ backups/
 OnlineJudgeFE/node_modules/
 OnlineJudgeFE/dist/
 
+# 题库：生成物不入库（都能一键重新生成，避免仓库膨胀）
+#   tests/*.out      <- OnlineJudge/fps/build_chapter.py <章节目录>   （标程实跑生成）
+#   题库/导入用XML/  <- OnlineJudge/fps/fps_generator.py <章节目录> -o <xml>
+#   *_测试点数据.zip <- OnlineJudge/fps/pack_tests.py <章节目录>       （已被上面的 *.zip 覆盖）
+# 保留的是【源素材】：config.json / 题面 md / solution.cpp / 讲解稿 / tests|samples 的 *.in / samples 的 *.out
+题库/**/tests/*.out
+题库/导入用XML/
+
 # Python
 __pycache__/
 *.pyc

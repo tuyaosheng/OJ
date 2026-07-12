@@ -43,6 +43,28 @@ python fps_generator.py example_problems -o example_problems/example_import.xml
 生成的 XML 即可直接在管理端「导入题目」上传。
 （现成样例：源文件夹 `example_problems/`，生成结果 `example_problems/example_import.xml`，可照着改。）
 
+## 1.5 标程编译 & 测试点生成：`build_chapter.py`
+
+出完题后，用它**批量编译每题的 `solution.cpp`，跑遍所有 `.in` 生成对应 `.out`**——保证测试点答案是标程**实际跑出来**的，而不是手写臆测的。
+
+```powershell
+cd E:\QingDaoOJ\OnlineJudge\fps
+python build_chapter.py "E:/QingDaoOJ/题库/基础算法/ch11-高精度计算"
+python build_chapter.py "<章节目录>" --only ch11-003    # 只重建某一题
+```
+
+输出每题的**最慢测试点耗时**，并在耗时超过时限 1/3 时给出 ⚠ 提示，方便决定要不要放宽 `time_limit`。
+
+**它为什么要绕道 judge 容器？**（这些坑踩过一次就够了）
+
+- 宿主机（Windows）没有 g++，而 `onlinejudgedeploy-oj-judge-1` 容器里有 g++ 13.2，且**与真实评测环境一致**。
+- 该容器根文件系统**只读**，`/tmp` 与 `/dev/shm` 是 **`noexec` 的 tmpfs**（编译产物无法执行），`docker cp` 也**写不进 tmpfs**。
+- 但 `/judger` 是 `OnlineJudgeDeploy/data/judge_server/run` 的**可读写绑定挂载** —— 脚本把素材拷进这个宿主目录，容器侧直接在 `/judger` 里编译执行。
+- 9p 文件系统 I/O 很慢，会让大数据点的耗时**测得偏高**；所以真正跑评测时把输入拷到 `/tmp`（tmpfs）上跑，二进制放 `/judger`（tmpfs 不可执行），兼顾**准确计时**与**可执行**。
+
+> **强烈建议**：生成 `.out` 后，**再用另一种语言（如 Python）独立实现一遍算法交叉验证**。
+> 只跑标程只能保证"自洽"，独立重算才能发现"标程本身就是错的"。第 11~15 章的 30 道题均已如此验证。
+
 ## 2. 导入接口增强：导入即入章 + 导入即可见
 
 `POST /api/admin/import_fps`（multipart 表单）现额外支持两个**可选**字段：
