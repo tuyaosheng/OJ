@@ -5,9 +5,9 @@ int main()
 {
     int a, b, c;
     cin >> a >> b >> c;
-    int maxn = a;            // 鍏堣 a 绔欎笂鎿傚彴
-    if (b > maxn) maxn = b;  // b 鎸戞垬锛氭洿澶у氨鍙栦唬
-    if (c > maxn) maxn = c;  // c 鎸戞垬锛氭洿澶у氨鍙栦唬
+    int maxn = a;            // 先让 a 站上擂台
+    if (b > maxn) maxn = b;  // b 挑战：更大就取代
+    if (c > maxn) maxn = c;  // c 挑战：更大就取代
     cout << maxn << endl;
     return 0;
 }

@@ -3,13 +3,13 @@
 using namespace std;
 
 struct Node {
-    int val;    // æ•°å€¼
-    int pos;    // åœ¨è¾“å…¥ä¸­çš„åŸå§‹ä½ç½®ï¼ˆä¸‹æ ‡ï¼‰
+    int val;    // ÊıÖµ
+    int pos;    // ÔÚÊäÈëÖĞµÄÔ­Ê¼Î»ÖÃ£¨ÏÂ±ê£©
 };
 
 bool cmp(const Node &a, const Node &b)
 {
-    return a.val < b.val;    // æŒ‰æ•°å€¼ä»å°åˆ°å¤§æ’
+    return a.val < b.val;    // °´ÊıÖµ´ÓĞ¡µ½´óÅÅ
 }
 
 int main()
@@ -17,15 +17,15 @@ int main()
     int n;
     cin >> n;
     Node a[10005];
-    int rankArr[10005];      // rankArr[pos] = è¯¥ä½ç½®çš„æ•°çš„æ’å
+    int rankArr[10005];      // rankArr[pos] = ¸ÃÎ»ÖÃµÄÊıµÄÅÅÃû
     for (int i = 0; i < n; i++)
     {
         cin >> a[i].val;
         a[i].pos = i;
     }
-    sort(a, a + n, cmp);     // æ•°äº’ä¸ç›¸åŒï¼Œæ™®é€š sort å³å¯
+    sort(a, a + n, cmp);     // Êı»¥²»ÏàÍ¬£¬ÆÕÍ¨ sort ¼´¿É
     for (int i = 0; i < n; i++)
-        rankArr[a[i].pos] = i + 1;   // æ’å¥½åºåç¬¬ i ä¸ªï¼ˆä» 0ï¼‰çš„æ’åæ˜¯ i+1
+        rankArr[a[i].pos] = i + 1;   // ÅÅºÃĞòºóµÚ i ¸ö£¨´Ó 0£©µÄÅÅÃûÊÇ i+1
     for (int i = 0; i < n; i++)
     {
         if (i > 0) cout << " ";

@@ -6,16 +6,16 @@ int main()
 {
     int n;
     cin >> n;
-    set<int> s;                      // æœ‰åºé›†åˆï¼šè‡ªåŠ¨å»é‡ + è‡ªåŠ¨æ’åº
+    set<int> s;                      // ÓĞĞò¼¯ºÏ£º×Ô¶¯È¥ÖØ + ×Ô¶¯ÅÅĞò
     for (int i = 0; i < n; i++)
     {
         int x;
         cin >> x;
         s.insert(x);
     }
-    cout << s.size() << endl;        // å»é‡åçš„ä¸ªæ•°
+    cout << s.size() << endl;        // È¥ÖØºóµÄ¸öÊı
     bool first = true;
-    for (int x : s)                  // éå† set å³ä»å°åˆ°å¤§
+    for (int x : s)                  // ±éÀú set ¼´´ÓĞ¡µ½´ó
     {
         if (!first) cout << " ";
         cout << x;

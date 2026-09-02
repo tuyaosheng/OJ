@@ -1,15 +1,15 @@
 #include <iostream>
 using namespace std;
 
-bool door[10005];            // false=å…³, true=å¼€ï¼›å…¨å±€æ•°ç»„è‡ªåŠ¨æ¸…é›¶
+bool door[10005];            // false=¹Ø, true=¿ª£»È«¾ÖÊý×é×Ô¶¯ÇåÁã
 
 int main()
 {
     int n;
     cin >> n;
-    for (int i = 1; i <= n; i++)          // ç¬¬ i ä¸ªæœåŠ¡å‘˜
-        for (int j = i; j <= n; j += i)   // i çš„å€æ•°ï¼ši, 2i, 3i, ...
-            door[j] = !door[j];           // åå‘å¤„ç†ï¼šå¼€å…³äº’æ¢
+    for (int i = 1; i <= n; i++)          // µÚ i ¸ö·þÎñÔ±
+        for (int j = i; j <= n; j += i)   // i µÄ±¶Êý£ºi, 2i, 3i, ...
+            door[j] = !door[j];           // ·´Ïò´¦Àí£º¿ª¹Ø»¥»»
     bool first = true;
     for (int i = 1; i <= n; i++)
     {

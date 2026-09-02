@@ -18,10 +18,10 @@ int main()
     for (int i = 1; i <= n; i++) cin >> a[i];
     int pos = -1;
     for (int i = 1; i <= n; i++)
-        if (isPrime(a[i]))           // æ‰¾åˆ°ç¬¬ä¸€ä¸ªè´¨æ•°
+        if (isPrime(a[i]))           // ÕÒµ½µÚÒ»¸öÖÊÊý
         {
             pos = i;
-            break;                   // ç«‹åˆ»åœæ­¢
+            break;                   // Á¢¿ÌÍ£Ö¹
         }
     cout << pos << endl;
     return 0;

@@ -12,13 +12,13 @@ int main()
     for (int i = 1; i <= n; i++)
     {
         cin >> a[i];
-        s[i] = s[i - 1] + a[i];      // å‰ç¼€å’Œé€’æ¨
+        s[i] = s[i - 1] + a[i];      // Ç°×ººÍµİÍÆ
     }
     while (q--)
     {
         int l, r;
         cin >> l >> r;
-        cout << s[r] - s[l - 1] << "\n";  // åŒºé—´å’Œ = s[r]-s[l-1]
+        cout << s[r] - s[l - 1] << "\n";  // Çø¼äºÍ = s[r]-s[l-1]
     }
     return 0;
 }

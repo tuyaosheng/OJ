@@ -1,13 +1,13 @@
 #include <iostream>
 using namespace std;
 
-// åˆ¤æ–­ n æ˜¯å¦ä¸ºç´ æ•°ï¼šæ˜¯è¿”å› trueï¼Œå¦è¿”å› false
+// ÅĞ¶Ï n ÊÇ·ñÎªËØÊı£ºÊÇ·µ»Ø true£¬·ñ·µ»Ø false
 bool isPrime(int n)
 {
-    if (n < 2) return false;            // 1 åŠä»¥ä¸‹éƒ½ä¸æ˜¯ç´ æ•°
-    for (long long i = 2; i * i <= n; i++)  // i ç”¨ long long é˜² i*i æº¢å‡º
-        if (n % i == 0) return false;   // æ‰¾åˆ°çº¦æ•°ï¼Œä¸æ˜¯ç´ æ•°
-    return true;                        // æ²¡æ‰¾åˆ°çº¦æ•°ï¼Œæ˜¯ç´ æ•°
+    if (n < 2) return false;            // 1 ¼°ÒÔÏÂ¶¼²»ÊÇËØÊı
+    for (long long i = 2; i * i <= n; i++)  // i ÓÃ long long ·À i*i Òç³ö
+        if (n % i == 0) return false;   // ÕÒµ½Ô¼Êı£¬²»ÊÇËØÊı
+    return true;                        // Ã»ÕÒµ½Ô¼Êı£¬ÊÇËØÊı
 }
 
 int main()

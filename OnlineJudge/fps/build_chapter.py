@@ -47,7 +47,9 @@ def build_one(pdir):
             shutil.copy(inf, os.path.join(stage, sub, os.path.basename(inf)))
 
     ct = f"{STAGE_CT}/{name}"
-    r = dexec(f"cd {ct} && g++ -O2 -std=c++17 -o sol solution.cpp 2>&1")
+    # solution.cpp 统一为 ANSI(GBK) 编码（Dev-C++ 兼容）；-finput-charset 让 g++ 按 GBK
+    # 解析源码、-fexec-charset 保证中文字符串字面量仍按 UTF-8 编进二进制（与测试点数据一致）
+    r = dexec(f"cd {ct} && g++ -O2 -std=c++17 -finput-charset=GBK -fexec-charset=UTF-8 -o sol solution.cpp 2>&1")
     if r.returncode != 0:
         return name, False, f"编译失败:\n{r.stdout}{r.stderr}", 0, "", tl
 

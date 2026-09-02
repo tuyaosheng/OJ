@@ -5,9 +5,9 @@ int main()
 {
     int a, b, c, t;
     cin >> a >> b >> c;
-    if (a < b) { t = a; a = b; b = t; }   // ä¿è¯ a >= b
-    if (a < c) { t = a; a = c; c = t; }   // ä¿è¯ a >= cï¼Œæ­¤æ—¶ a å·²æ˜¯æœ€å¤§
-    if (b < c) { t = b; b = c; c = t; }   // ä¿è¯ b >= cï¼Œä¸‰æ•°æœ‰åº
+    if (a < b) { t = a; a = b; b = t; }   // ±£Ö¤ a >= b
+    if (a < c) { t = a; a = c; c = t; }   // ±£Ö¤ a >= c£¬´ËÊ± a ÒÑÊÇ×î´ó
+    if (b < c) { t = b; b = c; c = t; }   // ±£Ö¤ b >= c£¬ÈýÊýÓÐÐò
     cout << a << " " << b << " " << c << endl;
     return 0;
 }

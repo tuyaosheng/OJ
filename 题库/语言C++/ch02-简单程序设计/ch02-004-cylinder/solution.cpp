@@ -1,14 +1,14 @@
 #include <cstdio>
 using namespace std;
 
-const double PI = 3.14159;   // ç¬¦å·å¸¸é‡ï¼šè§åçŸ¥æ„ï¼Œä¸”è¦æ”¹åªéœ€æ”¹è¿™ä¸€å¤„
+const double PI = 3.14159;   // ·ûºÅ³£Á¿£º¼ûÃûÖªÒâ£¬ÇÒÒª¸ÄÖ»Ğè¸ÄÕâÒ»´¦
 
 int main()
 {
     double r, h;
     scanf("%lf%lf", &r, &h);
-    // è¡¨é¢ç§¯ = ä¸Šä¸‹åº•é¢ç§¯(2*PI*r*r) + ä¾§é¢ç§¯(2*PI*r*h)
+    // ±íÃæ»ı = ÉÏÏÂµ×Ãæ»ı(2*PI*r*r) + ²àÃæ»ı(2*PI*r*h)
     double s = 2 * PI * r * r + 2 * PI * r * h;
-    printf("%.3f\n", s);     // ä¿ç•™ 3 ä½å°æ•°
+    printf("%.3f\n", s);     // ±£Áô 3 Î»Ğ¡Êı
     return 0;
 }

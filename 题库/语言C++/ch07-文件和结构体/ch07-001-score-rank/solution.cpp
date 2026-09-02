@@ -3,12 +3,12 @@
 #include <string>
 using namespace std;
 
-struct Student {           // ç»“æ„ä½“ï¼šæŠŠä¸€ä¸ªå­¦ç”Ÿçš„ä¿¡æ¯æ‰“åŒ…
+struct Student {           // ½á¹¹Ìå£º°ÑÒ»¸öÑ§ÉúµÄĞÅÏ¢´ò°ü
     string name;
-    int total;             // æ€»åˆ† = è¯­æ–‡ + æ•°å­¦
+    int total;             // ×Ü·Ö = ÓïÎÄ + ÊıÑ§
 };
 
-// æ¯”è¾ƒè§„åˆ™ï¼šæ€»åˆ†é«˜çš„æ’å‰é¢
+// ±È½Ï¹æÔò£º×Ü·Ö¸ßµÄÅÅÇ°Ãæ
 bool cmp(const Student &a, const Student &b)
 {
     return a.total > b.total;
@@ -25,7 +25,7 @@ int main()
         cin >> s[i].name >> chinese >> math;
         s[i].total = chinese + math;
     }
-    // stable_sort ç¨³å®šæ’åºï¼šæ€»åˆ†ç›¸åŒè€…ä¿æŒè¾“å…¥å…ˆå
+    // stable_sort ÎÈ¶¨ÅÅĞò£º×Ü·ÖÏàÍ¬Õß±£³ÖÊäÈëÏÈºó
     stable_sort(s, s + n, cmp);
     for (int i = 0; i < n; i++)
         cout << s[i].name << " " << s[i].total << endl;

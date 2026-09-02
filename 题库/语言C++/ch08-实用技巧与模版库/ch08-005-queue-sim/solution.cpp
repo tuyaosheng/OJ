@@ -6,7 +6,7 @@ int main()
 {
     int m;
     cin >> m;
-    queue<long long> q;              // FIFO é˜Ÿåˆ—
+    queue<long long> q;              // FIFO ¶ÓÁÐ
     for (int i = 0; i < m; i++)
     {
         int op;
@@ -15,12 +15,12 @@ int main()
         {
             long long x;
             cin >> x;
-            q.push(x);               // å…¥é˜Ÿåˆ°é˜Ÿå°¾
+            q.push(x);               // Èë¶Óµ½¶ÓÎ²
         }
         else                         // op == 2
         {
-            cout << q.front() << "\n";  // å–é˜Ÿé¦–
-            q.pop();                 // é˜Ÿé¦–å‡ºé˜Ÿ
+            cout << q.front() << "\n";  // È¡¶ÓÊ×
+            q.pop();                 // ¶ÓÊ×³ö¶Ó
         }
     }
     return 0;

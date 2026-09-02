@@ -8,22 +8,22 @@ struct Student {
     int score;
 };
 
-// ÂàÜÊï∞ÈôçÂ∫èÔºõÂàÜÊï∞Áõ∏ÂêåÊåâÂêçÂ≠óÂ≠óÂÖ∏Â∫èÂçáÂ∫è
+// ∑÷ ˝Ωµ–Ú£ª∑÷ ˝œ‡Õ¨∞¥√˚◊÷◊÷µ‰–Ú…˝–Ú
 bool cmp(const Student &a, const Student &b)
 {
     if (a.score != b.score) return a.score > b.score;
-    return a.name < b.name;          // string Áõ¥Êé•ÊØîÂ≠óÂÖ∏Â∫è
+    return a.name < b.name;          // string ÷±Ω”±»◊÷µ‰–Ú
 }
 
 int main()
 {
-    ios::sync_with_stdio(false);     // Âä†ÈÄü cin/coutÔºåÂ∫îÂØπ 10 ‰∏áÊï∞ÊçÆ
+    ios::sync_with_stdio(false);     // º”ÀŸ cin/cout£¨”¶∂‘ 10 ÕÚ ˝æ›
     int n;
     cin >> n;
     Student a[100005];
     for (int i = 0; i < n; i++)
         cin >> a[i].name >> a[i].score;
-    sort(a, a + n, cmp);             // STL ÊéíÂ∫èÔºåO(n log n)
+    sort(a, a + n, cmp);             // STL ≈≈–Ú£¨O(n log n)
     for (int i = 0; i < n; i++)
         cout << a[i].name << " " << a[i].score << "\n";
     return 0;

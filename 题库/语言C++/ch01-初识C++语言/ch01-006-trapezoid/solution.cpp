@@ -1,12 +1,12 @@
-#include <cstdio>            // ä½¿ç”¨ printf / scanfï¼Œéœ€åŒ…å« cstdio åº“
+#include <cstdio>            // Ê¹ÓÃ printf / scanf£¬Ğè°üº¬ cstdio ¿â
 using namespace std;
 
 int main()
 {
-    double a, b, s;          // ç”¨ double å­˜å‚¨ï¼Œé¿å…æ•´æ•°é™¤æ³•ä¸¢å¤±å°æ•°
-    scanf("%lf%lf%lf", &a, &b, &s);   // %lf æ˜¯è¯»å…¥ double çš„æ ¼å¼ç¬¦
-    double h = 2 * s / a;             // ç”±ä¸‰è§’å½¢é¢ç§¯ s = a*h/2 åæ¨é«˜ h
-    double ans = (a + b) * h / 2;     // æ¢¯å½¢é¢ç§¯å…¬å¼ï¼š(ä¸Šåº•+ä¸‹åº•)*é«˜/2
-    printf("%.2f\n", ans);            // %.2fï¼šä¿ç•™ä¸¤ä½å°æ•°è¾“å‡º
+    double a, b, s;          // ÓÃ double ´æ´¢£¬±ÜÃâÕûÊı³ı·¨¶ªÊ§Ğ¡Êı
+    scanf("%lf%lf%lf", &a, &b, &s);   // %lf ÊÇ¶ÁÈë double µÄ¸ñÊ½·û
+    double h = 2 * s / a;             // ÓÉÈı½ÇĞÎÃæ»ı s = a*h/2 ·´ÍÆ¸ß h
+    double ans = (a + b) * h / 2;     // ÌİĞÎÃæ»ı¹«Ê½£º(ÉÏµ×+ÏÂµ×)*¸ß/2
+    printf("%.2f\n", ans);            // %.2f£º±£ÁôÁ½Î»Ğ¡ÊıÊä³ö
     return 0;
 }

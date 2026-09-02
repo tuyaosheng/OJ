@@ -26,6 +26,7 @@ OnlineJudgeFE/dist/
 # 保留的是【源素材】：config.json / 题面 md / solution.cpp / 讲解稿 / tests|samples 的 *.in / samples 的 *.out
 题库/**/tests/*.out
 题库/导入用XML/
+题库/**/*.exe
 
 # Python
 __pycache__/

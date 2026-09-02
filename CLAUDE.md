@@ -242,7 +242,31 @@ OJ/
 
 **时限**：默认 1000ms；ch12-002~006（10 万级数据）放宽到 3000ms，ch13-005（O(n²) 卡特兰 n=5000）、ch15-005（N 皇后 n=12）放宽到 2000ms。
 
-**尚未导入**：XML 已就绪，需在管理端「导入题目」上传，或调 `POST /api/admin/import_fps` 带 `chapter_id` + `visible=true` 一步入章可见。**改库前先 `pg_dump -Fc` 备份到 `E:\QingDaoOJ\backups\`**。
+**已导入**：30 题已全部导入、可见并挂章（DB `_id` = `ch11-001` ~ `ch15-006`）。**改库前先 `pg_dump -Fc` 备份到 `E:\QingDaoOJ\backups\`**。
+
+### 十三、题面 HTML 化 + 例题/练习题体系 + 编码规范（2026-07）
+
+**题面 HTML 化（重要坑）**：前端 `Problem.vue` 用 `v-html` 直接渲染题面、**不解析 Markdown**。早期 ch01~ch15 共 91 题以 Markdown 原文入库，页面上显示裸的 `**`/``` 记号、段落挤在一起。已修复：
+- 91 题的描述/输入/输出/提示四字段已批量转成 HTML 回写数据库（转换**必须从磁盘 .md 源文件出发**，库里的文本被 HTML 转义过，直接转会把代码段二次转义）
+- `fps_generator.py` 已内置 md→HTML 转换（需 `pip install markdown`），**以后生成的 XML 天然是 HTML 题面**，新章节不会再踩这个坑
+- 汉诺塔（ch14-005）题面配了 4 张示意图，图片部署在 `OnlineJudgeDeploy/data/backend/public/upload/hanoi/`（该目录不进 git，源文件在题目文件夹 `images/` 下），URL `/public/upload/hanoi/*.png`
+
+**例题/练习题体系（新交付规范，详见《题库章节与题目建议.md》）**：
+- 每章题目分**例题**（课堂讲授，标题前缀`【例N】`）与**练习题**（变式巩固，前缀`【练N】`），`config.json` 加 `"role": "example"|"practice"`
+- **题量不固定 6 道**，以覆盖本章常见题型+变式为准；各章《章节讲稿.md》的 ☆ 清单即补题清单
+- **每章至少 1 道练习题带"知名游戏背景"**（如汉诺塔=《原神》木偶齿轮谜题）以提升兴趣；游戏只是外壳、考点不变，选题对照《题库章节与题目建议.md》的「游戏背景选题参考表」
+- 每章**第一道例题**目录放整章《章节讲稿.md》（知识点讲授稿），每题另有 `<题目标题>.md` 题目讲解稿（文件名不带前缀）
+- ch01~ch15 共 91 题已全部完成划分（config.json + DB 标题 + XML 三处同步），15 份章节讲稿就位
+
+**游戏背景练习题批次（2026-07-24 已交付，共 15 题，每章 1 道）**：
+- 显示 ID 均为 `chXX-007`（ch02 因原有 7 题，新题为 `ch02-008`），选题同时命中"游戏外壳 + 该章此前缺失的经典题型"，完整清单见《题库章节与题目建议.md》"游戏背景练习题交付清单"
+- 交付流程：Python 脚本批量生成素材（config/四个md/GBK版solution.cpp/samples/tests输入）→ `build_chapter.py` 在 judge 容器编译标程生成 `.out` → 另写 15 个独立 Python 参考实现逐字节交叉验证（15/15 通过）→ `pack_tests.py` 打包 → **Django shell 脚本**复刻 `FPSProblemImport._create_problem` 逻辑批量导入并挂章（绕开管理端网页，直接在 backend 容器内用 `python manage.py shell` 执行）→ 15 个章节 XML 重新生成
+- 导入前 `pg_dump -Fc` 备份到 `backups/backup_20260724_before_15_new_problems.dump`
+- **重要发现**：`chapter_problem` 表里部分章节（如 ch03~ch06 对应的 chapter_id 3~6）同时挂着"教程初始化"批次的历史遗留题目（CLAUDE.md 十节记录的 65 题）和新版 `chXX-*` 系列——两批共存是正常现象，新题按 `order = 现有题数` 接在新版序列末尾，不影响旧批次
+
+**cpp 编码规范（重要坑）**：教学机 Dev-C++ 只认 **ANSI(GBK)**，UTF-8 带 BOM 也乱码。全部 91 个 `solution.cpp` 已转 GBK。
+- **不能因此让评测数据变 GBK**：标程含中文输出（如汉诺塔），测试点 `.out` 是 UTF-8。`build_chapter.py` 编译统一带 `-finput-charset=GBK -fexec-charset=UTF-8`——源码按 GBK 读、字符串字面量按 UTF-8 编进二进制，输出与测试数据一致（已在 judge 容器验证逐字节相同）
+- 脚本写 cpp 用 `encoding="gbk"`；`.md`/`.json`/XML 等其余文件仍是 UTF-8
 
 ---
 

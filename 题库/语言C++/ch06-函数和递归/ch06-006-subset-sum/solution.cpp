@@ -5,17 +5,17 @@ int n, a[25];
 long long m;
 bool found = false;
 
-// è€ƒè™‘ç¬¬ i ä¸ªå…ƒç´ ï¼Œå½“å‰å·²é€‰å…ƒç´ ä¹‹å’Œä¸º sum
+// ¿¼ÂÇµÚ i ¸öÔªËØ£¬µ±Ç°ÒÑÑ¡ÔªËØÖ®ºÍÎª sum
 void dfs(int i, long long sum)
 {
-    if (found) return;               // å·²æ‰¾åˆ°ç­”æ¡ˆï¼Œå‰ªææå‰é€€å‡º
+    if (found) return;               // ÒÑÕÒµ½´ğ°¸£¬¼ôÖ¦ÌáÇ°ÍË³ö
     if (i > n)
     {
-        if (sum == m) found = true;  // åˆ°åº•äº†ï¼Œæ£€æŸ¥æ˜¯å¦å‡‘å‡º m
+        if (sum == m) found = true;  // µ½µ×ÁË£¬¼ì²éÊÇ·ñ´Õ³ö m
         return;
     }
-    dfs(i + 1, sum + a[i]);          // é€‰ç¬¬ i ä¸ª
-    dfs(i + 1, sum);                 // ä¸é€‰ç¬¬ i ä¸ª
+    dfs(i + 1, sum + a[i]);          // Ñ¡µÚ i ¸ö
+    dfs(i + 1, sum);                 // ²»Ñ¡µÚ i ¸ö
 }
 
 int main()

@@ -1,7 +1,7 @@
 #include <iostream>
 using namespace std;
 
-long long a[35][35];         // a[i][j]: ç¬¬ i è¡Œç¬¬ j ä¸ªæ•°
+long long a[35][35];         // a[i][j]: µÚ i ÐÐµÚ j ¸öÊý
 
 int main()
 {
@@ -9,9 +9,9 @@ int main()
     cin >> n;
     for (int i = 1; i <= n; i++)
     {
-        a[i][1] = a[i][i] = 1;               // æ¯è¡Œä¸¤ç«¯æ˜¯ 1
-        for (int j = 2; j < i; j++)          // ä¸­é—´çš„æ•°ç”±ä¸Šä¸€è¡Œé€’æŽ¨
-            a[i][j] = a[i-1][j-1] + a[i-1][j];   // è‚©ä¸Šä¸¤æ•°ä¹‹å’Œ
+        a[i][1] = a[i][i] = 1;               // Ã¿ÐÐÁ½¶ËÊÇ 1
+        for (int j = 2; j < i; j++)          // ÖÐ¼äµÄÊýÓÉÉÏÒ»ÐÐµÝÍÆ
+            a[i][j] = a[i-1][j-1] + a[i-1][j];   // ¼çÉÏÁ½ÊýÖ®ºÍ
     }
     for (int i = 1; i <= n; i++)
     {

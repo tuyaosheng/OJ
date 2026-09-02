@@ -7,7 +7,7 @@ int main()
 {
     int n;
     cin >> n;
-    // å°æ ¹å †ï¼šæœ€å°çš„å…ƒç´ æ’åœ¨å †é¡¶
+    // Ğ¡¸ù¶Ñ£º×îĞ¡µÄÔªËØÅÅÔÚ¶Ñ¶¥
     priority_queue<int, vector<int>, greater<int>> pq;
     for (int i = 0; i < n; i++)
     {
@@ -16,13 +16,13 @@ int main()
         pq.push(x);
     }
     long long ans = 0;
-    // æ¯æ¬¡å–æœ€å°çš„ä¸¤å †åˆå¹¶ï¼Œç›´åˆ°åªå‰©ä¸€å †
+    // Ã¿´ÎÈ¡×îĞ¡µÄÁ½¶ÑºÏ²¢£¬Ö±µ½Ö»Ê£Ò»¶Ñ
     while (pq.size() > 1)
     {
         int a = pq.top(); pq.pop();
         int b = pq.top(); pq.pop();
-        ans += a + b;                // æœ¬æ¬¡åˆå¹¶èŠ±è´¹
-        pq.push(a + b);              // åˆå¹¶åçš„æ–°å †æ”¾å›
+        ans += a + b;                // ±¾´ÎºÏ²¢»¨·Ñ
+        pq.push(a + b);              // ºÏ²¢ºóµÄĞÂ¶Ñ·Å»Ø
     }
     cout << ans << endl;
     return 0;

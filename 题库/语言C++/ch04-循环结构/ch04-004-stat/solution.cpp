@@ -6,17 +6,17 @@ int main()
 {
     int n, x;
     cin >> n;
-    cin >> x;                    // å…ˆè¯»ç¬¬ä¸€ä¸ªæ•°
-    int minn = x, maxn = x;      // ç”¨ç¬¬ä¸€ä¸ªæ•°åˆå§‹åŒ–æœ€å°/æœ€å¤§å€¼
+    cin >> x;                    // ÏÈ¶ÁµÚÒ»¸öÊı
+    int minn = x, maxn = x;      // ÓÃµÚÒ»¸öÊı³õÊ¼»¯×îĞ¡/×î´óÖµ
     long long sum = x;
-    for (int i = 2; i <= n; i++) // è¯»å‰©ä¸‹çš„ n-1 ä¸ªæ•°
+    for (int i = 2; i <= n; i++) // ¶ÁÊ£ÏÂµÄ n-1 ¸öÊı
     {
         cin >> x;
-        if (x < minn) minn = x;  // æ‰“æ“‚å°æ›´æ–°æœ€å°å€¼
-        if (x > maxn) maxn = x;  // æ›´æ–°æœ€å¤§å€¼
+        if (x < minn) minn = x;  // ´òÀŞÌ¨¸üĞÂ×îĞ¡Öµ
+        if (x > maxn) maxn = x;  // ¸üĞÂ×î´óÖµ
         sum += x;
     }
-    double avg = (double)sum / n;    // å¼ºåˆ¶è½¬ doubleï¼Œé¿å…æ•´æ•°é™¤æ³•
+    double avg = (double)sum / n;    // Ç¿ÖÆ×ª double£¬±ÜÃâÕûÊı³ı·¨
     cout << minn << " " << maxn << " "
          << fixed << setprecision(3) << avg << endl;
     return 0;

@@ -1,11 +1,11 @@
 #include <iostream>
 using namespace std;
 
-// é€’å½’è¾—è½¬ç›¸é™¤ï¼šgcd(m,n) = gcd(n, m%n)ï¼Œn ä¸º 0 æ—¶è¿”å› m
+// µİ¹éÕ·×ªÏà³ı£ºgcd(m,n) = gcd(n, m%n)£¬n Îª 0 Ê±·µ»Ø m
 int gcd(int m, int n)
 {
-    if (n == 0) return m;        // è¾¹ç•Œï¼šä½™æ•°ä¸º 0ï¼Œm å³ç­”æ¡ˆ
-    return gcd(n, m % n);        // é€’æ¨ï¼šé—®é¢˜ç¼©å°ä¸º gcd(n, m%n)
+    if (n == 0) return m;        // ±ß½ç£ºÓàÊıÎª 0£¬m ¼´´ğ°¸
+    return gcd(n, m % n);        // µİÍÆ£ºÎÊÌâËõĞ¡Îª gcd(n, m%n)
 }
 
 int main()

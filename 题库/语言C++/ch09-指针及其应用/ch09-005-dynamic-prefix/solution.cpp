@@ -5,13 +5,13 @@ int main()
 {
     int n;
     cin >> n;
-    long long *b = new long long[n + 1];   // 动态数组，按需申请
+    long long *b = new long long[n + 1];   // ��̬���飬��������
     b[0] = 0;
     for (int i = 1; i <= n; i++)
     {
         long long x;
         cin >> x;
-        b[i] = b[i - 1] + x;         // 前缀和递推
+        b[i] = b[i - 1] + x;         // ǰ׺�͵���
     }
     for (int i = 1; i <= n; i++)
     {
@@ -19,6 +19,6 @@ int main()
         cout << b[i];
     }
     cout << endl;
-    delete[] b;                      // 释放动态内存，好习惯
+    delete[] b;                      // �ͷŶ�̬�ڴ棬��ϰ��
     return 0;
 }

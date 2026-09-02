@@ -1,11 +1,11 @@
 #include <iostream>
 using namespace std;
 
-// é€’å½’æ±‚ x çš„ n æ¬¡æ–¹
+// µÝ¹éÇó x µÄ n ´Î·½
 long long power(int x, int n)
 {
-    if (n == 0) return 1;            // è¾¹ç•Œï¼šä»»ä½•æ•°çš„ 0 æ¬¡æ–¹æ˜¯ 1
-    return (long long)x * power(x, n - 1);  // é€’æŽ¨ï¼šx^n = x * x^(n-1)
+    if (n == 0) return 1;            // ±ß½ç£ºÈÎºÎÊýµÄ 0 ´Î·½ÊÇ 1
+    return (long long)x * power(x, n - 1);  // µÝÍÆ£ºx^n = x * x^(n-1)
 }
 
 int main()

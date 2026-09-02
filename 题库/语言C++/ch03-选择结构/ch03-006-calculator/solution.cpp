@@ -4,20 +4,20 @@ using namespace std;
 int main()
 {
     int a, b;
-    char op;                  // è¿ç®—ç¬¦æ˜¯ä¸€ä¸ªå­—ç¬¦
-    cin >> a >> op >> b;      // cin ä¼šè‡ªåŠ¨è·³è¿‡ç©ºæ ¼ï¼Œä¾æ¬¡è¯» æ•°-ç¬¦-æ•°
-    switch (op)               // æŒ‰è¿ç®—ç¬¦åˆ†æƒ…å†µå¤„ç†
+    char op;                  // ÔËËã·ûÊÇÒ»¸ö×Ö·û
+    cin >> a >> op >> b;      // cin »á×Ô¶¯Ìø¹ý¿Õ¸ñ£¬ÒÀ´Î¶Á Êý-·û-Êý
+    switch (op)               // °´ÔËËã·û·ÖÇé¿ö´¦Àí
     {
     case '+': cout << a + b << endl; break;
     case '-': cout << a - b << endl; break;
     case '*': cout << a * b << endl; break;
     case '/':
-        if (b == 0)                            // å…ˆåˆ¤é™¤é›¶ï¼Œå†åšé™¤æ³•
+        if (b == 0)                            // ÏÈÅÐ³ýÁã£¬ÔÙ×ö³ý·¨
             cout << "Divided by zero!" << endl;
         else
-            cout << a / b << endl;             // æ•´æ•°é™¤æ³•ï¼ŒèˆåŽ»å°æ•°
+            cout << a / b << endl;             // ÕûÊý³ý·¨£¬ÉáÈ¥Ð¡Êý
         break;
-    default:                                   // å…¶ä½™å­—ç¬¦éƒ½æ˜¯æ— æ•ˆè¿ç®—ç¬¦
+    default:                                   // ÆäÓà×Ö·û¶¼ÊÇÎÞÐ§ÔËËã·û
         cout << "Invalid operator!" << endl;
     }
     return 0;

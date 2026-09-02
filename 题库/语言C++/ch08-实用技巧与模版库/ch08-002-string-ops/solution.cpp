@@ -7,7 +7,7 @@ int main()
 {
     string s1, s2;
     cin >> s1 >> s2;
-    reverse(s2.begin(), s2.end());   // åŸåœ°åè½¬ s2
-    cout << s1 + s2 << endl;         // string ç›´æ¥ç”¨ + æ‹¼æ¥
+    reverse(s2.begin(), s2.end());   // Ô­µØ·´×ª s2
+    cout << s1 + s2 << endl;         // string Ö±½ÓÓÃ + Æ´½Ó
     return 0;
 }

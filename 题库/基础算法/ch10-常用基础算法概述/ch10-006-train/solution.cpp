@@ -9,7 +9,7 @@ int main()
     cin >> n;
     for (int i = 0; i < n; i++) cin >> a[i];
     long long cnt = 0;
-    // æ•°é€†åºå¯¹ï¼ši<j ä¸” a[i]>a[j]
+    // ÊıÄæĞò¶Ô£ºi<j ÇÒ a[i]>a[j]
     for (int i = 0; i < n; i++)
         for (int j = i + 1; j < n; j++)
             if (a[i] > a[j]) cnt++;

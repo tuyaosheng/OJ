@@ -5,7 +5,7 @@ int main()
 {
     long long sum = 0;
     int x;
-    while (cin >> x)     // ä¸€ç›´è¯»åˆ°æ–‡ä»¶æœ«å°¾ï¼ˆEOFï¼‰ï¼›è¯»å–å¤±è´¥åˆ™é€€å‡ºå¾ªç¯
+    while (cin >> x)     // Ò»Ö±¶Áµ½ÎÄ¼şÄ©Î²£¨EOF£©£»¶ÁÈ¡Ê§°ÜÔòÍË³öÑ­»·
         sum += x;
     cout << sum << endl;
     return 0;

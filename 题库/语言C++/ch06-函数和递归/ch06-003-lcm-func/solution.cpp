@@ -1,23 +1,23 @@
 #include <iostream>
 using namespace std;
 
-// è¾—è½¬ç›¸é™¤æ³•æ±‚æœ€å¤§å…¬çº¦æ•°
+// Õ·×ªÏà³ý·¨Çó×î´ó¹«Ô¼Êý
 int gcd(int a, int b)
 {
     while (b != 0)
     {
-        int r = a % b;   // ä½™æ•°
+        int r = a % b;   // ÓàÊý
         a = b;
         b = r;
     }
-    return a;            // b ä¸º 0 æ—¶ï¼Œa å°±æ˜¯æœ€å¤§å…¬çº¦æ•°
+    return a;            // b Îª 0 Ê±£¬a ¾ÍÊÇ×î´ó¹«Ô¼Êý
 }
 
 int main()
 {
     int x, y;
     cin >> x >> y;
-    // LCM = x*y/gcdï¼Œå…ˆé™¤åŽä¹˜é˜²æº¢å‡ºï¼šx/gcd ä¸€å®šæ•´é™¤
+    // LCM = x*y/gcd£¬ÏÈ³ýºó³Ë·ÀÒç³ö£ºx/gcd Ò»¶¨Õû³ý
     long long lcm = (long long)(x / gcd(x, y)) * y;
     cout << lcm << endl;
     return 0;

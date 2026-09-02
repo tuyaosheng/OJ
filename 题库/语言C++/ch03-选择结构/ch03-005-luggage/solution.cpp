@@ -1,16 +1,16 @@
 #include <iostream>
-#include <iomanip>           // fixed / setprecision éœ€è¦è¿™ä¸ªå¤´æ–‡ä»¶
+#include <iomanip>           // fixed / setprecision ĞèÒªÕâ¸öÍ·ÎÄ¼ş
 using namespace std;
 
 int main()
 {
     double w, cost;
     cin >> w;
-    if (w <= 20)             // è¾¹ç•Œ 20 å±äºä½è´¹ç‡æ®µ
+    if (w <= 20)             // ±ß½ç 20 ÊôÓÚµÍ·ÑÂÊ¶Î
         cost = w * 1.68;
     else
         cost = w * 1.98;
-    // fixed + setprecision(2)ï¼šå›ºå®šå°æ•°æ ¼å¼ï¼Œä¿ç•™ 2 ä½
+    // fixed + setprecision(2)£º¹Ì¶¨Ğ¡Êı¸ñÊ½£¬±£Áô 2 Î»
     cout << fixed << setprecision(2) << cost << endl;
     return 0;
 }

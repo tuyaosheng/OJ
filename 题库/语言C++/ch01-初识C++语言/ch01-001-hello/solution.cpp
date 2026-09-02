@@ -1,8 +1,8 @@
-#include <iostream>              // ä½¿ç”¨ cout è¾“å‡ºï¼Œå¿…é¡»åŒ…å« iostream åº“
-using namespace std;             // C++ æ ‡å‡†åº“çš„åå­—éƒ½æ”¾åœ¨ std å‘½åç©ºé—´é‡Œ
+#include <iostream>              // Ê¹ÓÃ cout Êä³ö£¬±ØĞë°üº¬ iostream ¿â
+using namespace std;             // C++ ±ê×¼¿âµÄÃû×Ö¶¼·ÅÔÚ std ÃüÃû¿Õ¼äÀï
 
-int main()                       // ä¸»å‡½æ•°ï¼šç¨‹åºä»è¿™é‡Œå¼€å§‹æ‰§è¡Œ
+int main()                       // Ö÷º¯Êı£º³ÌĞò´ÓÕâÀï¿ªÊ¼Ö´ĞĞ
 {
-    cout << "Hello World!" << endl;  // è¾“å‡ºæ–‡å­—ï¼Œendl è¡¨ç¤ºæ¢è¡Œ
-    return 0;                    // è¿”å› 0ï¼Œå‘Šè¯‰ç³»ç»Ÿç¨‹åºæ­£å¸¸ç»“æŸ
+    cout << "Hello World!" << endl;  // Êä³öÎÄ×Ö£¬endl ±íÊ¾»»ĞĞ
+    return 0;                    // ·µ»Ø 0£¬¸æËßÏµÍ³³ÌĞòÕı³£½áÊø
 }

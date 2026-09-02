@@ -5,12 +5,12 @@ int main()
 {
     int n;
     cin >> n;
-    long long sum1 = 0, sum2 = 0;    // å’Œå¯è¾¾ 5*10^11ï¼Œå¿…é¡»ç”¨ long long
-    for (int i = 1; i <= n; i++)     // i ä¾æ¬¡å– 1,2,...,n
+    long long sum1 = 0, sum2 = 0;    // ºÍ¿É´ï 5*10^11£¬±ØĞëÓÃ long long
+    for (int i = 1; i <= n; i++)     // i ÒÀ´ÎÈ¡ 1,2,...,n
     {
-        if (i % 2 == 1)              // å¥‡æ•°
-            sum1 += i;               // ç´¯åŠ ï¼šsum1 = sum1 + i
-        else                         // å¶æ•°
+        if (i % 2 == 1)              // ÆæÊı
+            sum1 += i;               // ÀÛ¼Ó£ºsum1 = sum1 + i
+        else                         // Å¼Êı
             sum2 += i;
     }
     cout << sum1 << " " << sum2 << endl;

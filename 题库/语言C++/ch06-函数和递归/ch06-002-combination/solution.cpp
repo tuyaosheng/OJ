@@ -1,19 +1,19 @@
 #include <iostream>
 using namespace std;
 
-// æ±‚ x çš„é˜¶ä¹˜ x! = 1*2*...*xï¼Œè¿”å› long long é˜²æº¢å‡º
+// Çó x µÄ½×³Ë x! = 1*2*...*x£¬·µ»Ø long long ·ÀÒç³ö
 long long fact(int x)
 {
     long long s = 1;
     for (int i = 2; i <= x; i++) s *= i;
-    return s;                    // 0! å’Œ 1! éƒ½è¿”å› 1
+    return s;                    // 0! ºÍ 1! ¶¼·µ»Ø 1
 }
 
 int main()
 {
     int m, n;
     cin >> m >> n;
-    // C(m,n) = m! / (n! * (m-n)!)ï¼Œfact å‡½æ•°å¤ç”¨ä¸‰æ¬¡
+    // C(m,n) = m! / (n! * (m-n)!)£¬fact º¯Êı¸´ÓÃÈı´Î
     long long ans = fact(m) / (fact(n) * fact(m - n));
     cout << ans << endl;
     return 0;

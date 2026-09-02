@@ -3,17 +3,17 @@ using namespace std;
 
 int main()
 {
-    int L, R, cnt = 0;           // cnt ç»Ÿè®¡è¾“å‡ºäº†å‡ ä¸ªç´ æ•°
+    int L, R, cnt = 0;           // cnt Í³¼ÆÊä³öÁË¼¸¸öËØÊý
     cin >> L >> R;
     for (int i = L; i <= R; i++)
     {
-        bool isPrime = true;     // å…ˆå‡è®¾ i æ˜¯ç´ æ•°
-        for (int j = 2; j * j <= i; j++)  // åªéœ€è¯•é™¤åˆ° sqrt(i)
+        bool isPrime = true;     // ÏÈ¼ÙÉè i ÊÇËØÊý
+        for (int j = 2; j * j <= i; j++)  // Ö»ÐèÊÔ³ýµ½ sqrt(i)
         {
-            if (i % j == 0)      // æ‰¾åˆ°çº¦æ•°ï¼Œä¸æ˜¯ç´ æ•°
+            if (i % j == 0)      // ÕÒµ½Ô¼Êý£¬²»ÊÇËØÊý
             {
                 isPrime = false;
-                break;           // æå‰é€€å‡ºå†…å±‚å¾ªçŽ¯
+                break;           // ÌáÇ°ÍË³öÄÚ²ãÑ­»·
             }
         }
         if (isPrime)
@@ -22,7 +22,7 @@ int main()
             cnt++;
         }
     }
-    if (cnt == 0)                // åŒºé—´å†…ä¸€ä¸ªç´ æ•°éƒ½æ²¡æœ‰
+    if (cnt == 0)                // Çø¼äÄÚÒ»¸öËØÊý¶¼Ã»ÓÐ
         cout << -1 << endl;
     return 0;
 }

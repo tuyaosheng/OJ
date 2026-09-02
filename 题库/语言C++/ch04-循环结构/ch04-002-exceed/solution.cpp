@@ -4,12 +4,12 @@ using namespace std;
 int main()
 {
     long long k, s = 0;
-    long long n = 0;         // å½“å‰åŠ åˆ°ç¬¬å‡ é¡¹
+    long long n = 0;         // µ±Ç°¼Óµ½µÚ¼¸Ïî
     cin >> k;
-    while (s <= k)           // è¿˜æ²¡è¶…è¿‡ k å°±ç»§ç»­å¾ªçŽ¯
+    while (s <= k)           // »¹Ã»³¬¹ý k ¾Í¼ÌÐøÑ­»·
     {
-        n++;                 // é¡¹æ•°åŠ ä¸€
-        s += n;              // åŠ ä¸Šç¬¬ n é¡¹
+        n++;                 // ÏîÊý¼ÓÒ»
+        s += n;              // ¼ÓÉÏµÚ n Ïî
     }
     cout << n << " " << s << endl;
     return 0;

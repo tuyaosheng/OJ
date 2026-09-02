@@ -3,10 +3,10 @@ using namespace std;
 
 int main()
 {
-    int n, m;                // n锛氳嫻鏋滄�绘暟锛宮锛氭瘡琚嬬殑涓暟
+    int n, m;                // n：苹果总数，m：每袋的个数
     cin >> n >> m;
-    int bags = n / m;        // 鏁存暟闄ゆ硶锛氳嚜鍔ㄨ垗鍘诲皬鏁帮紝寰楀埌瑁呮弧鐨勮瀛愭暟
-    int rest = n % m;        // 鍙栦綑杩愮畻锛氬緱鍒拌涓嶆弧鐨勫墿浣欒嫻鏋滄暟
+    int bags = n / m;        // 整数除法：自动舍去小数，得到装满的袋子数
+    int rest = n % m;        // 取余运算：得到装不满的剩余苹果数
     cout << bags << " " << rest << endl;
     return 0;
 }

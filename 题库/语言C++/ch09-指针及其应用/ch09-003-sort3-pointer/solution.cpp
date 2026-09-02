@@ -1,7 +1,7 @@
 #include <iostream>
 using namespace std;
 
-// é€šè¿‡æŒ‡é’ˆäº¤æ¢ä¸¤ä¸ªå˜é‡çš„å€¼ï¼ˆä¿®æ”¹çš„æ˜¯ä¸»å‡½æ•°é‡Œçš„å˜é‡ï¼‰
+// Í¨¹ıÖ¸Õë½»»»Á½¸ö±äÁ¿µÄÖµ£¨ĞŞ¸ÄµÄÊÇÖ÷º¯ÊıÀïµÄ±äÁ¿£©
 void mySwap(int *x, int *y)
 {
     int t = *x;
@@ -9,11 +9,11 @@ void mySwap(int *x, int *y)
     *y = t;
 }
 
-// æ’åºï¼Œä½¿ *a <= *b <= *c
+// ÅÅĞò£¬Ê¹ *a <= *b <= *c
 void sort3(int *a, int *b, int *c)
 {
     if (*a > *b) mySwap(a, b);
-    if (*a > *c) mySwap(a, c);       // æ­¤æ—¶ *a æœ€å°
+    if (*a > *c) mySwap(a, c);       // ´ËÊ± *a ×îĞ¡
     if (*b > *c) mySwap(b, c);       // *b <= *c
 }
 
@@ -21,7 +21,7 @@ int main()
 {
     int a, b, c;
     cin >> a >> b >> c;
-    sort3(&a, &b, &c);               // ä¼ åœ°å€ï¼Œå‡½æ•°æ‰èƒ½æ”¹åŠ¨ a,b,c
+    sort3(&a, &b, &c);               // ´«µØÖ·£¬º¯Êı²ÅÄÜ¸Ä¶¯ a,b,c
     cout << a << " " << b << " " << c << endl;
     return 0;
 }

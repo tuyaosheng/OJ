@@ -5,6 +5,6 @@ int main()
 {
     int a, b;
     cin >> a >> b;
-    cout << a / b << " " << a % b << endl;  // 鏁撮櫎涓庡彇浣欙細C++ 榛樿鍚戦浂鍙栨暣
+    cout << a / b << " " << a % b << endl;  // 整除与取余：C++ 默认向零取整
     return 0;
 }

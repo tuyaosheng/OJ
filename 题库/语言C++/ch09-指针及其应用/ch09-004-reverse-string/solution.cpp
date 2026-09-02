@@ -8,11 +8,11 @@ int main()
 {
     cin >> s;
     int len = strlen(s);
-    char *p = s;                     // æŒ‡å‘å¼€å¤´
-    char *q = s + len - 1;           // æŒ‡å‘ç»“å°¾
-    while (p < q)                    // ä¸¤ç«¯å‘ä¸­é—´é æ‹¢
+    char *p = s;                     // Ö¸Ïò¿ªÍ·
+    char *q = s + len - 1;           // Ö¸Ïò½áÎ²
+    while (p < q)                    // Á½¶ËÏòÖĞ¼ä¿¿Â£
     {
-        char t = *p; *p = *q; *q = t;  // äº¤æ¢é¦–å°¾å­—ç¬¦
+        char t = *p; *p = *q; *q = t;  // ½»»»Ê×Î²×Ö·û
         p++;
         q--;
     }

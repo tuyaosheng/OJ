@@ -5,8 +5,8 @@ int main()
 {
     int a, b;
     cin >> a >> b;
-    int *pa = &a, *pb = &b;          // pa æŒ‡å‘ aï¼Œpb æŒ‡å‘ b
-    // *pa å°±æ˜¯ a çš„å€¼ï¼Œ*pb å°±æ˜¯ b çš„å€¼
+    int *pa = &a, *pb = &b;          // pa Ö¸Ïò a£¬pb Ö¸Ïò b
+    // *pa ¾ÍÊÇ a µÄÖµ£¬*pb ¾ÍÊÇ b µÄÖµ
     long long sum = (long long)(*pa) + (*pb);
     long long prod = (long long)(*pa) * (*pb);
     cout << sum << " " << prod << endl;

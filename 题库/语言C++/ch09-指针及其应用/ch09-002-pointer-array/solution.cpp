@@ -10,10 +10,10 @@ int main()
     for (int i = 0; i < n; i++) cin >> a[i];
     long long sum = 0;
     long long maxv = a[0];
-    // p 浠庢暟缁勯鍦板潃鍑哄彂锛岄�愪釜鍚庣Щ閬嶅巻
+    // p 从数组首地址出发，逐个后移遍历
     for (int *p = a; p < a + n; p++)
     {
-        sum += *p;                   // *p 灏辨槸褰撳墠鍏冪礌
+        sum += *p;                   // *p 就是当前元素
         if (*p > maxv) maxv = *p;
     }
     cout << sum << " " << maxv << endl;

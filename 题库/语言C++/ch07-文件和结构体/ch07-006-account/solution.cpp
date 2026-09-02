@@ -6,9 +6,9 @@ int main()
 {
     int n;
     cin >> n;
-    int male = 0, female = 0;      // èº«ä»½è¯ç”·/å¥³äººæ•°
-    long long qqSum = 0;           // QQ å·æ€»å’Œ
-    int qqCnt = 0;                 // QQ å·ä¸ªæ•°
+    int male = 0, female = 0;      // Éí·İÖ¤ÄĞ/Å®ÈËÊı
+    long long qqSum = 0;           // QQ ºÅ×ÜºÍ
+    int qqCnt = 0;                 // QQ ºÅ¸öÊı
     for (int i = 0; i < n; i++)
     {
         char type;
@@ -17,9 +17,9 @@ int main()
         {
             string id;
             cin >> id;
-            int gender = id[16] - '0';   // ç¬¬ 17 ä½ï¼ˆä¸‹æ ‡ 16ï¼‰è¡¨ç¤ºæ€§åˆ«
-            if (gender % 2 == 1) male++;  // å¥‡æ•°ä¸ºç”·
-            else                 female++;// å¶æ•°ä¸ºå¥³
+            int gender = id[16] - '0';   // µÚ 17 Î»£¨ÏÂ±ê 16£©±íÊ¾ĞÔ±ğ
+            if (gender % 2 == 1) male++;  // ÆæÊıÎªÄĞ
+            else                 female++;// Å¼ÊıÎªÅ®
         }
         else                          // type == 'Q'
         {

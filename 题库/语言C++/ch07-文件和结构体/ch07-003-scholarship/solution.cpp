@@ -3,12 +3,12 @@
 using namespace std;
 
 struct Stu {
-    int id;        // Â≠¶Âè∑ÔºàËæìÂÖ•È°∫Â∫èÔºâ
-    int chinese;   // ËØ≠Êñá
-    int total;     // ÊÄªÂàÜ
+    int id;        // —ß∫≈£® ‰»ÎÀ≥–Ú£©
+    int chinese;   // ”ÔŒƒ
+    int total;     // ◊‹∑÷
 };
 
-// Â§öÂÖ≥ÈîÆÂ≠óÔºöÊÄªÂàÜÈôçÂ∫è > ËØ≠ÊñáÈôçÂ∫è > Â≠¶Âè∑ÂçáÂ∫è
+// ∂‡πÿº¸◊÷£∫◊‹∑÷Ωµ–Ú > ”ÔŒƒΩµ–Ú > —ß∫≈…˝–Ú
 bool cmp(const Stu &a, const Stu &b)
 {
     if (a.total != b.total)     return a.total > b.total;
@@ -25,12 +25,12 @@ int main()
     {
         int c, m, e;
         cin >> c >> m >> e;
-        s[i].id = i + 1;          // Â≠¶Âè∑‰ªé 1 ÂºÄÂßã
+        s[i].id = i + 1;          // —ß∫≈¥” 1 ø™ º
         s[i].chinese = c;
         s[i].total = c + m + e;
     }
     sort(s, s + n, cmp);
-    for (int i = 0; i < 5; i++)   // ËæìÂá∫Ââç 5 Âêç
+    for (int i = 0; i < 5; i++)   //  ‰≥ˆ«∞ 5 √˚
         cout << s[i].id << " " << s[i].total << endl;
     return 0;
 }

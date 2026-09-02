@@ -52,6 +52,27 @@ import os
 import re
 import sys
 
+try:
+    import markdown as _markdown
+except ImportError:
+    _markdown = None
+
+
+def md_to_html(text):
+    """题面 .md 转 HTML 再入 XML。
+
+    前端 Problem.vue 用 v-html 直接渲染题面、不做 Markdown 解析，
+    所以导入前必须转好 HTML，否则页面上会看到裸的 ** 和 ``` 记号。
+    需要 pip install markdown；未安装则原样返回并给出警告。
+    """
+    if text is None or text.strip() == "":
+        return text
+    if _markdown is None:
+        print("  [警告] 未安装 markdown 库（pip install markdown），题面将按原文导入", file=sys.stderr)
+        return text
+    md = _markdown.Markdown(extensions=["fenced_code", "tables", "nl2br", "sane_lists"])
+    return md.convert(text)
+
 
 def cdata(text):
     """把任意文本安全包进 CDATA。处理罕见的 ']]>' 串。"""
@@ -65,7 +86,7 @@ def cdata(text):
 
 def read_file(path):
     if os.path.isfile(path):
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8-sig") as f:
             return f.read()
     return None
 
@@ -111,10 +132,10 @@ def build_item(problem_dir):
         print(f"  [跳过] {problem_dir} 的 config.json 缺少 title", file=sys.stderr)
         return None
 
-    statement = read_file(os.path.join(problem_dir, "statement.md")) or "No Description"
-    input_desc = read_file(os.path.join(problem_dir, "input.md")) or ""
-    output_desc = read_file(os.path.join(problem_dir, "output.md")) or ""
-    hint = read_file(os.path.join(problem_dir, "hint.md"))
+    statement = md_to_html(read_file(os.path.join(problem_dir, "statement.md"))) or "No Description"
+    input_desc = md_to_html(read_file(os.path.join(problem_dir, "input.md"))) or ""
+    output_desc = md_to_html(read_file(os.path.join(problem_dir, "output.md"))) or ""
+    hint = md_to_html(read_file(os.path.join(problem_dir, "hint.md")))
 
     time_limit = int(cfg.get("time_limit", 1000))   # ms
     memory_limit = int(cfg.get("memory_limit", 256))  # MB

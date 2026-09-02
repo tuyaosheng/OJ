@@ -9,12 +9,12 @@ int main()
     cin >> n;
     long long x;
     cin >> x;
-    long long cur = x, ans = x;      // ç”¨ç¬¬ä¸€ä¸ªå…ƒç´ åˆå§‹åŒ–ï¼Œå¤„ç†å…¨è´Ÿæ•°æ®
+    long long cur = x, ans = x;      // ÓÃµÚÒ»¸öÔªËØ³õÊ¼»¯£¬´¦ÀíÈ«¸ºÊı¾İ
     for (int i = 2; i <= n; i++)
     {
         cin >> x;
-        cur = max(x, cur + x);       // è¦ä¹ˆå¦èµ·ä¸€æ®µï¼Œè¦ä¹ˆæ¥åœ¨å‰é¢
-        ans = max(ans, cur);         // æ›´æ–°å…¨å±€æœ€å¤§
+        cur = max(x, cur + x);       // ÒªÃ´ÁíÆğÒ»¶Î£¬ÒªÃ´½ÓÔÚÇ°Ãæ
+        ans = max(ans, cur);         // ¸üĞÂÈ«¾Ö×î´ó
     }
     cout << ans << endl;
     return 0;
