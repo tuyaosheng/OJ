@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>内存地址与指针 · 板书演示</title>
+<style>
+  :root {
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+    --green: #2e7d32;
+    --green-light: #e8f5e9;
+    --orange: #ef6c00;
+    --orange-light: #fff3e0;
+    --gray: #9e9e9e;
+    --ink: #263238;
+    --border: #cfd8dc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    background: #f0f2f5;
+    color: var(--ink);
+    padding: 24px;
+  }
+  h1 { text-align: center; color: var(--blue); margin: 0 0 4px; font-size: 26px; }
+  .sub { text-align: center; color: #607d8b; margin-bottom: 20px; font-size: 14px; }
+  .wrap {
+    max-width: 1080px; margin: 0 auto; background: #fff; border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08); padding: 24px 28px 28px;
+  }
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab {
+    flex: 1; min-width: 150px; padding: 10px 14px; border: 2px solid var(--border);
+    background: #fafafa; border-radius: 8px; cursor: pointer; font-size: 14px;
+    font-weight: 600; color: #546e7a; transition: all .15s;
+  }
+  .tab:hover { border-color: var(--blue); color: var(--blue); }
+  .tab.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .controls {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #f5f7fa; padding: 14px 16px; border-radius: 8px; margin-bottom: 20px;
+  }
+  .controls label { font-size: 14px; color: #455a64; }
+  .controls input {
+    width: 150px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 14px; font-family: "Consolas", monospace;
+  }
+  .controls button {
+    padding: 7px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;
+    font-weight: 600; color: #fff; background: var(--blue); transition: opacity .15s;
+  }
+  .controls button:hover { opacity: .85; }
+  .controls button.secondary { background: #78909c; }
+  .controls button.go { background: var(--green); }
+  .controls button:disabled { background: #cfd8dc; cursor: not-allowed; }
+  .hint { font-size: 13px; color: #90a4ae; margin: -12px 0 18px 2px; }
+
+  .board {
+    background: #fbfcfd; border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px; min-height: 220px; overflow-x: auto;
+  }
+  .board-empty { text-align: center; color: #b0bec5; padding: 40px 0; font-size: 15px; }
+
+  .mem-stage { position: relative; margin: 0 auto; }
+  .mem-box {
+    position: absolute; width: 110px; height: 56px; border-radius: 8px;
+    border: 2px solid var(--border); background: #fff; text-align: center;
+    font-family: "Consolas", monospace; padding-top: 4px; transition: all .25s;
+  }
+  .mem-box .mname { font-weight: 700; font-size: 14px; color: #455a64; }
+  .mem-box .mval { font-size: 15px; font-weight: 700; color: var(--ink); margin-top: 2px; }
+  .mem-box .maddr { font-size: 10px; color: #b0bec5; margin-top: 1px; }
+  .mem-box.flash { border-color: var(--orange); background: var(--orange-light); }
+  .mem-box.flash .mval { color: var(--orange); }
+  .mem-box.ptr { border-color: var(--blue); background: var(--blue-light); }
+  .mem-box.ptr .mval { color: var(--blue); font-size: 12px; }
+  .mem-box.current { box-shadow: 0 0 0 3px rgba(21,101,192,0.2); }
+  .mem-box.changed { border-color: var(--green); background: var(--green-light); }
+  .mem-box.changed .mval { color: var(--green); }
+  .mem-box.temp { border-style: dashed; opacity: .85; }
+  .mem-box.nullbox { border-style: dashed; color: #b0bec5; }
+  .mem-box.nullbox .mname { color: #b0bec5; }
+  .row-label {
+    position: absolute; left: 0; font-size: 12px; font-weight: 700; color: #90a4ae;
+  }
+  svg.arrow-layer { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+  .arrow-path { fill: none; stroke: var(--blue); stroke-width: 2.5; }
+  .arrow-path.ok { stroke: var(--green); }
+  .readout {
+    margin-top: 12px; font-family: "Consolas", monospace; font-size: 14px; color: #455a64;
+    background: #eceff1; border-radius: 8px; padding: 8px 14px; display: inline-block;
+  }
+  .phase-label {
+    display: inline-block; font-size: 13px; font-weight: 700; color: #fff;
+    background: var(--orange); border-radius: 12px; padding: 2px 12px; margin-bottom: 12px;
+  }
+  .phase-label.ok { background: var(--green); }
+
+  .log {
+    margin-top: 18px; background: #263238; color: #b2ff59; border-radius: 8px;
+    padding: 14px 16px; font-family: "Consolas", monospace; font-size: 14px;
+    min-height: 90px; max-height: 220px; overflow-y: auto; line-height: 1.7;
+  }
+  .log div { opacity: .55; }
+  .log div:last-child { opacity: 1; color: #eeff41; }
+  .log .placeholder { color: #607d8b; opacity: 1; }
+
+  @media (prefers-color-scheme: dark) {
+    body { background: #14181b; color: #e0e0e0; }
+    .wrap { background: #1e2428; box-shadow: none; }
+    .mem-box { background: #263238; color: #e0e0e0; border-color: #37474f; }
+    .mem-box .mname { color: #cfd8dc; }
+    .controls { background: #262c30; }
+    .board { background: #1a1f22; border-color: #37474f; }
+    .readout { background: #2c3639; color: #cfd8dc; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>内存地址与指针 · 电子板书</h1>
+  <div class="sub">第 9 章配套演示 &nbsp;|&nbsp; 变量是带门牌号的盒子，指针是一支指向别的盒子的箭头</div>
+
+  <div class="tabs">
+    <button class="tab active" data-mode="deref">取地址与解引用</button>
+    <button class="tab" data-mode="arr">指针遍历数组</button>
+    <button class="tab" data-mode="swap">指针传参：传值 vs 传指针</button>
+    <button class="tab" data-mode="list">链表头插法</button>
+  </div>
+
+  <div class="controls" id="controls"></div>
+  <div class="hint" id="hint"></div>
+
+  <div class="board" id="board">
+    <div class="board-empty">点击"生成演示"开始</div>
+  </div>
+
+  <div class="log" id="log"><div class="placeholder">// 这里会实时打印每一步发生了什么</div></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var BOX_W = 110, BOX_H = 56, GAP_X = 26;
+  function colX(i) { return i * (BOX_W + GAP_X) + 14; }
+  function addrHex(i) { return "0x" + (0x1000 + i * 4).toString(16).toUpperCase(); }
+
+  var MODE_INFO = {
+    deref: {
+      hint: "int a=10; int *p=&a; *p=20; —— 看 p 指向谁、*p=20 到底改的是哪个盒子。",
+      inputs: [{ id: "aInit", label: "a 的初始值 =", def: 10 }, { id: "pSet", label: "*p = ", def: 20 }]
+    },
+    arr: {
+      hint: "for(int *p=a; p<a+n; p++) sum+=*p; —— p 每次跳过的是一个 int，不是一个字节。",
+      inputs: [{ id: "arr", label: "数组（逗号分隔）：", def: "3,1,4,1,5", wide: true }]
+    },
+    swap: {
+      hint: "同样的 a、b，先看值传递为什么改不了外面，再看指针传参为什么能改。",
+      inputs: [{ id: "aVal", label: "a =", def: 3 }, { id: "bVal", label: "b =", def: 7 }]
+    },
+    list: {
+      hint: "每吃一个食物，在链表头部插入新节点——head 挪到新节点，新节点的 next 指向旧的 head。",
+      inputs: [{ id: "seq", label: "依次吃到的食物编号：", def: "5,2,8", wide: true }]
+    }
+  };
+
+  var mode = "deref";
+  var steps = [];
+  var stepIndex = -1;
+  var autoTimer = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var boardEl = $("board"), logEl = $("log"), controlsEl = $("controls"), hintEl = $("hint");
+
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  // ================= pure step builders =================
+
+  function buildDerefSteps(aInit, pSet) {
+    var steps = [];
+    var boxes = [{ name: "a", addr: addrHex(0), value: aInit }];
+    steps.push({ boxes: clone(boxes), arrows: [], log: "执行 int a = " + aInit + "；假设 a 分配在地址 " + addrHex(0) + "，值是 " + aInit + "。" });
+
+    boxes.push({ name: "p", addr: addrHex(1), value: addrHex(0), isPtr: true, target: 0 });
+    steps.push({ boxes: clone(boxes), arrows: [[1, 0]], log: "执行 int *p = &a；p 分配在地址 " + addrHex(1) + "，但 p 里存的不是数值，是 a 的地址 " + addrHex(0) + "——画一支箭头从 p 指向 a。" });
+
+    boxes[0].value = pSet;
+    boxes[0].changed = true;
+    steps.push({ boxes: clone(boxes), arrows: [[1, 0]], log: "执行 *p = " + pSet + "；顺着 p 里的地址找到 a，把 a 的值改成 " + pSet + "。" });
+
+    steps.push({ boxes: clone(boxes), arrows: [[1, 0]], log: "现在 a 的值是 " + pSet + "，p 全程没有变过——变的是 p 指向的那个盒子，不是 p 自己。", done: true, result: pSet });
+    return steps;
+  }
+
+  function buildArrPointerSteps(arr) {
+    var n = arr.length;
+    var boxes = [];
+    for (var i = 0; i < n; i++) boxes.push({ name: "a[" + i + "]", addr: addrHex(i), value: arr[i] });
+    var pBox = { name: "p", addr: "", value: "", isPtr: true, target: null };
+    var steps = [];
+    var sum = 0, maxv = arr[0];
+    var allBoxes = boxes.concat([pBox]);
+    steps.push({ boxes: clone(allBoxes), arrows: [], log: "数组 a 声明好，sum=0，maxv=a[0]=" + arr[0] + "（先假设第一个数最大）。", readout: "sum=0  maxv=" + maxv });
+    for (i = 0; i < n; i++) {
+      pBox.value = boxes[i].addr;
+      pBox.target = n; // index n in allBoxes list is p itself; target uses index into "boxes" range i
+      var snapBoxes = clone(boxes.map(function (b, idx) { var c = clone(b); if (idx === i) c.current = true; return c; }).concat([pBox]));
+      sum += arr[i];
+      var beat = arr[i] > maxv;
+      if (beat) maxv = arr[i];
+      steps.push({
+        boxes: snapBoxes, arrows: [[n, i]],
+        log: "p 指向 a[" + i + "]=" + arr[i] + "：sum += " + arr[i] + " → sum=" + sum + (beat ? "；" + arr[i] + " > 之前的 maxv，更新 maxv=" + maxv : "；" + arr[i] + " 没超过 maxv=" + maxv + "，不更新"),
+        readout: "sum=" + sum + "  maxv=" + maxv
+      });
+    }
+    var finalBoxes = clone(boxes.concat([{ name: "p", addr: "", value: "越界", isPtr: true, target: null }]));
+    steps.push({ boxes: finalBoxes, arrows: [], log: "p 挪到 a+" + n + "（数组末尾之后），循环条件 p<a+" + n + " 不成立，停止——全部处理完毕，sum=" + sum + "，maxv=" + maxv + "。", readout: "sum=" + sum + "  maxv=" + maxv, done: true, result: { sum: sum, maxv: maxv } });
+    return steps;
+  }
+
+  function buildParamSwapSteps(aVal, bVal) {
+    var steps = [];
+    // ---- phase 1: value passing ----
+    var caller1 = [{ name: "a", addr: addrHex(0), value: aVal }, { name: "b", addr: addrHex(1), value: bVal }];
+    steps.push({ phase: "值传递（badSwap）", callerRow: clone(caller1), calleeRow: null, arrows: [], log: "调用 badSwap(a, b)：这是普通的值传递。" });
+
+    var callee1 = [{ name: "x", addr: addrHex(2), value: aVal }, { name: "y", addr: addrHex(3), value: bVal }];
+    steps.push({ phase: "值传递（badSwap）", callerRow: clone(caller1), calleeRow: clone(callee1), arrows: [], log: "badSwap 栈帧压入，x 和 y 只是 a、b 的拷贝，两份数据完全独立，没有任何箭头指回调用者。" });
+
+    var t1 = aVal;
+    callee1[0].value = bVal; callee1[1].value = aVal;
+    callee1[0].changed = true; callee1[1].changed = true;
+    steps.push({ phase: "值传递（badSwap）", callerRow: clone(caller1), calleeRow: clone(callee1), arrows: [], log: "函数内部交换 x、y：t=" + t1 + "，x=y=" + bVal + "，y=t=" + aVal + "——但这只是 callee 栈帧里的拷贝在换位置。" });
+
+    steps.push({ phase: "值传递（badSwap）", callerRow: clone(caller1), calleeRow: null, arrows: [], log: "badSwap 返回，栈帧弹出。调用者的 a=" + aVal + "、b=" + bVal + "，完全没被碰到，和调用前一模一样。", phaseDone: true });
+
+    // ---- phase 2: pointer passing ----
+    var caller2 = [{ name: "a", addr: addrHex(0), value: aVal }, { name: "b", addr: addrHex(1), value: bVal }];
+    var callee2 = [{ name: "x", addr: addrHex(2), value: addrHex(0), isPtr: true, target: 0 }, { name: "y", addr: addrHex(3), value: addrHex(1), isPtr: true, target: 1 }];
+    steps.push({ phase: "指针传参（mySwap）", callerRow: clone(caller2), calleeRow: clone(callee2), arrows: [["callee0", "caller0"], ["callee1", "caller1"]], log: "调用 mySwap(&a, &b)：这次传的是地址。x 存 a 的地址，y 存 b 的地址——两支箭头直接指回调用者的盒子。" });
+
+    var t2 = aVal;
+    caller2[0].value = bVal;
+    caller2[0].changed = true;
+    steps.push({ phase: "指针传参（mySwap）", callerRow: clone(caller2), calleeRow: clone(callee2), arrows: [["callee0", "caller0"], ["callee1", "caller1"]], log: "t = *x = " + t2 + "；然后 *x = *y：顺着 x 的箭头找到 a，把 a 改成 " + bVal + "。" });
+
+    caller2[1].value = t2;
+    caller2[1].changed = true;
+    steps.push({ phase: "指针传参（mySwap）", callerRow: clone(caller2), calleeRow: clone(callee2), arrows: [["callee0", "caller0"], ["callee1", "caller1"]], log: "*y = t：顺着 y 的箭头找到 b，把 b 改成 " + t2 + "。" });
+
+    steps.push({ phase: "指针传参（mySwap）", callerRow: clone(caller2), calleeRow: null, arrows: [], log: "mySwap 返回，栈帧弹出。调用者的 a=" + caller2[0].value + "、b=" + caller2[1].value + "——真的换过来了！地址能穿过函数边界，值不能。", done: true, result: { a: caller2[0].value, b: caller2[1].value } });
+
+    return steps;
+  }
+
+  function buildLinkedListSteps(seq) {
+    var steps = [];
+    var list = []; // head -> tail order
+    steps.push({ list: clone(list), temp: null, log: "链表初始为空，head = nullptr。" });
+    for (var k = 0; k < seq.length; k++) {
+      var v = seq[k];
+      var temp = { val: v, isTemp: true };
+      steps.push({ list: clone(list), temp: clone(temp), tempLinksTo: list.length ? 0 : "NULL", log: "吃到食物 " + v + "：new 一个新节点，val=" + v + "。" });
+      steps.push({ list: clone(list), temp: clone(temp), tempLinksTo: list.length ? 0 : "NULL", log: "新节点.next 指向原来的 head（" + (list.length ? "节点 " + list[0].val : "此刻是 nullptr") + "）。" });
+      list.unshift({ val: v });
+      steps.push({ list: clone(list), temp: null, log: "head 挪到新节点：head 现在指向节点 " + v + "。插入完成，当前链表（头到尾）：" + list.map(function (n) { return n.val; }).join(" → ") + "。" });
+    }
+    steps.push({ list: clone(list), temp: null, log: "全部吃完。从头到尾输出：" + list.map(function (n) { return n.val; }).join(" ") + "。", done: true, result: list.map(function (n) { return n.val; }) });
+    return steps;
+  }
+
+  // ================= rendering helpers =================
+
+  function svgNS(tag) { return document.createElementNS("http://www.w3.org/2000/svg", tag); }
+
+  function makeArrowLayer(w, h) {
+    var svg = svgNS("svg");
+    svg.setAttribute("class", "arrow-layer");
+    svg.setAttribute("width", w);
+    svg.setAttribute("height", h);
+    var defs = svgNS("defs");
+    ["b", "g"].forEach(function (id) {
+      var marker = svgNS("marker");
+      marker.setAttribute("id", "arrowhead-" + id);
+      marker.setAttribute("markerWidth", "8");
+      marker.setAttribute("markerHeight", "8");
+      marker.setAttribute("refX", "6");
+      marker.setAttribute("refY", "3");
+      marker.setAttribute("orient", "auto");
+      var path = svgNS("path");
+      path.setAttribute("d", "M0,0 L6,3 L0,6 Z");
+      path.setAttribute("fill", id === "g" ? "#2e7d32" : "#1565c0");
+      marker.appendChild(path);
+      defs.appendChild(marker);
+    });
+    svg.appendChild(defs);
+    return svg;
+  }
+
+  function addCurvedArrow(svg, x1, y1, x2, y2, ok) {
+    var midX = (x1 + x2) / 2;
+    var arcY = Math.min(y1, y2) - 40;
+    var path = svgNS("path");
+    path.setAttribute("d", "M " + x1 + " " + y1 + " Q " + midX + " " + arcY + " " + x2 + " " + y2);
+    path.setAttribute("class", "arrow-path" + (ok ? " ok" : ""));
+    path.setAttribute("marker-end", "url(#arrowhead-" + (ok ? "g" : "b") + ")");
+    svg.appendChild(path);
+  }
+
+  function addStraightArrow(svg, x1, y1, x2, y2, ok) {
+    var path = svgNS("path");
+    path.setAttribute("d", "M " + x1 + " " + y1 + " L " + x2 + " " + y2);
+    path.setAttribute("class", "arrow-path" + (ok ? " ok" : ""));
+    path.setAttribute("marker-end", "url(#arrowhead-" + (ok ? "g" : "b") + ")");
+    svg.appendChild(path);
+  }
+
+  function makeBox(b, x, y) {
+    var d = document.createElement("div");
+    d.className = "mem-box" + (b.isPtr ? " ptr" : "") + (b.changed ? " changed" : "") + (b.current ? " current" : "") + (b.isTemp ? " temp" : "") + (b.isNull ? " nullbox" : "");
+    d.style.left = x + "px";
+    d.style.top = y + "px";
+    d.innerHTML = '<div class="mname">' + b.name + '</div><div class="mval">' + b.value + '</div>' + (b.addr ? '<div class="maddr">' + b.addr + '</div>' : '');
+    return d;
+  }
+
+  // ================= per-tab renderers =================
+
+  function renderSingleRow(snap) {
+    boardEl.innerHTML = "";
+    var boxes = snap.boxes;
+    var ROW_TOP = 50;
+    var stageW = Math.max(boxes.length * (BOX_W + GAP_X) + 20, 300);
+    var stageH = ROW_TOP + BOX_H + 40;
+    var stage = document.createElement("div");
+    stage.className = "mem-stage";
+    stage.style.width = stageW + "px";
+    stage.style.height = stageH + "px";
+    var svg = makeArrowLayer(stageW, stageH);
+    stage.appendChild(svg);
+    boxes.forEach(function (b, i) {
+      stage.appendChild(makeBox(b, colX(i), ROW_TOP));
+    });
+    (snap.arrows || []).forEach(function (pair) {
+      var i = pair[0], j = pair[1];
+      var x1 = colX(i) + BOX_W / 2, x2 = colX(j) + BOX_W / 2;
+      addCurvedArrow(svg, x1, ROW_TOP, x2, ROW_TOP, false);
+    });
+    boardEl.appendChild(stage);
+    if (snap.readout) {
+      var r = document.createElement("div");
+      r.className = "readout";
+      r.textContent = snap.readout;
+      boardEl.appendChild(r);
+    }
+  }
+
+  function renderSwap(snap) {
+    boardEl.innerHTML = "";
+    var label = document.createElement("div");
+    label.className = "phase-label" + (snap.phaseDone || snap.done ? " ok" : "");
+    label.textContent = snap.phase;
+    boardEl.appendChild(label);
+
+    var ROW1_TOP = 46, ROW2_TOP = 180;
+    var stageW = 2 * (BOX_W + GAP_X) + 20;
+    var stageH = ROW2_TOP + BOX_H + 30;
+    var stage = document.createElement("div");
+    stage.className = "mem-stage";
+    stage.style.width = stageW + "px";
+    stage.style.height = stageH + "px";
+    var svg = makeArrowLayer(stageW, stageH);
+    stage.appendChild(svg);
+
+    var l1 = document.createElement("div");
+    l1.className = "row-label"; l1.style.top = (ROW1_TOP - 20) + "px";
+    l1.textContent = "调用者（main）";
+    stage.appendChild(l1);
+
+    snap.callerRow.forEach(function (b, i) { stage.appendChild(makeBox(b, colX(i), ROW1_TOP)); });
+
+    if (snap.calleeRow) {
+      var l2 = document.createElement("div");
+      l2.className = "row-label"; l2.style.top = (ROW2_TOP - 20) + "px";
+      l2.textContent = "子函数栈帧";
+      stage.appendChild(l2);
+      snap.calleeRow.forEach(function (b, i) { stage.appendChild(makeBox(b, colX(i), ROW2_TOP)); });
+    }
+
+    (snap.arrows || []).forEach(function (pair) {
+      var fromIdx = parseInt(pair[0].replace("callee", ""), 10);
+      var toIdx = parseInt(pair[1].replace("caller", ""), 10);
+      var x = colX(fromIdx) + BOX_W / 2;
+      addStraightArrow(svg, x, ROW2_TOP, x, ROW1_TOP + BOX_H, true);
+    });
+
+    boardEl.appendChild(stage);
+  }
+
+  function renderList(snap) {
+    boardEl.innerHTML = "";
+    var nodes = snap.list.slice();
+    var showTemp = snap.temp;
+    var totalCols = nodes.length + (showTemp ? 1 : 0) + 1; // +1 for NULL tag
+    var ROW_TOP = 60;
+    var stageW = Math.max(totalCols * (BOX_W + GAP_X) + 20, 340);
+    var stageH = ROW_TOP + BOX_H + 40;
+    var stage = document.createElement("div");
+    stage.className = "mem-stage";
+    stage.style.width = stageW + "px";
+    stage.style.height = stageH + "px";
+    var svg = makeArrowLayer(stageW, stageH);
+    stage.appendChild(svg);
+
+    var col = 0;
+    var positions = {};
+    if (showTemp) {
+      stage.appendChild(makeBox({ name: "新节点", value: showTemp.val, isTemp: true }, colX(col), ROW_TOP));
+      positions.temp = col;
+      col++;
+    }
+    nodes.forEach(function (n, i) {
+      stage.appendChild(makeBox({ name: i === 0 ? "head→节点" : "节点", value: n.val }, colX(col), ROW_TOP));
+      positions["node" + i] = col;
+      col++;
+    });
+    stage.appendChild(makeBox({ name: "next", value: "NULL", isNull: true }, colX(col), ROW_TOP));
+    positions.nullTag = col;
+
+    // arrows: temp -> (old head or NULL)
+    if (showTemp) {
+      var fromX = colX(positions.temp) + BOX_W / 2;
+      var toCol = snap.tempLinksTo === "NULL" ? positions.nullTag : positions["node0"];
+      var toX = colX(toCol) + BOX_W / 2;
+      addCurvedArrow(svg, fromX, ROW_TOP, toX, ROW_TOP, false);
+    }
+    // arrows: each node -> next node, last node -> NULL
+    for (var i = 0; i < nodes.length; i++) {
+      var fx = colX(positions["node" + i]) + BOX_W / 2;
+      var tx = (i + 1 < nodes.length) ? colX(positions["node" + (i + 1)]) + BOX_W / 2 : colX(positions.nullTag) + BOX_W / 2;
+      addCurvedArrow(svg, fx, ROW_TOP, tx, ROW_TOP, true);
+    }
+
+    boardEl.appendChild(stage);
+  }
+
+  // ================= driver =================
+
+  function render() {
+    if (stepIndex < 0) {
+      boardEl.innerHTML = '<div class="board-empty">点击"生成演示"开始</div>';
+      logEl.innerHTML = '<div class="placeholder">// 这里会实时打印每一步发生了什么</div>';
+      return;
+    }
+    var snap = steps[stepIndex];
+    if (mode === "deref" || mode === "arr") renderSingleRow(snap);
+    else if (mode === "swap") renderSwap(snap);
+    else renderList(snap);
+
+    var lines = [];
+    for (var i = 0; i <= stepIndex; i++) lines.push("<div>" + (i + 1) + ". " + steps[i].log + "</div>");
+    logEl.innerHTML = lines.join("");
+    logEl.scrollTop = logEl.scrollHeight;
+    $("btnStep").disabled = stepIndex >= steps.length - 1;
+  }
+
+  function generate() {
+    stopAuto();
+    if (mode === "deref") {
+      var aInit = parseInt($("in_aInit").value, 10);
+      var pSet = parseInt($("in_pSet").value, 10);
+      if (isNaN(aInit)) aInit = 10;
+      if (isNaN(pSet)) pSet = 20;
+      $("in_aInit").value = aInit; $("in_pSet").value = pSet;
+      steps = buildDerefSteps(aInit, pSet);
+    } else if (mode === "arr") {
+      var arrStr = ($("in_arr").value || "3,1,4,1,5").trim();
+      var arr = arrStr.split(",").map(function (s) { return parseInt(s.trim(), 10); }).filter(function (v) { return !isNaN(v); });
+      if (arr.length === 0) arr = [3, 1, 4, 1, 5];
+      $("in_arr").value = arr.join(",");
+      steps = buildArrPointerSteps(arr);
+    } else if (mode === "swap") {
+      var aVal = parseInt($("in_aVal").value, 10);
+      var bVal = parseInt($("in_bVal").value, 10);
+      if (isNaN(aVal)) aVal = 3;
+      if (isNaN(bVal)) bVal = 7;
+      $("in_aVal").value = aVal; $("in_bVal").value = bVal;
+      steps = buildParamSwapSteps(aVal, bVal);
+    } else {
+      var seqStr = ($("in_seq").value || "5,2,8").trim();
+      var seq = seqStr.split(",").map(function (s) { return parseInt(s.trim(), 10); }).filter(function (v) { return !isNaN(v); });
+      if (seq.length === 0) seq = [5, 2, 8];
+      $("in_seq").value = seq.join(",");
+      steps = buildLinkedListSteps(seq);
+    }
+    stepIndex = -1;
+    nextStep();
+  }
+
+  function nextStep() {
+    if (stepIndex < steps.length - 1) { stepIndex++; render(); }
+    if (stepIndex >= steps.length - 1) stopAuto();
+  }
+
+  function resetAll() {
+    stopAuto();
+    stepIndex = -1;
+    steps = [];
+    render();
+  }
+
+  function stopAuto() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; $("btnAuto").textContent = "自动播放"; }
+  }
+
+  function toggleAuto() {
+    if (autoTimer) { stopAuto(); return; }
+    if (steps.length === 0) generate();
+    $("btnAuto").textContent = "暂停";
+    autoTimer = setInterval(function () {
+      if (stepIndex >= steps.length - 1) { stopAuto(); return; }
+      nextStep();
+    }, 1200);
+  }
+
+  function buildControls() {
+    var info = MODE_INFO[mode];
+    var html = "";
+    info.inputs.forEach(function (inp) {
+      var elId = "in_" + inp.id;
+      html += '<label>' + inp.label + ' <input id="' + elId + '" value="' + inp.def + '" style="' + (inp.wide ? "width:200px;" : "") + '" /></label>';
+    });
+    html += '<button class="go" id="btnGen">生成演示</button>';
+    html += '<button id="btnStep">下一步 →</button>';
+    html += '<button id="btnAuto">自动播放</button>';
+    html += '<button class="secondary" id="btnReset">重置</button>';
+    controlsEl.innerHTML = html;
+    $("btnGen").addEventListener("click", generate);
+    $("btnStep").addEventListener("click", nextStep);
+    $("btnAuto").addEventListener("click", toggleAuto);
+    $("btnReset").addEventListener("click", resetAll);
+    hintEl.textContent = info.hint;
+  }
+
+  function switchMode(m) {
+    mode = m;
+    document.querySelectorAll(".tab").forEach(function (t) {
+      t.classList.toggle("active", t.dataset.mode === m);
+    });
+    buildControls();
+    resetAll();
+  }
+
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function () { switchMode(t.dataset.mode); });
+  });
+
+  switchMode("deref");
+})();
+</script>
+</body>
+</html>

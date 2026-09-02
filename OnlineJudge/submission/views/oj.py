@@ -1,6 +1,7 @@
 import ipaddress
 
 import requests
+from django.db import IntegrityError
 from django.utils import timezone
 
 from account.decorators import login_required, check_contest_permission
@@ -379,12 +380,20 @@ class AICodeDiagnosisAPI(APIView):
         except (KeyError, IndexError):
             return self.error("AI 服务返回异常，请联系管理员检查接口配置")
 
-        diagnosis = AICodeDiagnosis.objects.create(submission=submission,
-                                                   problem=submission.problem,
-                                                   user_id=submission.user_id,
-                                                   username=submission.username,
-                                                   submission_result=submission.result,
-                                                   result=content)
+        try:
+            diagnosis = AICodeDiagnosis.objects.create(submission=submission,
+                                                       problem=submission.problem,
+                                                       user_id=submission.user_id,
+                                                       username=submission.username,
+                                                       submission_result=submission.result,
+                                                       result=content)
+        except IntegrityError:
+            # 同一条提交被并发重复诊断（如多标签页同时点击）：另一个请求已抢先写入，直接返回其结果当缓存
+            existing = AICodeDiagnosis.objects.filter(submission_id=submission.id).first()
+            if existing:
+                return self.success({"result": existing.result, "cached": True})
+            raise
+
         remaining = limit
         if not request.user.is_admin_role():
             used = AICodeDiagnosis.objects.filter(user_id=request.user.id,

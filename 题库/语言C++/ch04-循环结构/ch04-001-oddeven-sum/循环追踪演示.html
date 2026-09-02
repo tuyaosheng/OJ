@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>循环结构 · 执行追踪演示</title>
+<style>
+  :root {
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+    --green: #2e7d32;
+    --green-light: #e8f5e9;
+    --orange: #ef6c00;
+    --orange-light: #fff3e0;
+    --gray: #9e9e9e;
+    --ink: #263238;
+    --border: #cfd8dc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    background: #f0f2f5;
+    color: var(--ink);
+    padding: 24px;
+  }
+  h1 { text-align: center; color: var(--blue); margin: 0 0 4px; font-size: 26px; }
+  .sub { text-align: center; color: #607d8b; margin-bottom: 20px; font-size: 14px; }
+  .wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+    padding: 24px 28px 28px;
+  }
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab {
+    flex: 1; min-width: 140px; padding: 10px 14px;
+    border: 2px solid var(--border); background: #fafafa; border-radius: 8px;
+    cursor: pointer; font-size: 15px; font-weight: 600; color: #546e7a; transition: all .15s;
+  }
+  .tab:hover { border-color: var(--blue); color: var(--blue); }
+  .tab.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .controls {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #f5f7fa; padding: 14px 16px; border-radius: 8px; margin-bottom: 20px;
+  }
+  .controls label { font-size: 14px; color: #455a64; }
+  .controls input {
+    width: 100px; padding: 6px 10px; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 15px; font-family: "Consolas", monospace;
+  }
+  .controls button {
+    padding: 7px 16px; border: none; border-radius: 6px; cursor: pointer;
+    font-size: 14px; font-weight: 600; color: #fff; background: var(--blue); transition: opacity .15s;
+  }
+  .controls button:hover { opacity: .85; }
+  .controls button.secondary { background: #78909c; }
+  .controls button.go { background: var(--green); }
+  .controls button:disabled { background: #cfd8dc; cursor: not-allowed; }
+  .hint { font-size: 13px; color: #90a4ae; margin: -12px 0 18px 2px; }
+
+  .board { background: #fbfcfd; border: 1px solid var(--border); border-radius: 10px; padding: 22px; min-height: 160px; }
+  .board-empty { text-align: center; color: #b0bec5; padding: 40px 0; font-size: 15px; }
+
+  .phase-label {
+    display: inline-block; font-size: 13px; font-weight: 700; color: #fff;
+    background: var(--blue); border-radius: 12px; padding: 2px 12px; margin-bottom: 14px;
+  }
+  .phase-label.body { background: var(--orange); }
+  .phase-label.done { background: var(--green); }
+
+  .codebox {
+    background: #263238; border-radius: 8px; padding: 14px 18px;
+    font-family: "Consolas", monospace; font-size: 15px; line-height: 1.85; color: #cfd8dc;
+    margin-bottom: 18px; overflow-x: auto;
+  }
+  .codeline { white-space: pre; padding: 1px 8px; border-radius: 4px; }
+  .codeline.hl-cond { background: rgba(21,101,192,0.55); color: #fff; }
+  .codeline.hl-body { background: rgba(239,108,0,0.55); color: #fff; }
+  .codeline.hl-update { background: rgba(21,101,192,0.35); color: #fff; }
+
+  table.trace {
+    width: 100%; border-collapse: collapse; font-family: "Consolas", monospace; font-size: 15px;
+    margin-bottom: 6px;
+  }
+  table.trace th, table.trace td { border: 1px solid var(--border); padding: 6px 10px; text-align: center; }
+  table.trace th { background: #eceff1; color: var(--blue); }
+  table.trace tr.current td { background: var(--blue-light); font-weight: 700; }
+  table.trace tr.done td { color: #607d8b; }
+  .trace-scroll { max-height: 300px; overflow-y: auto; border-radius: 6px; }
+
+  .grid-tri { display: grid; gap: 4px; margin: 6px auto; width: max-content; }
+  .star-row { display: flex; gap: 4px; justify-content: flex-start; align-items: center; }
+  .star-row .rowlabel { width: 64px; font-family: "Consolas", monospace; font-size: 13px; color: #607d8b; text-align: right; margin-right: 4px; }
+  .star-cell {
+    width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+    border-radius: 5px; border: 2px solid var(--border); background: #fafafa; color: #cfd8dc;
+    font-size: 18px; font-weight: 700;
+  }
+  .star-cell.filled { background: var(--green-light); color: var(--green); border-color: transparent; }
+  .star-cell.current { background: var(--orange-light); color: var(--orange); border-color: var(--orange); }
+
+  .log {
+    margin-top: 18px; background: #263238; color: #b2ff59; border-radius: 8px; padding: 14px 16px;
+    font-family: "Consolas", monospace; font-size: 14px; min-height: 90px; max-height: 220px;
+    overflow-y: auto; line-height: 1.7;
+  }
+  .log div { opacity: .55; }
+  .log div:last-child { opacity: 1; color: #eeff41; }
+  .log .placeholder { color: #607d8b; opacity: 1; }
+
+  @media (prefers-color-scheme: dark) {
+    body { background: #14181b; color: #e0e0e0; }
+    .wrap { background: #1e2428; box-shadow: none; }
+    .controls { background: #262c30; }
+    .board { background: #1a1f22; border-color: #37474f; }
+    table.trace th { background: #2c3639; }
+    table.trace td { border-color: #37474f; color: #cfd8dc; }
+    table.trace tr.current td { background: #29435c; }
+    .star-cell { background: #1c2226; border-color: #37474f; color: #455a64; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>循环结构 · 执行追踪演示</h1>
+  <div class="sub">第 4 章配套演示 &nbsp;|&nbsp; 每一步都在"判断条件 / 执行循环体 / 步进"之间跳转，右侧同步搭出追踪表</div>
+
+  <div class="tabs">
+    <button class="tab active" data-mode="for">for 循环（奇偶数之和）</button>
+    <button class="tab" data-mode="while">while 循环（加到超过k）</button>
+    <button class="tab" data-mode="tri">双重循环（直角三角形）</button>
+  </div>
+
+  <div class="controls">
+    <label id="labelMain">n：<input id="inputMain" /></label>
+    <button class="go" id="btnGen">生成演示</button>
+    <button id="btnStep">下一步 →</button>
+    <button id="btnAuto">自动播放</button>
+    <button class="secondary" id="btnReset">重置</button>
+  </div>
+  <div class="hint" id="hint"></div>
+
+  <div class="board" id="board"><div class="board-empty">点击"生成演示"开始</div></div>
+
+  <div class="log" id="log"><div class="placeholder">// 这里会实时打印每一步的运算过程</div></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- pure step builders (verified against hand-traced numbers in 章节讲稿.md) ----------
+
+  function buildForSteps(n) {
+    var steps = [];
+    var sum1 = 0, sum2 = 0;
+    steps.push({ phase: "init", sum1: sum1, sum2: sum2, log: "初始化：sum1=0, sum2=0，i 即将从 1 开始" });
+    var i = 1;
+    while (true) {
+      var cond = i <= n;
+      steps.push({ phase: "cond", i: i, cond: cond, sum1: sum1, sum2: sum2,
+        log: "条件判断：i=" + i + " <= n=" + n + " ？" + (cond ? " 成立，进入循环体" : " 不成立，循环结束") });
+      if (!cond) break;
+      var isOdd = i % 2 === 1;
+      if (isOdd) sum1 += i; else sum2 += i;
+      steps.push({ phase: "body", i: i, isOdd: isOdd, sum1: sum1, sum2: sum2,
+        log: "执行循环体：i=" + i + " 是" + (isOdd ? ("奇数，sum1 += " + i + " → sum1=" + sum1) : ("偶数，sum2 += " + i + " → sum2=" + sum2)) });
+      steps.push({ phase: "row", i: i, sum1: sum1, sum2: sum2, log: "记录一行：i=" + i + "，sum1=" + sum1 + "，sum2=" + sum2 });
+      var newI = i + 1;
+      steps.push({ phase: "update", i: i, newI: newI, sum1: sum1, sum2: sum2, log: "步进：i++ → i=" + newI });
+      i = newI;
+    }
+    steps.push({ phase: "done", sum1: sum1, sum2: sum2, log: "循环结束，最终 奇数和=" + sum1 + "，偶数和=" + sum2 });
+    return steps;
+  }
+
+  function buildWhileSteps(k) {
+    var steps = [];
+    var n = 0, s = 0;
+    steps.push({ phase: "init", n: n, s: s, log: "初始化：n=0, s=0" });
+    while (true) {
+      var cond = s <= k;
+      steps.push({ phase: "cond", n: n, s: s, cond: cond,
+        log: "条件判断：s=" + s + " <= k=" + k + " ？" + (cond ? " 成立，继续累加" : " 不成立，循环结束") });
+      if (!cond) break;
+      n++;
+      steps.push({ phase: "body1", n: n, s: s, log: "执行 n++ → n=" + n });
+      s += n;
+      steps.push({ phase: "body2", n: n, s: s, log: "执行 s += n → s=" + s });
+      steps.push({ phase: "row", n: n, s: s, log: "记录一行：n=" + n + "，s=" + s });
+    }
+    steps.push({ phase: "done", n: n, s: s, log: "循环结束：首次使 s 超过 k 的项数 n=" + n + "，此时 s=" + s });
+    return steps;
+  }
+
+  function buildTriangleSteps(n) {
+    var steps = [];
+    var grid = new Array(n).fill(0);
+    for (var i = 1; i <= n; i++) {
+      steps.push({ phase: "outer", i: i, grid: grid.slice(), log: "外层循环：i=" + i + "，准备打印第 " + i + " 行" });
+      for (var j = 1; j <= i; j++) {
+        grid[i - 1] = j;
+        steps.push({ phase: "inner", i: i, j: j, grid: grid.slice(), log: "内层循环：j=" + j + "，输出一个 *（第 " + i + " 行第 " + j + " 个）" });
+      }
+      steps.push({ phase: "rowEnd", i: i, grid: grid.slice(), log: "第 " + i + " 行结束，换行" });
+    }
+    steps.push({ phase: "done", grid: grid.slice(), log: "外层循环结束，共打印 " + n + " 行，星号总数 = " + (n * (n + 1) / 2) });
+    return steps;
+  }
+
+  // ---------- mode config ----------
+
+  var CODE = {
+    for: [
+      "int sum1 = 0, sum2 = 0;",
+      "for (int i = 1; i <= n; i++) {",
+      "    if (i % 2 == 1) sum1 += i;",
+      "    else            sum2 += i;",
+      "}"
+    ],
+    while: [
+      "long long n = 0, s = 0;",
+      "while (s <= k) {",
+      "    n++;",
+      "    s += n;",
+      "}"
+    ],
+    tri: [
+      "for (int i = 1; i <= n; i++) {",
+      "    for (int j = 1; j <= i; j++)",
+      "        cout << \"*\";",
+      "    cout << endl;",
+      "}"
+    ]
+  };
+
+  var MODE_DEFAULTS = { for: "6", while: "20", tri: "4" };
+  var MODE_LABEL = { for: "n：", while: "k：", tri: "n：" };
+  var MODE_HINTS = {
+    for: "n 建议 4~10，方便完整看完追踪表；黑板上正式讲的例子用的是同样的规则，数字更大而已。",
+    while: "k 建议 10~40，方便几步就能看完；正式课件里的例子是 k=1000（答案是第45项、s=1035），道理完全一样，只是步数多。",
+    tri: "n 建议不超过 8，太大格子会铺满屏幕。"
+  };
+
+  var mode = "for";
+  var steps = [];
+  var stepIndex = -1;
+  var autoTimer = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var boardEl = $("board"), logEl = $("log");
+  var inputMain = $("inputMain"), labelMain = $("labelMain");
+  var btnStep = $("btnStep"), btnAuto = $("btnAuto");
+
+  function clampInt(v, lo, hi, dflt) {
+    var x = parseInt(v, 10);
+    if (isNaN(x)) return dflt;
+    return Math.max(lo, Math.min(hi, x));
+  }
+
+  // ---------- rendering ----------
+
+  function renderCode(highlightIndex, cls) {
+    var lines = CODE[mode];
+    var html = lines.map(function (line, idx) {
+      var c = (idx === highlightIndex) ? (" hl-" + cls) : "";
+      return '<div class="codeline' + c + '">' + escapeHtml(line) + "</div>";
+    }).join("");
+    return '<div class="codebox">' + html + "</div>";
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function phaseLabelHtml(text, kind) {
+    var cls = kind === "body" ? " body" : (kind === "done" ? " done" : "");
+    return '<div class="phase-label' + cls + '">' + text + "</div>";
+  }
+
+  function renderFor(snap) {
+    var lineIdx = -1, cls = "cond", label = "", kind = "cond";
+    if (snap.phase === "init") { lineIdx = 0; label = "初始化"; }
+    else if (snap.phase === "cond") { lineIdx = 1; label = "条件判断"; }
+    else if (snap.phase === "body") { lineIdx = snap.isOdd ? 2 : 3; label = "执行循环体"; kind = "body"; cls = "body"; }
+    else if (snap.phase === "row") { lineIdx = snap.isOdd === undefined ? 2 : (snap.isOdd ? 2 : 3); label = "记录一行到追踪表"; kind = "body"; cls = "body"; }
+    else if (snap.phase === "update") { lineIdx = 1; label = "步进 i++"; cls = "update"; }
+    else if (snap.phase === "done") { lineIdx = -1; label = "循环结束"; kind = "done"; }
+
+    var html = phaseLabelHtml(label, kind) + renderCode(lineIdx, cls);
+
+    html += '<div class="trace-scroll"><table class="trace"><thead><tr><th>i</th><th>条件 i&lt;=n</th><th>sum1（奇数和）</th><th>sum2（偶数和）</th></tr></thead><tbody>';
+    for (var k = 0; k <= stepIndex; k++) {
+      var s = steps[k];
+      if (s.phase !== "row") continue;
+      var isCur = (k === stepIndex);
+      html += '<tr class="' + (isCur ? "current" : "done") + '"><td>' + s.i + '</td><td>成立</td><td>' + s.sum1 + '</td><td>' + s.sum2 + '</td></tr>';
+    }
+    html += "</tbody></table></div>";
+    if (snap.phase === "done") {
+      html += '<div style="text-align:center;color:var(--green);font-weight:700;margin-top:8px;">最终：sum1=' + snap.sum1 + '，sum2=' + snap.sum2 + '</div>';
+    }
+    boardEl.innerHTML = html;
+  }
+
+  function renderWhile(snap) {
+    var lineIdx = -1, cls = "cond", label = "", kind = "cond";
+    if (snap.phase === "init") { lineIdx = 0; label = "初始化"; }
+    else if (snap.phase === "cond") { lineIdx = 1; label = "条件判断"; }
+    else if (snap.phase === "body1") { lineIdx = 2; label = "执行循环体：n++"; kind = "body"; cls = "body"; }
+    else if (snap.phase === "body2") { lineIdx = 3; label = "执行循环体：s += n"; kind = "body"; cls = "body"; }
+    else if (snap.phase === "row") { lineIdx = 3; label = "记录一行到追踪表"; kind = "body"; cls = "body"; }
+    else if (snap.phase === "done") { lineIdx = -1; label = "循环结束"; kind = "done"; }
+
+    var html = phaseLabelHtml(label, kind) + renderCode(lineIdx, cls);
+
+    html += '<div class="trace-scroll"><table class="trace"><thead><tr><th>n</th><th>条件 s&lt;=k（判断前）</th><th>s（累加后）</th></tr></thead><tbody>';
+    for (var k = 0; k <= stepIndex; k++) {
+      var s = steps[k];
+      if (s.phase !== "row") continue;
+      var isCur = (k === stepIndex);
+      html += '<tr class="' + (isCur ? "current" : "done") + '"><td>' + s.n + '</td><td>成立</td><td>' + s.s + '</td></tr>';
+    }
+    html += "</tbody></table></div>";
+    if (snap.phase === "done") {
+      html += '<div style="text-align:center;color:var(--green);font-weight:700;margin-top:8px;">最终：首次超过 k 的项数 n=' + snap.n + '，此时 s=' + snap.s + '</div>';
+    }
+    boardEl.innerHTML = html;
+  }
+
+  function renderTri(snap) {
+    var lineIdx = -1, cls = "cond", label = "", kind = "cond";
+    if (snap.phase === "outer") { lineIdx = 0; label = "外层循环：第 " + snap.i + " 行"; }
+    else if (snap.phase === "inner") { lineIdx = 2; label = "内层循环：打印第 " + snap.j + " 个 *"; kind = "body"; cls = "body"; }
+    else if (snap.phase === "rowEnd") { lineIdx = 3; label = "换行"; cls = "update"; }
+    else if (snap.phase === "done") { lineIdx = -1; label = "循环结束"; kind = "done"; }
+
+    var html = phaseLabelHtml(label, kind) + renderCode(lineIdx, cls);
+
+    var grid = snap.grid;
+    var n = grid.length;
+    html += '<div class="grid-tri">';
+    for (var i = 1; i <= n; i++) {
+      html += '<div class="star-row"><div class="rowlabel">i=' + i + '</div>';
+      var revealed = grid[i - 1];
+      var maxShow = n; // keep column width consistent across rows
+      for (var j = 1; j <= maxShow; j++) {
+        if (j > i) { html += '<div class="star-cell" style="visibility:hidden;">*</div>'; continue; }
+        var isCurCell = (snap.phase === "inner" && snap.i === i && snap.j === j);
+        var filled = j <= revealed;
+        var cls2 = "star-cell" + (filled ? " filled" : "") + (isCurCell ? " current" : "");
+        html += '<div class="' + cls2 + '">' + (filled ? "*" : "") + "</div>";
+      }
+      html += "</div>";
+    }
+    html += "</div>";
+    if (snap.phase === "done") {
+      html += '<div style="text-align:center;color:var(--green);font-weight:700;margin-top:12px;">共打印 ' + n + ' 行，星号总数 = ' + (n * (n + 1) / 2) + '</div>';
+    }
+    boardEl.innerHTML = html;
+  }
+
+  function render() {
+    if (stepIndex < 0) {
+      boardEl.innerHTML = '<div class="board-empty">点击"生成演示"开始</div>';
+      logEl.innerHTML = '<div class="placeholder">// 这里会实时打印每一步的运算过程</div>';
+      return;
+    }
+    var snap = steps[stepIndex];
+    if (mode === "for") renderFor(snap);
+    else if (mode === "while") renderWhile(snap);
+    else renderTri(snap);
+
+    var lines = [];
+    for (var i = 0; i <= stepIndex; i++) lines.push("<div>" + (i + 1) + ". " + steps[i].log + "</div>");
+    logEl.innerHTML = lines.join("");
+    logEl.scrollTop = logEl.scrollHeight;
+
+    btnStep.disabled = stepIndex >= steps.length - 1;
+  }
+
+  function generate() {
+    stopAuto();
+    var raw = inputMain.value || MODE_DEFAULTS[mode];
+    var val;
+    if (mode === "for") val = clampInt(raw, 1, 12, 6);
+    else if (mode === "while") val = clampInt(raw, 1, 2000, 20);
+    else val = clampInt(raw, 1, 9, 4);
+    inputMain.value = val;
+
+    if (mode === "for") steps = buildForSteps(val);
+    else if (mode === "while") steps = buildWhileSteps(val);
+    else steps = buildTriangleSteps(val);
+
+    stepIndex = -1;
+    nextStep();
+  }
+
+  function nextStep() {
+    if (stepIndex < steps.length - 1) { stepIndex++; render(); }
+    if (stepIndex >= steps.length - 1) stopAuto();
+  }
+
+  function resetAll() {
+    stopAuto();
+    stepIndex = -1;
+    steps = [];
+    render();
+  }
+
+  function stopAuto() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; btnAuto.textContent = "自动播放"; }
+  }
+
+  function toggleAuto() {
+    if (autoTimer) { stopAuto(); return; }
+    if (steps.length === 0) generate();
+    btnAuto.textContent = "暂停";
+    autoTimer = setInterval(function () {
+      if (stepIndex >= steps.length - 1) { stopAuto(); return; }
+      nextStep();
+    }, 650);
+  }
+
+  function switchMode(m) {
+    mode = m;
+    document.querySelectorAll(".tab").forEach(function (t) { t.classList.toggle("active", t.dataset.mode === m); });
+    inputMain.value = MODE_DEFAULTS[m];
+    labelMain.firstChild.textContent = MODE_LABEL[m];
+    $("hint").textContent = MODE_HINTS[m];
+    resetAll();
+  }
+
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function () { switchMode(t.dataset.mode); });
+  });
+  $("btnGen").addEventListener("click", generate);
+  btnStep.addEventListener("click", nextStep);
+  btnAuto.addEventListener("click", toggleAuto);
+  $("btnReset").addEventListener("click", resetAll);
+
+  switchMode("for");
+})();
+</script>
+</body>
+</html>

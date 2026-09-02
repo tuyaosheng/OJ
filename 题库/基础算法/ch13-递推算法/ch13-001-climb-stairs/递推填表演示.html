@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>递推填表 · 板书演示</title>
+<style>
+  :root {
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+    --green: #2e7d32;
+    --green-light: #e8f5e9;
+    --orange: #ef6c00;
+    --orange-light: #fff3e0;
+    --purple: #6a1b9a;
+    --purple-light: #f3e5f5;
+    --gray: #9e9e9e;
+    --ink: #263238;
+    --border: #cfd8dc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    background: #f0f2f5;
+    color: var(--ink);
+    padding: 24px;
+  }
+  h1 { text-align: center; color: var(--blue); margin: 0 0 4px; font-size: 26px; }
+  .sub { text-align: center; color: #607d8b; margin-bottom: 20px; font-size: 14px; }
+  .wrap {
+    max-width: 1080px; margin: 0 auto; background: #fff; border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08); padding: 24px 28px 28px;
+  }
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab {
+    flex: 1; min-width: 110px; padding: 10px 10px; border: 2px solid var(--border);
+    background: #fafafa; border-radius: 8px; cursor: pointer; font-size: 14px;
+    font-weight: 600; color: #546e7a; transition: all .15s;
+  }
+  .tab:hover { border-color: var(--blue); color: var(--blue); }
+  .tab.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .controls {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #f5f7fa; padding: 14px 16px; border-radius: 8px; margin-bottom: 20px;
+  }
+  .controls label { font-size: 14px; color: #455a64; display: flex; align-items: center; gap: 6px; }
+  .controls input[type=text], .controls input[type=number] {
+    width: 90px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 15px; font-family: "Consolas", monospace;
+  }
+  .controls button {
+    padding: 7px 16px; border: none; border-radius: 6px; cursor: pointer;
+    font-size: 14px; font-weight: 600; color: #fff; background: var(--blue); transition: opacity .15s;
+  }
+  .controls button:hover { opacity: .85; }
+  .controls button.secondary { background: #78909c; }
+  .controls button.go { background: var(--green); }
+  .controls button:disabled { background: #cfd8dc; cursor: not-allowed; }
+  .hint { font-size: 13px; color: #90a4ae; margin: -12px 0 18px 2px; }
+
+  .board { background: #fbfcfd; border: 1px solid var(--border); border-radius: 10px; padding: 24px; min-height: 220px; overflow-x: auto; }
+  .board-empty { text-align: center; color: #b0bec5; padding: 40px 0; font-size: 15px; }
+  .section-title { font-size: 13px; color: #90a4ae; margin: 4px 0 10px 2px; font-weight: 600; }
+  .status-line { font-size: 14px; color: #37474f; margin-bottom: 14px; font-family: "Consolas", monospace; }
+  .status-line b { color: var(--blue); }
+
+  .strip { display: flex; gap: 8px; align-items: flex-end; }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; }
+  .idx-label { font-size: 11px; color: #90a4ae; font-family: "Consolas", monospace; }
+  .cell {
+    width: 56px; height: 52px; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-family: "Consolas", monospace; font-weight: 700;
+    border-radius: 6px; border: 2px solid transparent; background: #fff; color: var(--ink);
+    position: relative;
+  }
+  .cell.unknown { color: #cfd8dc; background: #fafafa; }
+  .cell.current { border-color: var(--orange); background: var(--orange-light); color: var(--orange); box-shadow: 0 0 0 3px rgba(239,108,0,0.15); }
+  .cell.src { border-color: var(--blue); background: var(--blue-light); color: var(--blue); }
+  .cell.src2 { border-color: var(--purple); background: var(--purple-light); color: var(--purple); }
+  .cell.done { background: var(--green-light); color: var(--green); }
+  .cell.chosen { border-color: var(--green); }
+  .dep-tag {
+    position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; font-weight: 700; color: #fff; background: var(--orange);
+    border-radius: 10px; padding: 1px 6px; white-space: nowrap;
+  }
+  .formula-line {
+    margin-top: 14px; padding: 10px 14px; background: #eceff1; border-radius: 8px;
+    font-family: "Consolas", monospace; font-size: 14px; color: #37474f; text-align: center;
+  }
+
+  .grid-tri { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .tri-row { display: flex; gap: 8px; }
+
+  .grid-pairs { display: grid; gap: 4px; margin: 10px auto; width: max-content; }
+  .gcell {
+    width: 60px; height: 40px; display: flex; align-items: center; justify-content: center;
+    font-family: "Consolas", monospace; font-size: 13px; border-radius: 6px;
+    background: #fff; border: 1px solid var(--border); color: #546e7a;
+  }
+  .gcell.head { background: #eceff1; font-weight: 700; color: var(--blue); border: none; }
+  .gcell.hit { background: var(--orange-light); border: 2px solid var(--orange); color: var(--orange); font-weight: 700; }
+
+  .ring { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+  .legend { margin-top: 14px; display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: #607d8b; }
+  .legend span.dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: middle; }
+
+  .log {
+    margin-top: 18px; background: #263238; color: #b2ff59; border-radius: 8px;
+    padding: 14px 16px; font-family: "Consolas", monospace; font-size: 14px;
+    min-height: 90px; max-height: 220px; overflow-y: auto; line-height: 1.7;
+  }
+  .log div { opacity: .55; }
+  .log div:last-child { opacity: 1; color: #eeff41; }
+  .log .placeholder { color: #607d8b; opacity: 1; }
+
+  @media (prefers-color-scheme: dark) {
+    body { background: #14181b; color: #e0e0e0; }
+    .wrap { background: #1e2428; box-shadow: none; }
+    .cell, .gcell { background: #263238; color: #e0e0e0; }
+    .cell.unknown { background: #1c2226; color: #546e7a; }
+    .gcell.head { background: #2c3639; }
+    .controls { background: #262c30; }
+    .board { background: #1a1f22; border-color: #37474f; }
+    .formula-line { background: #26313a; color: #cfd8dc; }
+    .status-line { color: #cfd8dc; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>递推填表 · 电子板书</h1>
+  <div class="sub">第 13 章配套演示 &nbsp;|&nbsp; 点"下一步"，看新格子怎么由旧格子推出来，依赖关系一格不落</div>
+
+  <div class="tabs">
+    <button class="tab active" data-mode="stairs">爬楼梯</button>
+    <button class="tab" data-mode="triangle">数字三角形</button>
+    <button class="tab" data-mode="catalan">卡特兰数</button>
+    <button class="tab" data-mode="pass">传球游戏</button>
+  </div>
+
+  <div class="controls" id="controls">
+    <!-- filled per mode -->
+  </div>
+  <div class="hint" id="hint"></div>
+
+  <div class="board" id="board">
+    <div class="board-empty">点击"生成演示"开始</div>
+  </div>
+
+  <div class="log" id="log"><div class="placeholder">// 这里会实时打印每一步的运算过程</div></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var mode = "stairs";
+  var steps = [];
+  var stepIndex = -1;
+  var autoTimer = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var boardEl = $("board"), logEl = $("log"), controlsEl = $("controls"), hintEl = $("hint");
+  var btnStep, btnAuto;
+
+  // ================= pure logic =================
+
+  // ---- 1. stairs: linear recurrence f[i] = sum of f[i-1..i-k] ----
+  function buildStairsSteps(n, allowThree) {
+    var k = allowThree ? 3 : 2;
+    var f = new Array(n + 1).fill(null);
+    var base = allowThree ? [1, 1, 2] : [null, 1, 2]; // index 0 unused in classic 2-step version
+    var steps = [];
+    var startI;
+    if (allowThree) {
+      f[0] = 1; if (n >= 1) f[1] = 1; if (n >= 2) f[2] = 2;
+      startI = 3;
+      steps.push({ f: f.slice(), current: -1, n: n, k: k,
+        log: "边界：f[0]=1（站着不动也算一种方案），f[1]=1，f[2]=2。" });
+    } else {
+      if (n >= 1) f[1] = 1; if (n >= 2) f[2] = 2;
+      startI = 3;
+      steps.push({ f: f.slice(), current: -1, n: n, k: k,
+        log: "边界：f[1]=1（只能迈 1 级），f[2]=2（1+1 或 2）。" });
+    }
+    for (var i = startI; i <= n; i++) {
+      var srcs = [];
+      var sum = 0;
+      for (var d = 1; d <= k; d++) { srcs.push(i - d); sum += f[i - d]; }
+      f[i] = sum;
+      var terms = srcs.map(function (s) { return "f[" + s + "]=" + f[s]; }).join(" + ");
+      steps.push({ f: f.slice(), current: i, srcs: srcs, n: n, k: k,
+        log: "f[" + i + "] = " + terms + " = " + f[i] });
+    }
+    steps.push({ f: f.slice(), current: -1, n: n, k: k, done: true,
+      log: "填表完成，f[" + n + "] = " + f[n] + "。" });
+    return steps;
+  }
+
+  // ---- 2. triangle: bottom-up 2D max recurrence ----
+  function buildTriangleSteps(tri) {
+    var rows = tri.length;
+    var g = tri.map(function (row) { return row.slice(); }); // start as copy, overwrite bottom-up
+    var steps = [];
+    steps.push({ g: g.map(function (r) { return r.slice(); }), activeRow: rows - 1, activeCol: -1, tri: tri,
+      log: "从最后一行开始：g[" + (rows - 1) + "][j] 就是它自己 = [" + tri[rows - 1].join(", ") + "]。" });
+    for (var i = rows - 2; i >= 0; i--) {
+      for (var j = 0; j <= i; j++) {
+        var left = g[i + 1][j], right = g[i + 1][j + 1];
+        var best = Math.max(left, right);
+        g[i][j] = tri[i][j] + best;
+        steps.push({
+          g: g.map(function (r) { return r.slice(); }), activeRow: i, activeCol: j,
+          childRow: i + 1, childCols: [j, j + 1], chosenCol: left >= right ? j : j + 1, tri: tri,
+          log: "g[" + i + "][" + j + "] = a[" + i + "][" + j + "] + max(g[" + (i+1) + "][" + j + "]=" + left + ", g[" + (i+1) + "][" + (j+1) + "]=" + right + ") = " + tri[i][j] + " + " + best + " = " + g[i][j]
+        });
+      }
+    }
+    steps.push({ g: g.map(function (r) { return r.slice(); }), activeRow: -1, activeCol: -1, tri: tri, done: true,
+      log: "推到顶部，g[0][0] = " + g[0][0] + "，这就是最大路径和。" });
+    return steps;
+  }
+
+  // ---- 3. catalan: sum-of-products recurrence ----
+  function buildCatalanSteps(n) {
+    var f = new Array(n + 1).fill(null);
+    f[0] = 1;
+    var steps = [];
+    steps.push({ f: f.slice(), current: -1, n: n, log: "边界：f[0]=1（空序列只有一种方案）。" });
+    for (var m = 1; m <= n; m++) {
+      var pairs = [];
+      var sum = 0;
+      for (var k = 0; k < m; k++) {
+        var term = f[k] * f[m - 1 - k];
+        pairs.push({ k: k, other: m - 1 - k, val: term });
+        sum += term;
+      }
+      f[m] = sum;
+      var terms = pairs.map(function (p) { return "f[" + p.k + "]×f[" + p.other + "]=" + p.val; }).join(" + ");
+      steps.push({ f: f.slice(), current: m, pairs: pairs, n: n,
+        log: "f[" + m + "] = " + terms + " = " + f[m] });
+    }
+    steps.push({ f: f.slice(), current: -1, n: n, done: true, log: "填表完成，f[" + n + "] = " + f[n] + "。" });
+    return steps;
+  }
+
+  // ---- 4. pass ball: 2D circular recurrence ----
+  function buildPassSteps(n, m) {
+    // f[i][j], j from 1..n (1-indexed persons), stored as array index 0..n-1
+    var rows = [];
+    var f0 = new Array(n).fill(0);
+    f0[0] = 1; // person 1 (index 0) holds the ball at time 0
+    rows.push(f0);
+    var steps = [];
+    steps.push({ rows: rows.map(function (r) { return r.slice(); }), n: n, m: m, activeRow: 0, activeCol: -1,
+      log: "边界：f[0][1]=1（球一开始在 1 号手里），其他人 f[0][j]=0。" });
+    for (var i = 1; i <= m; i++) {
+      var prev = rows[i - 1];
+      var cur = new Array(n).fill(0);
+      for (var j = 0; j < n; j++) {
+        var leftIdx = (j - 1 + n) % n;   // circular left neighbor
+        var rightIdx = (j + 1) % n;      // circular right neighbor
+        cur[j] = prev[leftIdx] + prev[rightIdx];
+        steps.push({
+          rows: rows.concat([cur]).map(function (r) { return r.slice(); }), n: n, m: m,
+          activeRow: i, activeCol: j, srcRow: i - 1, srcCols: [leftIdx, rightIdx],
+          log: "f[" + i + "][" + (j + 1) + "] = f[" + (i - 1) + "][" + (leftIdx + 1) + "]（左邻）+ f[" + (i - 1) + "][" + (rightIdx + 1) + "]（右邻）= " + prev[leftIdx] + " + " + prev[rightIdx] + " = " + cur[j]
+        });
+      }
+      rows.push(cur);
+    }
+    steps.push({ rows: rows.map(function (r) { return r.slice(); }), n: n, m: m, activeRow: -1, activeCol: -1, done: true,
+      log: "传了 " + m + " 次后，球回到 1 号手里的方案数是 f[" + m + "][1] = " + rows[m][0] + "。" });
+    return steps;
+  }
+
+  // ================= rendering =================
+
+  function renderStrip(container, arr, opts) {
+    opts = opts || {};
+    var strip = document.createElement("div");
+    strip.className = "strip";
+    for (var i = 0; i < arr.length; i++) {
+      var col = document.createElement("div");
+      col.className = "col";
+      var cell = document.createElement("div");
+      var v = arr[i];
+      cell.className = "cell";
+      if (v === null || v === undefined) { cell.classList.add("unknown"); cell.textContent = "?"; }
+      else cell.textContent = v;
+      if (opts.current === i) cell.classList.add("current");
+      if (opts.srcSet && opts.srcSet.indexOf(i) !== -1) cell.classList.add("src");
+      if (opts.doneAll || (opts.doneUpTo !== undefined && i <= opts.doneUpTo && v !== null)) cell.classList.add("done");
+      col.appendChild(cell);
+      var label = document.createElement("div");
+      label.className = "idx-label";
+      label.textContent = (opts.labelFn ? opts.labelFn(i) : "f[" + i + "]");
+      col.appendChild(label);
+      strip.appendChild(col);
+    }
+    container.appendChild(strip);
+  }
+
+  function renderStairs(snap) {
+    boardEl.innerHTML = "";
+    var status = document.createElement("div");
+    status.className = "status-line";
+    status.textContent = snap.k === 3 ? "允许迈 1/2/3 级（三项递推）" : "只允许迈 1/2 级（经典两项递推）";
+    boardEl.appendChild(status);
+    renderStrip(boardEl, snap.f, { current: snap.current, srcSet: snap.srcs, doneAll: !!snap.done });
+    if (snap.current >= 0 && snap.srcs) {
+      var f = document.createElement("div");
+      f.className = "formula-line";
+      f.textContent = "f[" + snap.current + "] = " + snap.srcs.map(function (s) { return "f[" + s + "]"; }).join(" + ");
+      boardEl.appendChild(f);
+    }
+  }
+
+  function renderTriangle(snap) {
+    boardEl.innerHTML = "";
+    var status = document.createElement("div");
+    status.className = "status-line";
+    status.textContent = snap.done ? "填表完成（自底向上）" : "自底向上第 " + (snap.tri.length - snap.activeRow) + " 步";
+    boardEl.appendChild(status);
+
+    var wrap = document.createElement("div");
+    wrap.className = "grid-tri";
+    for (var i = 0; i < snap.g.length; i++) {
+      var rowEl = document.createElement("div");
+      rowEl.className = "tri-row";
+      for (var j = 0; j < snap.g[i].length; j++) {
+        var col = document.createElement("div");
+        col.className = "col";
+        var cell = document.createElement("div");
+        cell.className = "cell";
+        var v = snap.g[i][j];
+        cell.textContent = v === undefined ? snap.tri[i][j] : v;
+        var isKnown = (i > snap.activeRow) || (i === snap.activeRow && j <= snap.activeCol) || snap.done;
+        if (!isKnown && i >= snap.activeRow) { cell.classList.add("unknown"); cell.textContent = snap.tri[i][j]; }
+        if (i === snap.activeRow && j === snap.activeCol) cell.classList.add("current");
+        if (i === snap.childRow && snap.childCols && snap.childCols.indexOf(j) !== -1) {
+          cell.classList.add(j === snap.chosenCol ? "chosen" : "src2");
+          if (j === snap.chosenCol) cell.classList.add("src");
+        }
+        if (i > snap.activeRow || snap.done) cell.classList.add("done");
+        col.appendChild(cell);
+        var label = document.createElement("div");
+        label.className = "idx-label";
+        label.textContent = "g[" + i + "][" + j + "]";
+        col.appendChild(label);
+        rowEl.appendChild(col);
+      }
+      wrap.appendChild(rowEl);
+    }
+    boardEl.appendChild(wrap);
+
+    var legend = document.createElement("div");
+    legend.className = "legend";
+    legend.innerHTML =
+      '<span><span class="dot" style="background:var(--orange-light);border:1px solid var(--orange)"></span>正在计算的格子</span>' +
+      '<span><span class="dot" style="background:var(--blue-light);border:1px solid var(--blue)"></span>被 max 选中的来源</span>' +
+      '<span><span class="dot" style="background:#fff;border:1px solid var(--purple)"></span>被舍弃的来源</span>' +
+      '<span><span class="dot" style="background:var(--green-light);border:1px solid var(--green)"></span>已算好</span>';
+    boardEl.appendChild(legend);
+  }
+
+  function renderCatalan(snap) {
+    boardEl.innerHTML = "";
+    renderStrip(boardEl, snap.f, { current: snap.current, doneAll: !!snap.done });
+    if (snap.pairs) {
+      var t = document.createElement("div");
+      t.className = "section-title";
+      t.textContent = "f[" + snap.current + "] 的配对来源（k 从 0 到 " + (snap.current - 1) + "）";
+      boardEl.appendChild(t);
+      var grid = document.createElement("div");
+      grid.className = "grid-pairs";
+      grid.style.gridTemplateColumns = "repeat(" + snap.pairs.length + ", 60px)";
+      snap.pairs.forEach(function (p) {
+        var gc = document.createElement("div");
+        gc.className = "gcell hit";
+        gc.textContent = "f[" + p.k + "]×f[" + p.other + "]=" + p.val;
+        grid.appendChild(gc);
+      });
+      boardEl.appendChild(grid);
+      var f = document.createElement("div");
+      f.className = "formula-line";
+      f.textContent = "求和：" + snap.pairs.map(function (p) { return p.val; }).join(" + ") + " = " + snap.f[snap.current];
+      boardEl.appendChild(f);
+    }
+  }
+
+  function renderPass(snap) {
+    boardEl.innerHTML = "";
+    var status = document.createElement("div");
+    status.className = "status-line";
+    status.textContent = snap.done ? "填表完成" : "正在计算第 " + snap.activeRow + " 行（传了 " + snap.activeRow + " 次球）";
+    boardEl.appendChild(status);
+
+    for (var i = 0; i < snap.rows.length; i++) {
+      var rowWrap = document.createElement("div");
+      rowWrap.className = "section-title";
+      rowWrap.textContent = "f[" + i + "][1..n]（传了 " + i + " 次）";
+      boardEl.appendChild(rowWrap);
+      var ring = document.createElement("div");
+      ring.className = "ring";
+      for (var j = 0; j < snap.rows[i].length; j++) {
+        var col = document.createElement("div");
+        col.className = "col";
+        var cell = document.createElement("div");
+        cell.className = "cell";
+        cell.textContent = snap.rows[i][j];
+        if (i === snap.activeRow && j === snap.activeCol) cell.classList.add("current");
+        if (i === snap.srcRow && snap.srcCols && snap.srcCols.indexOf(j) !== -1) cell.classList.add("src");
+        if (i < snap.activeRow || snap.done) cell.classList.add("done");
+        col.appendChild(cell);
+        var label = document.createElement("div");
+        label.className = "idx-label";
+        label.textContent = (j + 1) + "号";
+        col.appendChild(label);
+        ring.appendChild(col);
+      }
+      boardEl.appendChild(ring);
+    }
+  }
+
+  function render() {
+    if (stepIndex < 0) {
+      boardEl.innerHTML = '<div class="board-empty">点击"生成演示"开始</div>';
+      logEl.innerHTML = '<div class="placeholder">// 这里会实时打印每一步的运算过程</div>';
+      return;
+    }
+    var snap = steps[stepIndex];
+    if (mode === "stairs") renderStairs(snap);
+    else if (mode === "triangle") renderTriangle(snap);
+    else if (mode === "catalan") renderCatalan(snap);
+    else renderPass(snap);
+
+    var lines = [];
+    for (var i = 0; i <= stepIndex; i++) lines.push("<div>" + (i + 1) + ". " + steps[i].log + "</div>");
+    logEl.innerHTML = lines.join("");
+    logEl.scrollTop = logEl.scrollHeight;
+
+    btnStep.disabled = stepIndex >= steps.length - 1;
+  }
+
+  // ---- default triangle data (matches real judged sample, answer 30) ----
+  var DEFAULT_TRIANGLE = [
+    [7],
+    [3, 8],
+    [8, 1, 0],
+    [2, 7, 4, 4],
+    [4, 5, 2, 6, 5]
+  ];
+
+  function parseTriangle(str) {
+    var lines = str.split("\n").map(function (l) { return l.trim(); }).filter(function (l) { return l.length; });
+    return lines.map(function (l) { return (l.match(/-?\d+/g) || []).map(Number); });
+  }
+
+  function generate() {
+    stopAuto();
+    if (mode === "stairs") {
+      var n = parseInt($("stairsN").value, 10) || 8;
+      var allowThree = $("stairsK3").checked;
+      steps = buildStairsSteps(Math.min(n, 12), allowThree);
+    } else if (mode === "triangle") {
+      var triStr = $("triData").value.trim();
+      var tri = triStr ? parseTriangle(triStr) : DEFAULT_TRIANGLE;
+      steps = buildTriangleSteps(tri);
+    } else if (mode === "catalan") {
+      var cn = parseInt($("catalanN").value, 10) || 4;
+      steps = buildCatalanSteps(Math.min(cn, 6));
+    } else {
+      var pn = parseInt($("passN").value, 10) || 3;
+      var pm = parseInt($("passM").value, 10) || 3;
+      steps = buildPassSteps(Math.min(pn, 6), Math.min(pm, 6));
+    }
+    stepIndex = -1;
+    nextStep();
+  }
+
+  function nextStep() {
+    if (stepIndex < steps.length - 1) { stepIndex++; render(); }
+    if (stepIndex >= steps.length - 1) stopAuto();
+  }
+
+  function resetAll() {
+    stopAuto();
+    stepIndex = -1;
+    steps = [];
+    render();
+  }
+
+  function stopAuto() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; if (btnAuto) btnAuto.textContent = "自动播放"; }
+  }
+
+  function toggleAuto() {
+    if (autoTimer) { stopAuto(); return; }
+    if (steps.length === 0) generate();
+    btnAuto.textContent = "暂停";
+    autoTimer = setInterval(function () {
+      if (stepIndex >= steps.length - 1) { stopAuto(); return; }
+      nextStep();
+    }, 900);
+  }
+
+  var CONTROLS_HTML = {
+    stairs:
+      '<label>楼梯级数 n：<input type="number" id="stairsN" value="8" min="3" max="12"></label>' +
+      '<label><input type="checkbox" id="stairsK3" checked> 允许迈 3 级</label>' +
+      '<button class="go" id="btnGen">生成演示</button>' +
+      '<button id="btnStep">下一步 →</button>' +
+      '<button id="btnAuto">自动播放</button>' +
+      '<button class="secondary" id="btnReset">重置</button>',
+    triangle:
+      '<label>三角形数据（每行一行，留空用默认）：<textarea id="triData" rows="2" style="width:260px;font-family:Consolas,monospace;"></textarea></label>' +
+      '<button class="go" id="btnGen">生成演示</button>' +
+      '<button id="btnStep">下一步 →</button>' +
+      '<button id="btnAuto">自动播放</button>' +
+      '<button class="secondary" id="btnReset">重置</button>',
+    catalan:
+      '<label>n（不超过 6）：<input type="number" id="catalanN" value="4" min="1" max="6"></label>' +
+      '<button class="go" id="btnGen">生成演示</button>' +
+      '<button id="btnStep">下一步 →</button>' +
+      '<button id="btnAuto">自动播放</button>' +
+      '<button class="secondary" id="btnReset">重置</button>',
+    pass:
+      '<label>人数 n：<input type="number" id="passN" value="3" min="3" max="6"></label>' +
+      '<label>传球次数 m：<input type="number" id="passM" value="3" min="1" max="6"></label>' +
+      '<button class="go" id="btnGen">生成演示</button>' +
+      '<button id="btnStep">下一步 →</button>' +
+      '<button id="btnAuto">自动播放</button>' +
+      '<button class="secondary" id="btnReset">重置</button>'
+  };
+  var HINTS = {
+    stairs: "取消勾选\"允许迈 3 级\"看经典两项斐波那契版本；勾上看真正要交的三项 Tribonacci 版本，格子上方会标出这一格依赖的是哪几格。",
+    triangle: "默认数据就是题目给出的真实例子，答案是 30；也可以按题目格式自己粘一个三角形进来（每行一行，数字用空格隔开）。",
+    catalan: "n 建议不超过 6，格子数会很快变多；每算一个新格子，下面会列出所有配对相乘的来源。",
+    pass: "n、m 建议不超过 6；每一行代表传了几次球，环形的两个来源格子会同时高亮，即使它们隔得很远。"
+  };
+
+  function bindControlButtons() {
+    btnStep = $("btnStep"); btnAuto = $("btnAuto");
+    $("btnGen").addEventListener("click", generate);
+    btnStep.addEventListener("click", nextStep);
+    btnAuto.addEventListener("click", toggleAuto);
+    $("btnReset").addEventListener("click", resetAll);
+  }
+
+  function switchMode(m) {
+    mode = m;
+    document.querySelectorAll(".tab").forEach(function (t) {
+      t.classList.toggle("active", t.dataset.mode === m);
+    });
+    controlsEl.innerHTML = CONTROLS_HTML[m];
+    hintEl.textContent = HINTS[m];
+    bindControlButtons();
+    resetAll();
+  }
+
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function () { switchMode(t.dataset.mode); });
+  });
+
+  switchMode("stairs");
+})();
+</script>
+</body>
+</html>

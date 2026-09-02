@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>递归调用树 · 板书演示</title>
+<style>
+  :root {
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+    --green: #2e7d32;
+    --green-light: #e8f5e9;
+    --orange: #ef6c00;
+    --orange-light: #fff3e0;
+    --gray: #9e9e9e;
+    --ink: #263238;
+    --border: #cfd8dc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    background: #f0f2f5;
+    color: var(--ink);
+    padding: 24px;
+  }
+  h1 { text-align: center; color: var(--blue); margin: 0 0 4px; font-size: 26px; }
+  .sub { text-align: center; color: #607d8b; margin-bottom: 20px; font-size: 14px; }
+  .wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+    padding: 24px 28px 28px;
+  }
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: #f5f7fa;
+    padding: 14px 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+  .controls label { font-size: 14px; color: #455a64; display: flex; align-items: center; gap: 6px; }
+  .controls input[type="number"] {
+    width: 70px;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 15px;
+    font-family: "Consolas", monospace;
+  }
+  .controls input[type="checkbox"] { width: 18px; height: 18px; }
+  .controls button {
+    padding: 7px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--blue);
+    transition: opacity .15s;
+  }
+  .controls button:hover { opacity: .85; }
+  .controls button.secondary { background: #78909c; }
+  .controls button.go { background: var(--green); }
+  .controls button:disabled { background: #cfd8dc; cursor: not-allowed; }
+  .hint { font-size: 13px; color: #90a4ae; margin: 0 0 16px 2px; }
+
+  .stats {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+    font-size: 14px;
+  }
+  .stat-pill {
+    background: var(--blue-light);
+    color: var(--blue);
+    border-radius: 16px;
+    padding: 5px 14px;
+    font-weight: 600;
+  }
+  .stat-pill.orange { background: var(--orange-light); color: var(--orange); }
+  .stat-pill.green { background: var(--green-light); color: var(--green); }
+
+  .board-outer {
+    background: #fbfcfd;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    overflow-x: auto;
+    min-height: 200px;
+  }
+  .board-empty { text-align: center; color: #b0bec5; padding: 60px 0; font-size: 15px; }
+  .tree-area { position: relative; margin: 0 auto; }
+  .edge-svg { position: absolute; top: 0; left: 0; pointer-events: none; }
+
+  .node {
+    position: absolute;
+    width: 66px;
+    height: 48px;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    background: #fafafa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: "Consolas", monospace;
+    transition: background .2s, border-color .2s, opacity .2s;
+  }
+  .node .k { font-size: 11px; color: #78909c; line-height: 1.1; }
+  .node .v { font-size: 17px; font-weight: 700; color: var(--ink); line-height: 1.2; }
+
+  .node.pending { opacity: .3; }
+  .node.pending .v { color: #b0bec5; }
+
+  .node.stack { border-color: var(--blue); background: var(--blue-light); }
+  .node.stack .k { color: var(--blue); }
+
+  .node.current { box-shadow: 0 0 0 4px rgba(21,101,192,0.25); animation: pulse 1s infinite alternate; }
+  @keyframes pulse { from { box-shadow: 0 0 0 3px rgba(21,101,192,0.18);} to { box-shadow: 0 0 0 6px rgba(21,101,192,0.3);} }
+
+  .node.done { border-color: var(--green); background: var(--green-light); }
+  .node.done .k { color: var(--green); }
+  .node.done .v { color: var(--green); }
+
+  .node.hit { border-color: var(--orange); background: var(--orange-light); border-style: dashed; }
+  .node.hit .k { color: var(--orange); }
+  .node.hit .v { color: var(--orange); }
+
+  .node.repeat-badge::after {
+    content: "重复";
+    position: absolute;
+    top: -12px;
+    right: -10px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--orange);
+    border-radius: 8px;
+    padding: 1px 6px;
+    animation: pop .3s ease;
+  }
+  @keyframes pop {
+    0% { transform: scale(.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .log {
+    margin-top: 18px;
+    background: #263238;
+    color: #b2ff59;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: "Consolas", monospace;
+    font-size: 14px;
+    min-height: 90px;
+    max-height: 220px;
+    overflow-y: auto;
+    line-height: 1.7;
+  }
+  .log div { opacity: .55; }
+  .log div:last-child { opacity: 1; color: #eeff41; }
+  .log .placeholder { color: #607d8b; opacity: 1; }
+
+  @media (prefers-color-scheme: dark) {
+    body { background: #14181b; color: #e0e0e0; }
+    .wrap { background: #1e2428; box-shadow: none; }
+    .controls { background: #262c30; }
+    .board-outer { background: #1a1f22; border-color: #37474f; }
+    .node { background: #263238; border-color: #37474f; }
+    .node .v { color: #e0e0e0; }
+    .node.pending .v { color: #546e7a; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>递归调用树 · fib(n) 电子板书</h1>
+  <div class="sub">第 14 章配套演示 &nbsp;|&nbsp; 一步步展开递归调用树，亲眼看见"重复计算"是怎么发生的，以及记忆化怎么把树"剪短"</div>
+
+  <div class="controls">
+    <label>n：<input id="inputN" type="number" min="3" max="8" value="6" /></label>
+    <label><input id="chkMemo" type="checkbox" /> 开启记忆化</label>
+    <button class="go" id="btnGen">生成演示</button>
+    <button id="btnStep">下一步 →</button>
+    <button id="btnAuto">自动播放</button>
+    <button class="secondary" id="btnReset">重置</button>
+  </div>
+  <div class="hint">建议 n 取 5~8：n 太小看不出重复计算，太大树会很拥挤（超出屏幕请横向滚动）。先关掉"记忆化"看爆炸增长，再勾选它看树被剪短。</div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="board-outer">
+    <div class="board" id="board">
+      <div class="board-empty">点击"生成演示"开始</div>
+    </div>
+  </div>
+
+  <div class="log" id="log"><div class="placeholder">// 这里会实时打印每一次函数调用发生了什么</div></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var X_UNIT = 76, Y_UNIT = 92, MARGIN = 40, NODE_W = 66, NODE_H = 48;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var boardEl = $("board"), logEl = $("log"), statsEl = $("stats");
+  var inputN = $("inputN"), chkMemo = $("chkMemo");
+  var btnStep = $("btnStep"), btnAuto = $("btnAuto");
+
+  var run = null;       // { nodes, events, rootId, leafCount, maxDepth }
+  var stepIndex = -1;
+  var autoTimer = null;
+
+  // ---------- build the call tree + the event sequence ----------
+
+  function buildRun(n, useMemo) {
+    var nodes = [];
+    var events = [];
+    var memoCache = {};       // k -> value, only ever set for k > 2 (matches the real code)
+    var seenDone = {};        // k -> true once a call to fib(k) has fully finished
+
+    function rec(k, parentId, depth) {
+      var id = nodes.length;
+      var node = { id: id, k: k, parentId: parentId, depth: depth, children: [], status: "pending", result: null, repeat: false, hit: false, x: 0 };
+      nodes.push(node);
+      events.push({ id: id, type: "enter", log: "调用 fib(" + k + ")" + (parentId === null ? "，这是最初的调用" : "") });
+
+      if (k <= 2) {
+        node.result = 1;
+        events.push({ id: id, type: "done", result: 1, log: "fib(" + k + ") 命中递归边界：F(1)=F(2)=1，直接返回 1，不再往下调用。" });
+        return id;
+      }
+
+      if (useMemo && Object.prototype.hasOwnProperty.call(memoCache, k)) {
+        node.hit = true;
+        node.result = memoCache[k];
+        events.push({ id: id, type: "hit", result: memoCache[k], log: "fib(" + k + ") 之前算过、已经存进 memo[" + k + "]，直接查表返回 " + memoCache[k] + "，不再往下展开子调用。" });
+        return id;
+      }
+
+      var isRepeat = !useMemo && !!seenDone[k];
+
+      var leftId = rec(k - 1, id, depth + 1);
+      var rightId = rec(k - 2, id, depth + 1);
+      node.children.push(leftId, rightId);
+      var lv = nodes[leftId].result, rv = nodes[rightId].result;
+      node.result = lv + rv;
+      node.repeat = isRepeat;
+      if (useMemo) memoCache[k] = node.result;
+      seenDone[k] = true;
+      events.push({
+        id: id, type: "done", result: node.result,
+        log: "fib(" + k + ") = fib(" + (k - 1) + ") + fib(" + (k - 2) + ") = " + lv + " + " + rv + " = " + node.result +
+          (isRepeat ? "。——注意，这个值之前已经算过一次了，这一次纯属重复计算！" : "")
+      });
+      return id;
+    }
+
+    var rootId = rec(n, null, 0);
+
+    // layout: leaves get sequential x slots, internal nodes sit above the average of their children
+    var leafCounter = 0;
+    var maxDepth = 0;
+    function assignX(id) {
+      var node = nodes[id];
+      if (node.depth > maxDepth) maxDepth = node.depth;
+      if (node.children.length === 0) {
+        node.x = leafCounter++;
+        return node.x;
+      }
+      var sum = 0;
+      for (var i = 0; i < node.children.length; i++) sum += assignX(node.children[i]);
+      node.x = sum / node.children.length;
+      return node.x;
+    }
+    assignX(rootId);
+
+    var totalCalls = nodes.length;
+    var repeats = 0, hits = 0;
+    for (var i = 0; i < nodes.length; i++) { if (nodes[i].repeat) repeats++; if (nodes[i].hit) hits++; }
+
+    return { nodes: nodes, events: events, rootId: rootId, leafCount: leafCounter, maxDepth: maxDepth, totalCalls: totalCalls, repeats: repeats, hits: hits, n: n, useMemo: useMemo };
+  }
+
+  // ---------- rendering ----------
+
+  function render() {
+    if (!run || stepIndex < 0) {
+      boardEl.innerHTML = '<div class="board-empty">点击"生成演示"开始</div>';
+      logEl.innerHTML = '<div class="placeholder">// 这里会实时打印每一次函数调用发生了什么</div>';
+      statsEl.innerHTML = "";
+      return;
+    }
+
+    // replay events[0..stepIndex] to get each node's current status
+    var status = {}, result = {};
+    for (var i = 0; i <= stepIndex; i++) {
+      var ev = run.events[i];
+      if (ev.type === "enter") status[ev.id] = "stack";
+      else if (ev.type === "hit") { status[ev.id] = "hit"; result[ev.id] = ev.result; }
+      else if (ev.type === "done") { status[ev.id] = "done"; result[ev.id] = ev.result; }
+    }
+    var currentId = run.events[stepIndex].id;
+
+    var width = run.leafCount * X_UNIT + MARGIN * 2;
+    var height = (run.maxDepth + 1) * Y_UNIT + MARGIN;
+
+    var svgParts = [];
+    for (var j = 0; j < run.nodes.length; j++) {
+      var node = run.nodes[j];
+      if (node.parentId === null) continue;
+      var parent = run.nodes[node.parentId];
+      var x1 = MARGIN + parent.x * X_UNIT + NODE_W / 2, y1 = MARGIN + parent.depth * Y_UNIT + NODE_H;
+      var x2 = MARGIN + node.x * X_UNIT + NODE_W / 2, y2 = MARGIN + node.depth * Y_UNIT;
+      svgParts.push('<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#cfd8dc" stroke-width="2" />');
+    }
+
+    var html = '<div class="tree-area" style="width:' + width + 'px;height:' + height + 'px;">';
+    html += '<svg class="edge-svg" width="' + width + '" height="' + height + '">' + svgParts.join("") + '</svg>';
+    for (var k = 0; k < run.nodes.length; k++) {
+      var nd = run.nodes[k];
+      var st = status[k] || "pending";
+      var cls = "node " + st;
+      if (k === currentId) cls += " current";
+      if (nd.repeat && st === "done") cls += " repeat-badge";
+      var left = MARGIN + nd.x * X_UNIT;
+      var top = MARGIN + nd.depth * Y_UNIT;
+      var valText = (st === "pending" || st === "stack") ? "?" : String(result[k]);
+      html += '<div class="' + cls + '" style="left:' + left + 'px;top:' + top + 'px;">' +
+        '<div class="k">fib(' + nd.k + ')</div><div class="v">' + valText + '</div></div>';
+    }
+    html += '</div>';
+    boardEl.innerHTML = html;
+
+    var lines = [];
+    for (var m = 0; m <= stepIndex; m++) lines.push("<div>" + (m + 1) + ". " + run.events[m].log + "</div>");
+    logEl.innerHTML = lines.join("");
+    logEl.scrollTop = logEl.scrollHeight;
+
+    var calledSoFar = 0;
+    for (var e = 0; e <= stepIndex; e++) if (run.events[e].type === "enter") calledSoFar++;
+    var pills = '<span class="stat-pill">已发生调用 ' + calledSoFar + ' / ' + run.totalCalls + ' 次</span>';
+    if (run.useMemo) {
+      pills += '<span class="stat-pill orange">缓存命中（跳过子调用）共 ' + run.hits + ' 次</span>';
+      pills += '<span class="stat-pill green">真正展开计算 ' + (run.totalCalls - run.hits) + ' 次</span>';
+    } else {
+      pills += '<span class="stat-pill orange">其中重复计算 ' + run.repeats + ' 次</span>';
+    }
+    statsEl.innerHTML = pills;
+
+    btnStep.disabled = stepIndex >= run.events.length - 1;
+  }
+
+  function generate() {
+    stopAuto();
+    var n = parseInt(inputN.value, 10);
+    if (!(n >= 3 && n <= 8)) { n = 6; inputN.value = 6; }
+    run = buildRun(n, chkMemo.checked);
+    stepIndex = -1;
+    nextStep();
+  }
+
+  function nextStep() {
+    if (!run) return;
+    if (stepIndex < run.events.length - 1) {
+      stepIndex++;
+      render();
+    }
+    if (stepIndex >= run.events.length - 1) stopAuto();
+  }
+
+  function resetAll() {
+    stopAuto();
+    run = null;
+    stepIndex = -1;
+    render();
+  }
+
+  function stopAuto() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; btnAuto.textContent = "自动播放"; }
+  }
+
+  function toggleAuto() {
+    if (autoTimer) { stopAuto(); return; }
+    if (!run) generate();
+    btnAuto.textContent = "暂停";
+    autoTimer = setInterval(function () {
+      if (!run || stepIndex >= run.events.length - 1) { stopAuto(); return; }
+      nextStep();
+    }, 700);
+  }
+
+  $("btnGen").addEventListener("click", generate);
+  btnStep.addEventListener("click", nextStep);
+  btnAuto.addEventListener("click", toggleAuto);
+  $("btnReset").addEventListener("click", resetAll);
+  chkMemo.addEventListener("change", resetAll);
+
+  render();
+})();
+</script>
+</body>
+</html>

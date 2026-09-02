@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>回溯搜索 · 板书演示</title>
+<style>
+  :root {
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+    --green: #2e7d32;
+    --green-light: #e8f5e9;
+    --orange: #ef6c00;
+    --orange-light: #fff3e0;
+    --gray: #9e9e9e;
+    --ink: #263238;
+    --border: #cfd8dc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    background: #f0f2f5;
+    color: var(--ink);
+    padding: 24px;
+  }
+  h1 { text-align: center; color: var(--blue); margin: 0 0 4px; font-size: 26px; }
+  .sub { text-align: center; color: #607d8b; margin-bottom: 20px; font-size: 14px; }
+  .wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+    padding: 24px 28px 28px;
+  }
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab {
+    flex: 1; min-width: 160px; padding: 10px 14px;
+    border: 2px solid var(--border); background: #fafafa; border-radius: 8px;
+    cursor: pointer; font-size: 15px; font-weight: 600; color: #546e7a; transition: all .15s;
+  }
+  .tab:hover { border-color: var(--blue); color: var(--blue); }
+  .tab.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .controls {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #f5f7fa; padding: 14px 16px; border-radius: 8px; margin-bottom: 12px;
+  }
+  .controls label { font-size: 14px; color: #455a64; display: flex; align-items: center; gap: 6px; }
+  .controls input[type="number"] {
+    width: 60px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 15px; font-family: "Consolas", monospace;
+  }
+  .controls button {
+    padding: 7px 16px; border: none; border-radius: 6px; cursor: pointer;
+    font-size: 14px; font-weight: 600; color: #fff; background: var(--blue); transition: opacity .15s;
+  }
+  .controls button:hover { opacity: .85; }
+  .controls button.secondary { background: #78909c; }
+  .controls button.go { background: var(--green); }
+  .controls button.sub-toggle { background: #90a4ae; }
+  .controls button.sub-toggle.active { background: var(--orange); }
+  .controls button:disabled { background: #cfd8dc; cursor: not-allowed; }
+  .hint { font-size: 13px; color: #90a4ae; margin: 0 0 16px 2px; }
+
+  .stats { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 14px; font-size: 14px; }
+  .stat-pill { background: var(--blue-light); color: var(--blue); border-radius: 16px; padding: 5px 14px; font-weight: 600; }
+  .stat-pill.orange { background: var(--orange-light); color: var(--orange); }
+  .stat-pill.green { background: var(--green-light); color: var(--green); }
+
+  .board-outer {
+    background: #fbfcfd; border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px; overflow-x: auto; min-height: 200px;
+  }
+  .board-empty { text-align: center; color: #b0bec5; padding: 60px 0; font-size: 15px; }
+  .tree-area { position: relative; margin: 0 auto; }
+  .edge-svg { position: absolute; top: 0; left: 0; pointer-events: none; }
+
+  .node {
+    position: absolute; width: 74px; height: 46px; border-radius: 8px;
+    border: 2px solid var(--border); background: #fafafa;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Consolas", monospace; font-size: 13px; font-weight: 700; color: var(--ink);
+    transition: background .2s, border-color .2s, opacity .2s;
+    text-align: center; padding: 2px;
+  }
+  .node.pending { opacity: .25; }
+  .node.active { border-color: var(--blue); background: var(--blue-light); color: var(--blue); box-shadow: 0 0 0 4px rgba(21,101,192,0.2); }
+  .node.success { border-color: var(--green); background: var(--green-light); color: var(--green); box-shadow: 0 0 0 4px rgba(46,125,50,0.25); }
+  .node.deadend { border-color: var(--orange); background: var(--orange-light); color: var(--orange); border-style: dashed; }
+  .node.done-success { border-color: #a5d6a7; background: #f1f8e9; color: #558b2f; opacity: .8; }
+  .node.done-deadend { border-color: #ffcc80; background: #fff8e1; color: #ef6c00; opacity: .6; border-style: dashed; }
+  .node.done-plain { border-color: #cfd8dc; background: #eceff1; color: #78909c; opacity: .6; }
+
+  .combo-list { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 4px; }
+  .combo-chip {
+    background: var(--green-light); color: var(--green); border-radius: 14px;
+    padding: 4px 12px; font-size: 13px; font-family: "Consolas", monospace; font-weight: 700;
+  }
+
+  .grid-board { display: inline-grid; gap: 6px; margin: 0 auto; }
+  .gcell2 {
+    width: 64px; height: 64px; border-radius: 8px; border: 2px solid var(--border);
+    background: #fafafa; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: "Consolas", monospace; transition: background .2s, border-color .2s;
+  }
+  .gcell2 .coord { font-size: 10px; color: #90a4ae; }
+  .gcell2 .val { font-size: 18px; font-weight: 700; }
+  .gcell2.wall { background: #37474f; }
+  .gcell2.idle-open { background: #fff; }
+  .gcell2.idle-bg { background: #eceff1; color: #b0bec5; }
+  .gcell2.marked { border-color: var(--blue); background: var(--blue-light); }
+  .gcell2.marked .coord { color: var(--blue); }
+  .gcell2.flash { border-color: var(--green); background: var(--green-light); box-shadow: 0 0 0 4px rgba(46,125,50,0.3); }
+  .gcell2.visited-perm { border-color: var(--green); background: var(--green-light); color: var(--green); }
+  .gcell2.tissue-unvisited { border-color: #ffe082; background: #fffde7; color: #f57f17; }
+  .gcell2.current-ring { box-shadow: 0 0 0 4px rgba(239,108,0,0.35); }
+  .badge-row { display: flex; gap: 8px; justify-content: center; margin-top: 6px; }
+  .badge { font-size: 11px; color: #78909c; }
+
+  .log {
+    margin-top: 18px; background: #263238; color: #b2ff59; border-radius: 8px;
+    padding: 14px 16px; font-family: "Consolas", monospace; font-size: 14px;
+    min-height: 90px; max-height: 220px; overflow-y: auto; line-height: 1.7;
+  }
+  .log div { opacity: .55; }
+  .log div:last-child { opacity: 1; color: #eeff41; }
+  .log .placeholder { color: #607d8b; opacity: 1; }
+
+  @media (prefers-color-scheme: dark) {
+    body { background: #14181b; color: #e0e0e0; }
+    .wrap { background: #1e2428; box-shadow: none; }
+    .controls { background: #262c30; }
+    .board-outer { background: #1a1f22; border-color: #37474f; }
+    .node { background: #263238; border-color: #37474f; color: #e0e0e0; }
+    .gcell2 { background: #263238; border-color: #37474f; color: #e0e0e0; }
+    .gcell2.idle-bg { background: #1c2226; color: #546e7a; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>回溯搜索 · 电子板书</h1>
+  <div class="sub">第 15 章配套演示 &nbsp;|&nbsp; "选择→递归→撤销"的搜索树，以及"要不要撤销标记"的正反对照</div>
+
+  <div class="tabs">
+    <button class="tab active" data-panel="tree">回溯搜索树（组合）</button>
+    <button class="tab" data-panel="grid">撤销 vs 不撤销（迷宫 / 细胞）</button>
+  </div>
+
+  <!-- ========== Panel 1: combination backtracking tree ========== -->
+  <div class="panel active" id="panel-tree">
+    <div class="controls">
+      <label>n：<input id="tN" type="number" min="2" max="5" value="3" /></label>
+      <label>选 r 个：<input id="tR" type="number" min="1" max="4" value="2" /></label>
+      <button class="go" id="tBtnGen">生成演示</button>
+      <button id="tBtnStep">下一步 →</button>
+      <button id="tBtnAuto">自动播放</button>
+      <button class="secondary" id="tBtnReset">重置</button>
+    </div>
+    <div class="hint">默认从 {1,2,3} 里选 2 个，对照讲稿"选择→递归→撤销"三步曲。绿色框 = 凑齐了一个合法组合；橙色虚线 = 这条路没数可选了；变暗 = 已经回溯撤销、探索完毕。</div>
+
+    <div class="stats" id="tStats"></div>
+    <div class="combo-list" id="tComboList"></div>
+
+    <div class="board-outer">
+      <div class="board" id="tBoard"><div class="board-empty">点击"生成演示"开始</div></div>
+    </div>
+    <div class="log" id="tLog"><div class="placeholder">// 这里会实时打印每一步选择/回溯发生了什么</div></div>
+  </div>
+
+  <!-- ========== Panel 2: maze (undo) vs cells (never undo) ========== -->
+  <div class="panel" id="panel-grid">
+    <div class="controls">
+      <button class="sub-toggle active" id="gModeMaze">迷宫路径计数（必须撤销）</button>
+      <button class="sub-toggle" id="gModeCell">细胞个数（绝不撤销）</button>
+      <button class="go" id="gBtnGen">生成演示</button>
+      <button id="gBtnStep">下一步 →</button>
+      <button id="gBtnAuto">自动播放</button>
+      <button class="secondary" id="gBtnReset">重置</button>
+    </div>
+    <div class="hint" id="gHint"></div>
+
+    <div class="stats" id="gStats"></div>
+
+    <div class="board-outer">
+      <div class="board" id="gBoard" style="display:flex;justify-content:center;"><div class="board-empty">点击"生成演示"开始</div></div>
+    </div>
+    <div class="log" id="gLog"><div class="placeholder">// 这里会实时打印每一步标记/撤销发生了什么</div></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ================= shared tree layout helper (used by panel 1) =================
+  var X_UNIT = 88, Y_UNIT = 84, MARGIN = 40, NODE_W = 74, NODE_H = 46;
+
+  function layoutTree(nodes, rootId) {
+    var leafCounter = 0, maxDepth = 0;
+    function assignX(id) {
+      var node = nodes[id];
+      if (node.depth > maxDepth) maxDepth = node.depth;
+      if (node.children.length === 0) { node.x = leafCounter++; return node.x; }
+      var sum = 0;
+      for (var i = 0; i < node.children.length; i++) sum += assignX(node.children[i]);
+      node.x = sum / node.children.length;
+      return node.x;
+    }
+    assignX(rootId);
+    return { leafCount: leafCounter, maxDepth: maxDepth };
+  }
+
+  // ================= Panel 1: combination backtracking tree =================
+  (function () {
+    var boardEl = $("tBoard"), logEl = $("tLog"), statsEl = $("tStats"), comboListEl = $("tComboList");
+    var inputN = $("tN"), inputR = $("tR");
+    var btnStep = $("tBtnStep"), btnAuto = $("tBtnAuto");
+    var run = null, stepIndex = -1, autoTimer = null;
+
+    function buildComboRun(n, r) {
+      var nodes = [], events = [];
+      function rec(path, start, parentId, depth) {
+        var id = nodes.length;
+        var label = path.length === 0 ? "开始" : ("选 " + path[path.length - 1]);
+        var node = { id: id, path: path.slice(), parentId: parentId, depth: depth, children: [], isSuccess: false, isDeadend: false, label: label };
+        nodes.push(node);
+        events.push({
+          id: id, type: "enter",
+          log: path.length === 0
+            ? ("开始尝试：从 {1.." + n + "} 里选 " + r + " 个数")
+            : ("选择 " + path[path.length - 1] + "，当前已选：[" + path.join(",") + "]")
+        });
+        if (path.length === r) {
+          node.isSuccess = true;
+          events.push({ id: id, type: "success", log: "已经选够 " + r + " 个数：[" + path.join(",") + "]，这是一个合法组合！" });
+          events.push({ id: id, type: "fade", log: "记录完毕，回溯：撤销最后一次选择，回到上一层试下一个数" });
+          return id;
+        }
+        var any = false;
+        for (var i = start; i <= n; i++) {
+          any = true;
+          var childId = rec(path.concat([i]), i + 1, id, depth + 1);
+          node.children.push(childId);
+        }
+        if (!any) {
+          node.isDeadend = true;
+          events.push({ id: id, type: "deadend", log: "剩下可选的数不够了（下一个候选已经超过 " + n + "），这条路走不通，直接返回" });
+        }
+        events.push({
+          id: id, type: "fade",
+          log: path.length === 0 ? "所有可能都试过了，搜索结束" : ("这一层能试的数都试完了，回溯到上一层，把 " + path[path.length - 1] + " 放回去")
+        });
+        return id;
+      }
+      var rootId = rec([], 1, null, 0);
+      var lay = layoutTree(nodes, rootId);
+      var successCount = 0;
+      for (var i = 0; i < nodes.length; i++) if (nodes[i].isSuccess) successCount++;
+      return { nodes: nodes, events: events, rootId: rootId, leafCount: lay.leafCount, maxDepth: lay.maxDepth, successCount: successCount, n: n, r: r };
+    }
+
+    function combos(n, r) { // n! / (r!(n-r)!)
+      if (r < 0 || r > n) return 0;
+      var res = 1;
+      for (var i = 0; i < r; i++) res = res * (n - i) / (i + 1);
+      return Math.round(res);
+    }
+
+    function render() {
+      if (!run || stepIndex < 0) {
+        boardEl.innerHTML = '<div class="board-empty">点击"生成演示"开始</div>';
+        logEl.innerHTML = '<div class="placeholder">// 这里会实时打印每一步选择/回溯发生了什么</div>';
+        statsEl.innerHTML = "";
+        comboListEl.innerHTML = "";
+        return;
+      }
+      var status = {}, foundCombos = [];
+      for (var i = 0; i <= stepIndex; i++) {
+        var ev = run.events[i];
+        var node = run.nodes[ev.id];
+        if (ev.type === "enter") status[ev.id] = "active";
+        else if (ev.type === "success") { status[ev.id] = "success"; foundCombos.push(node.path.join(",")); }
+        else if (ev.type === "deadend") status[ev.id] = "deadend";
+        else if (ev.type === "fade") status[ev.id] = node.isSuccess ? "done-success" : (node.isDeadend ? "done-deadend" : "done-plain");
+      }
+      var currentId = run.events[stepIndex].id;
+
+      var width = run.leafCount * X_UNIT + MARGIN * 2;
+      var height = (run.maxDepth + 1) * Y_UNIT + MARGIN;
+      var svgParts = [];
+      for (var j = 0; j < run.nodes.length; j++) {
+        var nd = run.nodes[j];
+        if (nd.parentId === null) continue;
+        var parent = run.nodes[nd.parentId];
+        var x1 = MARGIN + parent.x * X_UNIT + NODE_W / 2, y1 = MARGIN + parent.depth * Y_UNIT + NODE_H;
+        var x2 = MARGIN + nd.x * X_UNIT + NODE_W / 2, y2 = MARGIN + nd.depth * Y_UNIT;
+        svgParts.push('<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#cfd8dc" stroke-width="2" />');
+      }
+      var html = '<div class="tree-area" style="width:' + width + 'px;height:' + height + 'px;">';
+      html += '<svg class="edge-svg" width="' + width + '" height="' + height + '">' + svgParts.join("") + '</svg>';
+      for (var k = 0; k < run.nodes.length; k++) {
+        var n2 = run.nodes[k];
+        var st = status[k] || "pending";
+        var cls = "node " + st;
+        if (k === currentId) cls += " current";
+        var left = MARGIN + n2.x * X_UNIT, top = MARGIN + n2.depth * Y_UNIT;
+        html += '<div class="' + cls + '" style="left:' + left + 'px;top:' + top + 'px;">' + n2.label + '</div>';
+      }
+      html += '</div>';
+      boardEl.innerHTML = html;
+
+      var lines = [];
+      for (var m = 0; m <= stepIndex; m++) lines.push("<div>" + (m + 1) + ". " + run.events[m].log + "</div>");
+      logEl.innerHTML = lines.join("");
+      logEl.scrollTop = logEl.scrollHeight;
+
+      statsEl.innerHTML =
+        '<span class="stat-pill">已找到 ' + foundCombos.length + ' / ' + run.successCount + ' 个组合</span>' +
+        '<span class="stat-pill green">理论组合数 C(' + run.n + ',' + run.r + ') = ' + combos(run.n, run.r) + '</span>';
+      comboListEl.innerHTML = foundCombos.map(function (c) { return '<span class="combo-chip">[' + c + ']</span>'; }).join("");
+
+      btnStep.disabled = stepIndex >= run.events.length - 1;
+    }
+
+    function generate() {
+      stopAuto();
+      var n = parseInt(inputN.value, 10), r = parseInt(inputR.value, 10);
+      if (!(n >= 2 && n <= 5)) { n = 3; inputN.value = 3; }
+      if (!(r >= 1 && r <= n)) { r = Math.min(2, n); inputR.value = r; }
+      run = buildComboRun(n, r);
+      stepIndex = -1;
+      nextStep();
+    }
+    function nextStep() {
+      if (!run) return;
+      if (stepIndex < run.events.length - 1) { stepIndex++; render(); }
+      if (stepIndex >= run.events.length - 1) stopAuto();
+    }
+    function resetAll() { stopAuto(); run = null; stepIndex = -1; render(); }
+    function stopAuto() { if (autoTimer) { clearInterval(autoTimer); autoTimer = null; btnAuto.textContent = "自动播放"; } }
+    function toggleAuto() {
+      if (autoTimer) { stopAuto(); return; }
+      if (!run) generate();
+      btnAuto.textContent = "暂停";
+      autoTimer = setInterval(function () {
+        if (!run || stepIndex >= run.events.length - 1) { stopAuto(); return; }
+        nextStep();
+      }, 650);
+    }
+
+    $("tBtnGen").addEventListener("click", generate);
+    btnStep.addEventListener("click", nextStep);
+    btnAuto.addEventListener("click", toggleAuto);
+    $("tBtnReset").addEventListener("click", resetAll);
+    render();
+  })();
+
+  // ================= Panel 2: maze (undo) vs cells (never undo) =================
+  (function () {
+    var boardEl = $("gBoard"), logEl = $("gLog"), statsEl = $("gStats"), hintEl = $("gHint");
+    var btnStep = $("gBtnStep"), btnAuto = $("gBtnAuto");
+    var modeMazeBtn = $("gModeMaze"), modeCellBtn = $("gModeCell");
+    var mode = "maze";
+    var run = null, stepIndex = -1, autoTimer = null;
+
+    var HINTS = {
+      maze: "2×2 全是空地，从 (1,1) 走到 (2,2)，四个方向都能走。vis 的含义是「在当前路径上」——走进一格就点亮，退回来就必须熄灭，否则别的路径会漏掉这一格。",
+      cell: "2 行 3 列的组织图（1 1 0 / 0 1 1），非 0 表示细胞组织。vis 的含义是「已经属于某个细胞」——点亮之后永远不熄灭，否则同一个细胞会被反复计数。"
+    };
+
+    // ---- maze: build DFS events (mirrors solution.cpp exactly: mark before recursing, unmark after) ----
+    function buildMazeRun() {
+      var n = 2, m = 2, sx = 1, sy = 1, tx = 2, ty = 2;
+      var grid = { 1: { 1: 0, 2: 0 }, 2: { 1: 0, 2: 0 } }; // all open
+      var visited = { 1: { 1: false, 2: false }, 2: { 1: false, 2: false } };
+      var dx = [-1, 1, 0, 0], dy = [0, 0, -1, 1];
+      var events = [];
+      var pathCount = 0;
+
+      function dfs(x, y) {
+        if (x === tx && y === ty) {
+          pathCount++;
+          events.push({ type: "success", x: x, y: y, log: "到达终点 (" + tx + "," + ty + ")！这是第 " + pathCount + " 条完整路径。" });
+          return;
+        }
+        for (var d = 0; d < 4; d++) {
+          var nx = x + dx[d], ny = y + dy[d];
+          if (nx < 1 || nx > n || ny < 1 || ny > m) continue;
+          if (grid[nx][ny] === 1) continue;
+          if (visited[nx][ny]) continue;
+          visited[nx][ny] = true;
+          events.push({ type: "mark", x: nx, y: ny, log: "踏进 (" + nx + "," + ny + ")，标记为「在当前路径上」" });
+          dfs(nx, ny);
+          visited[nx][ny] = false;
+          events.push({ type: "unmark", x: nx, y: ny, log: "回溯离开 (" + nx + "," + ny + ")，撤销标记——它已经不在当前路径上了" });
+        }
+      }
+      visited[sx][sy] = true;
+      events.push({ type: "mark", x: sx, y: sy, log: "从起点 (" + sx + "," + sy + ") 出发，标记为在路径上" });
+      dfs(sx, sy);
+      events.push({ type: "unmark", x: sx, y: sy, log: "整个搜索结束，起点的标记最后也撤销掉" });
+
+      return { kind: "maze", n: n, m: m, grid: grid, sx: sx, sy: sy, tx: tx, ty: ty, events: events, pathCount: pathCount };
+    }
+
+    // ---- cells: build flood-fill events (mirrors solution.cpp: mark permanently, never unmark) ----
+    function buildCellRun() {
+      var n = 2, m = 3;
+      var grid = { 1: { 1: 1, 2: 1, 3: 0 }, 2: { 1: 0, 2: 1, 3: 1 } };
+      var visited = { 1: { 1: false, 2: false, 3: false }, 2: { 1: false, 2: false, 3: false } };
+      var dx = [-1, 1, 0, 0], dy = [0, 0, -1, 1];
+      var events = [];
+      var compCount = 0;
+
+      function dfs(x, y) {
+        visited[x][y] = true;
+        events.push({ type: "visit", x: x, y: y, log: "踏进 (" + x + "," + y + ")，标记为已访问——这个标记以后永远不会撤销" });
+        for (var d = 0; d < 4; d++) {
+          var nx = x + dx[d], ny = y + dy[d];
+          if (nx < 1 || nx > n || ny < 1 || ny > m) continue;
+          if (grid[nx][ny] === 0) continue;
+          if (visited[nx][ny]) continue;
+          dfs(nx, ny);
+        }
+      }
+      for (var i = 1; i <= n; i++) {
+        for (var j = 1; j <= m; j++) {
+          if (grid[i][j] !== 0 && !visited[i][j]) {
+            compCount++;
+            events.push({ type: "newcomponent", x: i, y: j, log: "发现新的细胞（第 " + compCount + " 个），从 (" + i + "," + j + ") 开始向外扩散" });
+            dfs(i, j);
+          }
+        }
+      }
+      return { kind: "cell", n: n, m: m, grid: grid, events: events, compCount: compCount };
+    }
+
+    function render() {
+      if (!run || stepIndex < 0) {
+        boardEl.innerHTML = '<div class="board-empty">点击"生成演示"开始</div>';
+        logEl.innerHTML = '<div class="placeholder">// 这里会实时打印每一步标记/撤销发生了什么</div>';
+        statsEl.innerHTML = "";
+        return;
+      }
+      var n = run.n, m = run.m;
+      var lastEv = run.events[stepIndex];
+      var html = '<div class="grid-board" style="grid-template-columns:repeat(' + m + ',64px);">';
+
+      if (run.kind === "maze") {
+        var marked = {};
+        for (var i = 0; i <= stepIndex; i++) {
+          var ev = run.events[i];
+          if (ev.type === "mark") marked[ev.x + "_" + ev.y] = true;
+          if (ev.type === "unmark") marked[ev.x + "_" + ev.y] = false;
+        }
+        var pathsSoFar = 0;
+        for (var i2 = 0; i2 <= stepIndex; i2++) if (run.events[i2].type === "success") pathsSoFar++;
+        for (var x = 1; x <= n; x++) {
+          for (var y = 1; y <= m; y++) {
+            var isMarked = !!marked[x + "_" + y];
+            var isCurrent = (lastEv.x === x && lastEv.y === y);
+            var isFlash = isCurrent && lastEv.type === "success";
+            var cls = "gcell2 " + (isMarked ? "marked" : "idle-open") + (isFlash ? " flash" : "") + (isCurrent ? " current-ring" : "");
+            var tag = (x === run.sx && y === run.sy) ? "起" : ((x === run.tx && y === run.ty) ? "终" : "");
+            html += '<div class="' + cls + '"><div class="coord">(' + x + ',' + y + ')</div><div class="val">' + tag + '</div></div>';
+          }
+        }
+        html += '</div>';
+        boardEl.innerHTML = html;
+        statsEl.innerHTML =
+          '<span class="stat-pill">已发现路径 ' + pathsSoFar + ' / ' + run.pathCount + ' 条</span>' +
+          '<span class="stat-pill orange">当前仍标记「在路径上」的格子数：' + Object.keys(marked).filter(function (k) { return marked[k]; }).length + '</span>';
+      } else {
+        var visitedPerm = {};
+        var compsSoFar = 0;
+        for (var j = 0; j <= stepIndex; j++) {
+          var ev2 = run.events[j];
+          if (ev2.type === "visit") visitedPerm[ev2.x + "_" + ev2.y] = true;
+          if (ev2.type === "newcomponent") compsSoFar++;
+        }
+        for (var x2 = 1; x2 <= n; x2++) {
+          for (var y2 = 1; y2 <= m; y2++) {
+            var val = run.grid[x2][y2];
+            var isCurrent2 = (lastEv.x === x2 && lastEv.y === y2);
+            var cls2;
+            if (val === 0) cls2 = "gcell2 idle-bg";
+            else if (visitedPerm[x2 + "_" + y2]) cls2 = "gcell2 visited-perm";
+            else cls2 = "gcell2 tissue-unvisited";
+            if (isCurrent2) cls2 += " current-ring";
+            html += '<div class="' + cls2 + '"><div class="coord">(' + x2 + ',' + y2 + ')</div><div class="val">' + val + '</div></div>';
+          }
+        }
+        html += '</div>';
+        boardEl.innerHTML = html;
+        statsEl.innerHTML =
+          '<span class="stat-pill green">已发现细胞 ' + compsSoFar + ' / ' + run.compCount + ' 个</span>' +
+          '<span class="stat-pill">已标记（永久）格子数：' + Object.keys(visitedPerm).length + '</span>';
+      }
+
+      var lines = [];
+      for (var k = 0; k <= stepIndex; k++) lines.push("<div>" + (k + 1) + ". " + run.events[k].log + "</div>");
+      logEl.innerHTML = lines.join("");
+      logEl.scrollTop = logEl.scrollHeight;
+
+      btnStep.disabled = stepIndex >= run.events.length - 1;
+    }
+
+    function generate() {
+      stopAuto();
+      run = mode === "maze" ? buildMazeRun() : buildCellRun();
+      stepIndex = -1;
+      nextStep();
+    }
+    function nextStep() {
+      if (!run) return;
+      if (stepIndex < run.events.length - 1) { stepIndex++; render(); }
+      if (stepIndex >= run.events.length - 1) stopAuto();
+    }
+    function resetAll() { stopAuto(); run = null; stepIndex = -1; render(); }
+    function stopAuto() { if (autoTimer) { clearInterval(autoTimer); autoTimer = null; btnAuto.textContent = "自动播放"; } }
+    function toggleAuto() {
+      if (autoTimer) { stopAuto(); return; }
+      if (!run) generate();
+      btnAuto.textContent = "暂停";
+      autoTimer = setInterval(function () {
+        if (!run || stepIndex >= run.events.length - 1) { stopAuto(); return; }
+        nextStep();
+      }, 650);
+    }
+    function switchMode(m) {
+      mode = m;
+      modeMazeBtn.classList.toggle("active", m === "maze");
+      modeCellBtn.classList.toggle("active", m === "cell");
+      hintEl.textContent = HINTS[m];
+      resetAll();
+    }
+
+    $("gBtnGen").addEventListener("click", generate);
+    btnStep.addEventListener("click", nextStep);
+    btnAuto.addEventListener("click", toggleAuto);
+    $("gBtnReset").addEventListener("click", resetAll);
+    modeMazeBtn.addEventListener("click", function () { switchMode("maze"); });
+    modeCellBtn.addEventListener("click", function () { switchMode("cell"); });
+
+    switchMode("maze");
+  })();
+
+  // ================= top-level tab switching =================
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function () {
+      document.querySelectorAll(".tab").forEach(function (x) { x.classList.remove("active"); });
+      document.querySelectorAll(".panel").forEach(function (x) { x.classList.remove("active"); });
+      t.classList.add("active");
+      $("panel-" + t.dataset.panel).classList.add("active");
+    });
+  });
+})();
+</script>
+</body>
+</html>

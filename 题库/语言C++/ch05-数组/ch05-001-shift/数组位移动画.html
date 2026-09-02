@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数组位移动画</title>
+<style>
+  :root {
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+    --green: #2e7d32;
+    --green-light: #e8f5e9;
+    --orange: #ef6c00;
+    --orange-light: #fff3e0;
+    --gray: #9e9e9e;
+    --ink: #263238;
+    --border: #cfd8dc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    background: #f0f2f5;
+    color: var(--ink);
+    padding: 24px;
+  }
+  h1 { text-align: center; color: var(--blue); margin: 0 0 4px; font-size: 26px; }
+  .sub { text-align: center; color: #607d8b; margin-bottom: 20px; font-size: 14px; }
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+    padding: 24px 28px 28px;
+  }
+  .controls {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #f5f7fa; padding: 14px 16px; border-radius: 8px; margin-bottom: 20px;
+  }
+  .controls label { font-size: 14px; color: #455a64; }
+  .controls input {
+    width: 220px; padding: 6px 10px; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 15px; font-family: "Consolas", monospace;
+  }
+  .controls button {
+    padding: 7px 16px; border: none; border-radius: 6px; cursor: pointer;
+    font-size: 14px; font-weight: 600; color: #fff; background: var(--blue); transition: opacity .15s;
+  }
+  .controls button:hover { opacity: .85; }
+  .controls button.secondary { background: #78909c; }
+  .controls button.go { background: var(--green); }
+  .controls button:disabled { background: #cfd8dc; cursor: not-allowed; }
+  .hint { font-size: 13px; color: #90a4ae; margin: -12px 0 18px 2px; }
+
+  .phase-label {
+    display: inline-block; font-size: 13px; font-weight: 700; color: #fff;
+    background: var(--blue); border-radius: 12px; padding: 2px 12px; margin-bottom: 16px;
+  }
+  .phase-label.done { background: var(--green); }
+
+  .board { background: #fbfcfd; border: 1px solid var(--border); border-radius: 10px; padding: 26px; min-height: 200px; }
+  .board-empty { text-align: center; color: #b0bec5; padding: 40px 0; font-size: 15px; }
+
+  .array-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 28px; flex-wrap: wrap; }
+  .idx-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 6px; flex-wrap: wrap; }
+  .idx-cell { width: 54px; text-align: center; font-size: 12px; color: #90a4ae; font-family: "Consolas", monospace; }
+  .cell {
+    width: 54px; height: 54px; display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-family: "Consolas", monospace; font-weight: 700;
+    border-radius: 8px; border: 2px solid var(--border); background: #fff; color: var(--ink);
+    transition: background .2s, border-color .2s, transform .2s;
+  }
+  .cell.read { border-color: var(--orange); background: var(--orange-light); color: var(--orange); transform: translateY(-4px); }
+  .cell.write { border-color: var(--blue); background: var(--blue-light); color: var(--blue); transform: translateY(4px); }
+  .cell.settled { border-color: var(--green); background: var(--green-light); color: var(--green); }
+
+  .temp-area { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 4px; }
+  .temp-label { font-size: 14px; color: #607d8b; font-family: "Consolas", monospace; }
+  .temp-cell {
+    width: 54px; height: 54px; display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-family: "Consolas", monospace; font-weight: 700;
+    border-radius: 8px; border: 2px dashed var(--border); background: #fafafa; color: #cfd8dc;
+  }
+  .temp-cell.filled { border-style: solid; border-color: var(--orange); background: var(--orange-light); color: var(--orange); }
+  .arrow-down { text-align: center; color: var(--orange); font-size: 20px; margin: -6px 0 10px; }
+
+  .log {
+    margin-top: 18px; background: #263238; color: #b2ff59; border-radius: 8px; padding: 14px 16px;
+    font-family: "Consolas", monospace; font-size: 14px; min-height: 90px; max-height: 220px;
+    overflow-y: auto; line-height: 1.7;
+  }
+  .log div { opacity: .55; }
+  .log div:last-child { opacity: 1; color: #eeff41; }
+  .log .placeholder { color: #607d8b; opacity: 1; }
+
+  @media (prefers-color-scheme: dark) {
+    body { background: #14181b; color: #e0e0e0; }
+    .wrap { background: #1e2428; box-shadow: none; }
+    .controls { background: #262c30; }
+    .board { background: #1a1f22; border-color: #37474f; }
+    .cell, .temp-cell { background: #263238; color: #e0e0e0; border-color: #37474f; }
+    .temp-cell { color: #546e7a; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>数组位移动画</h1>
+  <div class="sub">第 5 章配套演示 &nbsp;|&nbsp; "第一个元素移到末尾，其余依次前移"——一步步看临时变量怎么救场</div>
+
+  <div class="controls">
+    <label>数组：<input id="inputArr" placeholder="例如 1,2,3,4,5" /></label>
+    <button class="go" id="btnGen">生成演示</button>
+    <button id="btnStep">下一步 →</button>
+    <button id="btnAuto">自动播放</button>
+    <button class="secondary" id="btnReset">重置</button>
+  </div>
+  <div class="hint" id="hint">用逗号或空格分隔数字，建议 4~8 个，太多格子会铺不下。</div>
+
+  <div class="board" id="board"><div class="board-empty">点击"生成演示"开始</div></div>
+
+  <div class="log" id="log"><div class="placeholder">// 这里会实时打印每一步的运算过程</div></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var DEFAULT_ARR = [1, 2, 3, 4, 5];
+
+  // ---------- pure step builder (verified against hand-traced numbers in 章节讲稿.md) ----------
+  // Algorithm matches ch05-001-shift/solution.cpp exactly:
+  //   temp = a[1]; for i in 1..n-1: a[i]=a[i+1]; a[n]=temp;
+
+  function buildShiftSteps(values) {
+    var n = values.length;
+    var a = new Array(n + 1);
+    for (var i = 1; i <= n; i++) a[i] = values[i - 1];
+    var steps = [];
+
+    steps.push({ phase: "start", a: a.slice(), temp: null, log: "初始数组：" + values.join(" ") });
+
+    var temp = a[1];
+    steps.push({ phase: "save", a: a.slice(), temp: temp, readIdx: 1,
+      log: "① temp = a[1] = " + temp + "（先存起来，不然一会儿会被覆盖丢失）" });
+
+    for (var k = 1; k <= n - 1; k++) {
+      var val = a[k + 1];
+      a[k] = val;
+      steps.push({ phase: "shift", a: a.slice(), temp: temp, readIdx: k + 1, writeIdx: k,
+        log: "② a[" + k + "] = a[" + (k + 1) + "] = " + val });
+    }
+
+    a[n] = temp;
+    steps.push({ phase: "place", a: a.slice(), temp: temp, writeIdx: n,
+      log: "③ a[" + n + "] = temp = " + temp + "（原来的第一个数放回末尾）" });
+
+    steps.push({ phase: "done", a: a.slice(), temp: temp, log: "平移完成，结果：" + a.slice(1).join(" ") });
+
+    return steps;
+  }
+
+  var steps = [];
+  var stepIndex = -1;
+  var autoTimer = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var boardEl = $("board"), logEl = $("log"), inputArr = $("inputArr");
+  var btnStep = $("btnStep"), btnAuto = $("btnAuto");
+
+  function parseArr(raw) {
+    var parts = (raw || "").split(/[,，\s]+/).filter(function (s) { return s.length > 0; });
+    var nums = parts.map(function (s) { return parseInt(s, 10); }).filter(function (v) { return !isNaN(v); });
+    if (nums.length < 1) return DEFAULT_ARR.slice();
+    if (nums.length > 8) nums = nums.slice(0, 8);
+    return nums;
+  }
+
+  function render() {
+    if (stepIndex < 0) {
+      boardEl.innerHTML = '<div class="board-empty">点击"生成演示"开始</div>';
+      logEl.innerHTML = '<div class="placeholder">// 这里会实时打印每一步的运算过程</div>';
+      return;
+    }
+    var snap = steps[stepIndex];
+    var n = snap.a.length - 1;
+
+    var labelText = "初始状态", labelCls = "";
+    if (snap.phase === "save") labelText = "第①步：存下第一个元素";
+    else if (snap.phase === "shift") labelText = "第②步：依次前移";
+    else if (snap.phase === "place") labelText = "第③步：放回末尾";
+    else if (snap.phase === "done") { labelText = "完成"; labelCls = " done"; }
+
+    var html = '<div class="phase-label' + labelCls + '">' + labelText + "</div>";
+
+    html += '<div class="idx-row">';
+    for (var i = 1; i <= n; i++) html += '<div class="idx-cell">a[' + i + ']</div>';
+    html += "</div>";
+
+    html += '<div class="array-row">';
+    for (var j = 1; j <= n; j++) {
+      var v = snap.a[j];
+      var cls = "cell";
+      if (snap.readIdx === j) cls += " read";
+      if (snap.writeIdx === j) cls += " write";
+      if (snap.phase === "done") cls += " settled";
+      html += '<div class="' + cls + '">' + v + "</div>";
+    }
+    html += "</div>";
+
+    html += '<div class="temp-area"><div class="temp-label">temp =</div><div class="temp-cell' +
+      (snap.temp !== null ? " filled" : "") + '">' + (snap.temp !== null ? snap.temp : "") + "</div></div>";
+
+    boardEl.innerHTML = html;
+
+    var lines = [];
+    for (var k = 0; k <= stepIndex; k++) lines.push("<div>" + (k + 1) + ". " + steps[k].log + "</div>");
+    logEl.innerHTML = lines.join("");
+    logEl.scrollTop = logEl.scrollHeight;
+
+    btnStep.disabled = stepIndex >= steps.length - 1;
+  }
+
+  function generate() {
+    stopAuto();
+    var arr = parseArr(inputArr.value);
+    inputArr.value = arr.join(",");
+    steps = buildShiftSteps(arr);
+    stepIndex = -1;
+    nextStep();
+  }
+
+  function nextStep() {
+    if (stepIndex < steps.length - 1) { stepIndex++; render(); }
+    if (stepIndex >= steps.length - 1) stopAuto();
+  }
+
+  function resetAll() {
+    stopAuto();
+    stepIndex = -1;
+    steps = [];
+    render();
+  }
+
+  function stopAuto() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; btnAuto.textContent = "自动播放"; }
+  }
+
+  function toggleAuto() {
+    if (autoTimer) { stopAuto(); return; }
+    if (steps.length === 0) generate();
+    btnAuto.textContent = "暂停";
+    autoTimer = setInterval(function () {
+      if (stepIndex >= steps.length - 1) { stopAuto(); return; }
+      nextStep();
+    }, 900);
+  }
+
+  $("btnGen").addEventListener("click", generate);
+  btnStep.addEventListener("click", nextStep);
+  btnAuto.addEventListener("click", toggleAuto);
+  $("btnReset").addEventListener("click", resetAll);
+
+  inputArr.value = DEFAULT_ARR.join(",");
+  render();
+})();
+</script>
+</body>
+</html>

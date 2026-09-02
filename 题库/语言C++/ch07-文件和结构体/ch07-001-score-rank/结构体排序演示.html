@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>结构体排序演示</title>
+<style>
+  :root {
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+    --green: #2e7d32;
+    --green-light: #e8f5e9;
+    --orange: #ef6c00;
+    --orange-light: #fff3e0;
+    --gray: #9e9e9e;
+    --ink: #263238;
+    --border: #cfd8dc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    background: #f0f2f5;
+    color: var(--ink);
+    padding: 24px;
+  }
+  h1 { text-align: center; color: var(--blue); margin: 0 0 4px; font-size: 26px; }
+  .sub { text-align: center; color: #607d8b; margin-bottom: 20px; font-size: 14px; }
+  .wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+    padding: 24px 28px 28px;
+  }
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab {
+    flex: 1; min-width: 220px; padding: 10px 14px;
+    border: 2px solid var(--border); background: #fafafa; border-radius: 8px;
+    cursor: pointer; font-size: 15px; font-weight: 600; color: #546e7a; transition: all .15s;
+  }
+  .tab:hover { border-color: var(--blue); color: var(--blue); }
+  .tab.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+  .controls {
+    display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap;
+    background: #f5f7fa; padding: 14px 16px; border-radius: 8px; margin-bottom: 8px;
+  }
+  .controls .field { display: flex; flex-direction: column; gap: 4px; }
+  .controls label { font-size: 13px; color: #455a64; }
+  .controls textarea {
+    width: 260px; height: 92px; padding: 6px 10px; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 13px; font-family: "Consolas", monospace; resize: vertical;
+  }
+  .btnrow { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
+  .controls button {
+    padding: 7px 16px; border: none; border-radius: 6px; cursor: pointer;
+    font-size: 14px; font-weight: 600; color: #fff; background: var(--blue); transition: opacity .15s;
+  }
+  .controls button:hover { opacity: .85; }
+  .controls button.secondary { background: #78909c; }
+  .controls button.go { background: var(--green); }
+  .controls button:disabled { background: #cfd8dc; cursor: not-allowed; }
+  .hint { font-size: 13px; color: #90a4ae; margin: 6px 0 18px 2px; }
+
+  .phase-label {
+    display: inline-block; font-size: 13px; font-weight: 700; color: #fff;
+    background: var(--blue); border-radius: 12px; padding: 2px 12px; margin-bottom: 14px;
+  }
+  .phase-label.compare { background: var(--orange); }
+  .phase-label.done { background: var(--green); }
+
+  .board { background: #fbfcfd; border: 1px solid var(--border); border-radius: 10px; padding: 22px; min-height: 220px; }
+  .board-empty { text-align: center; color: #b0bec5; padding: 40px 0; font-size: 15px; }
+
+  .cards { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .card {
+    width: 150px; border: 2px solid var(--border); border-radius: 10px; background: #fff;
+    padding: 10px 12px; font-family: "Consolas", monospace; font-size: 13px; color: #455a64;
+    transition: border-color .2s, background .2s, transform .2s;
+  }
+  .card .name { font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+  .card .row { display: flex; justify-content: space-between; }
+  .card .rank-badge {
+    display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 700;
+    color: #fff; background: var(--gray); border-radius: 10px; padding: 1px 8px;
+  }
+  .card.key { border-color: var(--orange); background: var(--orange-light); transform: translateY(-6px); }
+  .card.other { border-color: var(--blue); background: var(--blue-light); }
+  .card.settled { border-color: var(--green); }
+  .card.settled .rank-badge { background: var(--green); }
+
+  .log {
+    margin-top: 18px; background: #263238; color: #b2ff59; border-radius: 8px; padding: 14px 16px;
+    font-family: "Consolas", monospace; font-size: 14px; min-height: 90px; max-height: 220px;
+    overflow-y: auto; line-height: 1.7;
+  }
+  .log div { opacity: .55; }
+  .log div:last-child { opacity: 1; color: #eeff41; }
+  .log .placeholder { color: #607d8b; opacity: 1; }
+
+  @media (prefers-color-scheme: dark) {
+    body { background: #14181b; color: #e0e0e0; }
+    .wrap { background: #1e2428; box-shadow: none; }
+    .controls { background: #262c30; }
+    .board { background: #1a1f22; border-color: #37474f; }
+    .card { background: #263238; color: #cfd8dc; border-color: #37474f; }
+    .card .name { color: #e0e0e0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>结构体排序演示</h1>
+  <div class="sub">第 7 章配套演示 &nbsp;|&nbsp; 姓名+语文+数学捆成一张卡片，看比较规则怎么决定谁排在前面</div>
+
+  <div class="tabs">
+    <button class="tab active" data-rule="simple">规则一：只比总分（例1，同分按输入顺序）</button>
+    <button class="tab" data-rule="multi">规则二：总分→语文→学号（例2 奖学金）</button>
+  </div>
+
+  <div class="controls">
+    <div class="field">
+      <label>学生名单（每行：姓名 语文 数学）</label>
+      <textarea id="inputData"></textarea>
+    </div>
+    <div class="field" style="justify-content:flex-end;">
+      <div class="btnrow">
+        <button class="go" id="btnGen">生成演示</button>
+        <button id="btnStep">下一步 →</button>
+        <button id="btnAuto">自动播放</button>
+        <button class="secondary" id="btnReset">重置</button>
+      </div>
+    </div>
+  </div>
+  <div class="hint" id="hint"></div>
+
+  <div class="board" id="board"><div class="board-empty">点击"生成演示"开始</div></div>
+
+  <div class="log" id="log"><div class="placeholder">// 这里会实时打印每一步的比较过程</div></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var DEFAULT_TEXT = [
+    "李明 88 90",
+    "王芳 90 88",
+    "张伟 75 95",
+    "赵敏 90 80",
+    "孙悦 90 88"
+  ].join("\n");
+
+  var RULE_HINTS = {
+    simple: "对应例1：stable_sort 只比较总分，总分相同的两人保持输入顺序不变——留意李明、王芳、孙悦同为178分时谁排前面。",
+    multi: "对应例2奖学金：总分相同比语文，语文也相同比学号（越小越靠前）——同样这组数据，顺序会和规则一完全不同。"
+  };
+
+  // ---------- pure logic (verified: matches hand-computed tables in 章节讲稿.md) ----------
+
+  function cmpSimple(a, b) { return a.total > b.total; }
+  function cmpMulti(a, b) {
+    if (a.total !== b.total) return a.total > b.total;
+    if (a.chinese !== b.chinese) return a.chinese > b.chinese;
+    return a.id < b.id;
+  }
+
+  function insertionSortSteps(records, cmp) {
+    var arr = records.slice();
+    var n = arr.length;
+    var steps = [];
+    steps.push({ type: "init", arr: arr.slice(), log: "初始序列（按输入/学号顺序）：" + arr.map(function (r) { return r.name; }).join("、") });
+
+    for (var i = 1; i < n; i++) {
+      var key = arr[i];
+      var j = i - 1;
+      steps.push({ type: "pick", i: i, keyId: key.id, arr: arr.slice(),
+        log: "取出第 " + (i + 1) + " 张卡片：" + key.name + "，准备插入前面已排好的部分" });
+      while (j >= 0) {
+        var res = cmp(key, arr[j]);
+        var reason;
+        if (key.total !== arr[j].total) reason = "总分 " + key.total + (key.total > arr[j].total ? " > " : " < ") + arr[j].total;
+        else if (key.chinese !== arr[j].chinese) reason = "总分相同(" + key.total + ")，语文 " + key.chinese + (key.chinese > arr[j].chinese ? " > " : " < ") + arr[j].chinese;
+        else reason = "总分、语文都相同，比学号 " + key.id + (key.id < arr[j].id ? " < " : " >= ") + arr[j].id;
+        steps.push({ type: "compare", i: i, j: j, keyId: key.id, otherId: arr[j].id, result: res, arr: arr.slice(),
+          log: "比较 " + key.name + " 与 " + arr[j].name + "：" + reason + "，" + (res ? "应排到前面，交换" : "不用再往前移，停止") });
+        if (!res) break;
+        arr[j + 1] = arr[j];
+        j--;
+        steps.push({ type: "shift", pos: j + 1, arr: arr.slice(), log: "…" + arr[j + 1].name + " 右移一位，腾出位置" });
+      }
+      arr[j + 1] = key;
+      steps.push({ type: "place", pos: j + 1, keyId: key.id, arr: arr.slice(), log: key.name + " 插入到第 " + (j + 2) + " 个位置" });
+    }
+
+    var ranked = arr.map(function (r, idx) {
+      var copy = {}; for (var kk in r) copy[kk] = r[kk];
+      copy.rank = idx + 1; return copy;
+    });
+    steps.push({ type: "done", arr: ranked, log: "排序完成，最终名次：" + ranked.map(function (r) { return r.rank + "." + r.name; }).join("、") });
+    return steps;
+  }
+
+  var rule = "simple";
+  var steps = [];
+  var stepIndex = -1;
+  var autoTimer = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var boardEl = $("board"), logEl = $("log"), inputData = $("inputData");
+  var btnStep = $("btnStep"), btnAuto = $("btnAuto");
+
+  function parseRecords(text) {
+    var lines = (text || "").split("\n").map(function (l) { return l.trim(); }).filter(function (l) { return l.length > 0; });
+    var records = [];
+    lines.forEach(function (line, idx) {
+      var parts = line.split(/\s+/);
+      if (parts.length < 3) return;
+      var chinese = parseInt(parts[1], 10), math = parseInt(parts[2], 10);
+      if (isNaN(chinese) || isNaN(math)) return;
+      records.push({ id: idx + 1, name: parts[0], chinese: chinese, math: math, total: chinese + math });
+    });
+    if (records.length < 2) {
+      return parseRecords(DEFAULT_TEXT);
+    }
+    if (records.length > 8) records = records.slice(0, 8);
+    return records;
+  }
+
+  function renderCard(r, extraCls, rankText) {
+    return '<div class="card ' + extraCls + '">' +
+      '<div class="name">' + r.name + '</div>' +
+      '<div class="row"><span>学号</span><span>' + r.id + '</span></div>' +
+      '<div class="row"><span>语文</span><span>' + r.chinese + '</span></div>' +
+      '<div class="row"><span>数学</span><span>' + r.math + '</span></div>' +
+      '<div class="row"><span>总分</span><span>' + r.total + '</span></div>' +
+      (rankText ? '<div class="rank-badge">第 ' + rankText + ' 名</div>' : '') +
+      '</div>';
+  }
+
+  function render() {
+    if (stepIndex < 0) {
+      boardEl.innerHTML = '<div class="board-empty">点击"生成演示"开始</div>';
+      logEl.innerHTML = '<div class="placeholder">// 这里会实时打印每一步的比较过程</div>';
+      return;
+    }
+    var snap = steps[stepIndex];
+    var label = "初始序列", cls = "";
+    if (snap.type === "pick") label = "取出待插入的卡片";
+    else if (snap.type === "compare") { label = "比较：" + (snap.result ? "需要交换" : "无需交换"); cls = " compare"; }
+    else if (snap.type === "shift") { label = "右移腾位"; cls = " compare"; }
+    else if (snap.type === "place") label = "插入到正确位置";
+    else if (snap.type === "done") { label = "排序完成，已赋好名次"; cls = " done"; }
+
+    var html = '<div class="phase-label' + cls + '">' + label + "</div>";
+    html += '<div class="cards">';
+    snap.arr.forEach(function (r) {
+      var extra = "";
+      if (snap.type === "done") extra = "settled";
+      else if (snap.keyId === r.id) extra = "key";
+      else if (snap.otherId === r.id) extra = "other";
+      html += renderCard(r, extra, snap.type === "done" ? r.rank : "");
+    });
+    html += "</div>";
+    boardEl.innerHTML = html;
+
+    var lines = [];
+    for (var k = 0; k <= stepIndex; k++) lines.push("<div>" + (k + 1) + ". " + steps[k].log + "</div>");
+    logEl.innerHTML = lines.join("");
+    logEl.scrollTop = logEl.scrollHeight;
+
+    btnStep.disabled = stepIndex >= steps.length - 1;
+  }
+
+  function generate() {
+    stopAuto();
+    var records = parseRecords(inputData.value);
+    inputData.value = records.map(function (r) { return r.name + " " + r.chinese + " " + r.math; }).join("\n");
+    var cmp = rule === "simple" ? cmpSimple : cmpMulti;
+    steps = insertionSortSteps(records, cmp);
+    stepIndex = -1;
+    nextStep();
+  }
+
+  function nextStep() {
+    if (stepIndex < steps.length - 1) { stepIndex++; render(); }
+    if (stepIndex >= steps.length - 1) stopAuto();
+  }
+
+  function resetAll() {
+    stopAuto();
+    stepIndex = -1;
+    steps = [];
+    render();
+  }
+
+  function stopAuto() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; btnAuto.textContent = "自动播放"; }
+  }
+
+  function toggleAuto() {
+    if (autoTimer) { stopAuto(); return; }
+    if (steps.length === 0) generate();
+    btnAuto.textContent = "暂停";
+    autoTimer = setInterval(function () {
+      if (stepIndex >= steps.length - 1) { stopAuto(); return; }
+      nextStep();
+    }, 900);
+  }
+
+  function switchRule(r) {
+    rule = r;
+    document.querySelectorAll(".tab").forEach(function (t) { t.classList.toggle("active", t.dataset.rule === r); });
+    $("hint").textContent = RULE_HINTS[r];
+    resetAll();
+  }
+
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function () { switchRule(t.dataset.rule); });
+  });
+  $("btnGen").addEventListener("click", generate);
+  btnStep.addEventListener("click", nextStep);
+  btnAuto.addEventListener("click", toggleAuto);
+  $("btnReset").addEventListener("click", resetAll);
+
+  inputData.value = DEFAULT_TEXT;
+  switchRule("simple");
+})();
+</script>
+</body>
+</html>

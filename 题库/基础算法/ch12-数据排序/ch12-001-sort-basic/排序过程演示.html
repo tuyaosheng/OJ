@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>排序与二分查找 · 板书演示</title>
+<style>
+  :root {
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+    --green: #2e7d32;
+    --green-light: #e8f5e9;
+    --orange: #ef6c00;
+    --orange-light: #fff3e0;
+    --gray: #9e9e9e;
+    --ink: #263238;
+    --border: #cfd8dc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    background: #f0f2f5;
+    color: var(--ink);
+    padding: 24px;
+  }
+  h1 { text-align: center; color: var(--blue); margin: 0 0 4px; font-size: 26px; }
+  .sub { text-align: center; color: #607d8b; margin-bottom: 20px; font-size: 14px; }
+  .wrap {
+    max-width: 1040px; margin: 0 auto; background: #fff; border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08); padding: 24px 28px 28px;
+  }
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab {
+    flex: 1; min-width: 120px; padding: 10px 14px; border: 2px solid var(--border);
+    background: #fafafa; border-radius: 8px; cursor: pointer; font-size: 15px;
+    font-weight: 600; color: #546e7a; transition: all .15s;
+  }
+  .tab:hover { border-color: var(--blue); color: var(--blue); }
+  .tab.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .controls {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #f5f7fa; padding: 14px 16px; border-radius: 8px; margin-bottom: 20px;
+  }
+  .controls label { font-size: 14px; color: #455a64; }
+  .controls input {
+    width: 200px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 15px; font-family: "Consolas", monospace;
+  }
+  .controls button {
+    padding: 7px 16px; border: none; border-radius: 6px; cursor: pointer;
+    font-size: 14px; font-weight: 600; color: #fff; background: var(--blue); transition: opacity .15s;
+  }
+  .controls button:hover { opacity: .85; }
+  .controls button.secondary { background: #78909c; }
+  .controls button.go { background: var(--green); }
+  .controls button:disabled { background: #cfd8dc; cursor: not-allowed; }
+  .hint { font-size: 13px; color: #90a4ae; margin: -12px 0 18px 2px; }
+
+  .board { background: #fbfcfd; border: 1px solid var(--border); border-radius: 10px; padding: 24px 24px 12px; min-height: 220px; }
+  .board-empty { text-align: center; color: #b0bec5; padding: 40px 0; font-size: 15px; }
+  .section-title { font-size: 13px; color: #90a4ae; margin: 4px 0 10px 2px; font-weight: 600; }
+  .status-line { font-size: 14px; color: #37474f; margin-bottom: 14px; font-family: "Consolas", monospace; }
+  .status-line b { color: var(--blue); }
+
+  .bar-row { display: flex; gap: 10px; align-items: flex-end; height: 170px; padding-bottom: 4px; }
+  .bar-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; flex: 1; max-width: 74px; height: 100%; }
+  .bar-val { font-family: "Consolas", monospace; font-weight: 700; font-size: 15px; }
+  .bar {
+    width: 100%; border-radius: 6px 6px 0 0; background: #cfd8dc; transition: height .2s, background .2s;
+    min-height: 6px; border: 2px solid transparent;
+  }
+  .bar-col.sorted .bar { background: var(--green-light); border-color: var(--green); }
+  .bar-col.sorted .bar-val { color: var(--green); }
+  .bar-col.candidate .bar { background: var(--blue-light); border-color: var(--blue); }
+  .bar-col.candidate .bar-val { color: var(--blue); }
+  .bar-col.compare .bar { background: var(--orange-light); border-color: var(--orange); }
+  .bar-col.compare .bar-val { color: var(--orange); }
+  .bar-col.swap .bar { background: #ffebee; border-color: #c62828; }
+  .bar-col.swap .bar-val { color: #c62828; }
+  .idx-label { font-size: 11px; color: #90a4ae; font-family: "Consolas", monospace; }
+
+  .bs-row { display: flex; gap: 6px; }
+  .bs-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bs-cell {
+    width: 52px; height: 52px; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-family: "Consolas", monospace; font-weight: 700;
+    border-radius: 6px; border: 2px solid transparent; background: #fff; color: var(--ink);
+  }
+  .bs-cell.out { opacity: .3; }
+  .bs-cell.range { background: var(--blue-light); }
+  .bs-cell.mid { border-color: var(--orange); background: var(--orange-light); color: var(--orange); }
+  .bs-cell.found { border-color: var(--green); background: var(--green-light); color: var(--green); }
+  .bs-pointer { font-size: 12px; font-weight: 700; color: var(--blue); height: 16px; }
+  .legend { margin-top: 14px; display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: #607d8b; }
+  .legend span.dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: middle; }
+
+  .log {
+    margin-top: 18px; background: #263238; color: #b2ff59; border-radius: 8px;
+    padding: 14px 16px; font-family: "Consolas", monospace; font-size: 14px;
+    min-height: 90px; max-height: 220px; overflow-y: auto; line-height: 1.7;
+  }
+  .log div { opacity: .55; }
+  .log div:last-child { opacity: 1; color: #eeff41; }
+  .log .placeholder { color: #607d8b; opacity: 1; }
+
+  @media (prefers-color-scheme: dark) {
+    body { background: #14181b; color: #e0e0e0; }
+    .wrap { background: #1e2428; box-shadow: none; }
+    .bs-cell { background: #263238; color: #e0e0e0; }
+    .bar { background: #37474f; }
+    .controls { background: #262c30; }
+    .board { background: #1a1f22; border-color: #37474f; }
+    .status-line { color: #cfd8dc; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>排序与二分查找 · 电子板书</h1>
+  <div class="sub">第 12 章配套演示 &nbsp;|&nbsp; 输入数组、点"下一步"，看选择排序怎么打擂台、二分查找怎么砍半区间</div>
+
+  <div class="tabs">
+    <button class="tab active" data-mode="select">选择排序</button>
+    <button class="tab" data-mode="binary">二分查找</button>
+  </div>
+
+  <div class="controls">
+    <label id="label1">数组：<input id="input1" /></label>
+    <label id="label2" class="binary-only" style="display:none">目标 x：<input id="input2" /></label>
+    <button class="go" id="btnGen">生成演示</button>
+    <button id="btnStep">下一步 →</button>
+    <button id="btnAuto">自动播放</button>
+    <button class="secondary" id="btnReset">重置</button>
+  </div>
+  <div class="hint" id="hint"></div>
+
+  <div class="board" id="board">
+    <div class="board-empty">点击"生成演示"开始</div>
+  </div>
+
+  <div class="log" id="log"><div class="placeholder">// 这里会实时打印每一步的运算过程</div></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var MODE_DEFAULTS = {
+    select: { a: "3,1,4,1,5" },
+    binary: { a: "1,1,3,4,5", x: "1" }
+  };
+  var MODE_HINTS = {
+    select: "数组随便改，观察每一轮怎么从未排序区里\"打擂台\"找最小值，再换到前面。",
+    binary: "数组必须已经有序；目标 x 换成 1 / 4 / 2 分别对应\"找到最靠前的\"\"找到\"\"没找到\"三种真实情况。"
+  };
+
+  var mode = "select";
+  var steps = [];
+  var stepIndex = -1;
+  var autoTimer = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var boardEl = $("board"), logEl = $("log");
+  var input1 = $("input1"), input2 = $("input2");
+  var label2 = $("label2");
+  var btnStep = $("btnStep"), btnAuto = $("btnAuto");
+
+  function parseIntArray(str) {
+    return (str.match(/-?\d+/g) || []).map(function (s) { return parseInt(s, 10); });
+  }
+
+  // ---------- pure logic: selection sort ----------
+  function buildSelectSteps(arrIn) {
+    var a = arrIn.slice();
+    var n = a.length;
+    var steps = [];
+    steps.push({ arr: a.slice(), sortedUpTo: -1, i: null, j: null, minIdx: null, log: "初始数组：[" + a.join(", ") + "]，还没有任何位置归位。" });
+    for (var i = 0; i < n - 1; i++) {
+      var minIdx = i;
+      steps.push({ arr: a.slice(), sortedUpTo: i - 1, i: i, j: null, minIdx: minIdx,
+        log: "第 " + (i + 1) + " 轮开始：假设未排序区里最小值下标是 " + minIdx + "（值 " + a[minIdx] + "）。" });
+      for (var j = i + 1; j < n; j++) {
+        var less = a[j] < a[minIdx];
+        steps.push({ arr: a.slice(), sortedUpTo: i - 1, i: i, j: j, minIdx: minIdx,
+          log: "比较 a[" + j + "]=" + a[j] + " 和当前最小 a[" + minIdx + "]=" + a[minIdx] + "：" + (less ? "更小，更新 minIdx=" + j : "不更小，minIdx 不变") });
+        if (less) minIdx = j;
+      }
+      if (minIdx !== i) {
+        var tmp = a[i]; a[i] = a[minIdx]; a[minIdx] = tmp;
+        steps.push({ arr: a.slice(), sortedUpTo: i - 1, i: i, j: null, minIdx: minIdx, swapPair: [i, minIdx],
+          log: "交换 a[" + i + "] 和 a[" + minIdx + "]，得到 [" + a.join(", ") + "]。" });
+      } else {
+        steps.push({ arr: a.slice(), sortedUpTo: i - 1, i: i, j: null, minIdx: minIdx,
+          log: "minIdx 就是 " + i + " 本身，不需要交换。" });
+      }
+      steps.push({ arr: a.slice(), sortedUpTo: i, i: null, j: null, minIdx: null,
+        log: "第 " + (i + 1) + " 轮结束，前 " + (i + 1) + " 个数已经归位：[" + a.slice(0, i + 1).join(", ") + "]。" });
+    }
+    steps.push({ arr: a.slice(), sortedUpTo: n - 1, i: null, j: null, minIdx: null, done: true,
+      log: "全部轮次结束，排序完成：[" + a.join(", ") + "]。" });
+    return steps;
+  }
+
+  // ---------- pure logic: binary search (leftmost occurrence) ----------
+  function buildBinarySteps(arrIn, x) {
+    var a = arrIn.slice();
+    var n = a.length;
+    var l = 0, r = n - 1, ans = -1;
+    var steps = [];
+    steps.push({ arr: a, l: l, r: r, mid: null, ans: ans, log: "初始范围 l=0, r=" + r + "，目标 x=" + x + "。" });
+    while (l <= r) {
+      var mid = Math.floor((l + r) / 2);
+      if (a[mid] === x) {
+        ans = mid;
+        steps.push({ arr: a, l: l, r: r, mid: mid, ans: ans, log: "mid=" + mid + "，a[mid]=" + a[mid] + " 等于 x，记下 ans=" + mid + "，继续往左找更靠前的相同值。" });
+        r = mid - 1;
+      } else if (a[mid] < x) {
+        steps.push({ arr: a, l: l, r: r, mid: mid, ans: ans, log: "mid=" + mid + "，a[mid]=" + a[mid] + " 比 x 小，往右缩：l=mid+1=" + (mid + 1) + "。" });
+        l = mid + 1;
+      } else {
+        steps.push({ arr: a, l: l, r: r, mid: mid, ans: ans, log: "mid=" + mid + "，a[mid]=" + a[mid] + " 比 x 大，往左缩：r=mid-1=" + (mid - 1) + "。" });
+        r = mid - 1;
+      }
+      steps[steps.length - 1].newL = l;
+      steps[steps.length - 1].newR = r;
+    }
+    var pos1 = ans === -1 ? -1 : ans + 1;
+    steps.push({ arr: a, l: l, r: r, mid: null, ans: ans, pos1: pos1, done: true,
+      log: ans === -1 ? "l > r，循环结束，没有找到，输出 -1。" : ("l > r，循环结束，最终 ans=" + ans + "（下标），转成从 1 开始编号，位置是 " + pos1 + "。") });
+    return steps;
+  }
+
+  // ---------- rendering ----------
+  function renderSelect(snap, n) {
+    boardEl.innerHTML = "";
+    var status = document.createElement("div");
+    status.className = "status-line";
+    status.innerHTML = snap.i !== null ? ("当前第 <b>" + (snap.i + 1) + "</b> 轮，未排序区从下标 <b>" + snap.i + "</b> 开始") : (snap.done ? "排序完成" : "");
+    boardEl.appendChild(status);
+
+    var row = document.createElement("div");
+    row.className = "bar-row";
+    var maxV = Math.max.apply(null, snap.arr.map(Math.abs).concat([1]));
+    for (var idx = 0; idx < snap.arr.length; idx++) {
+      var v = snap.arr[idx];
+      var col = document.createElement("div");
+      col.className = "bar-col";
+      if (snap.sortedUpTo !== undefined && idx <= snap.sortedUpTo) col.classList.add("sorted");
+      if (snap.minIdx === idx) col.classList.add("candidate");
+      if (snap.j === idx) col.classList.add("compare");
+      if (snap.swapPair && (snap.swapPair[0] === idx || snap.swapPair[1] === idx)) col.classList.add("swap");
+      var valEl = document.createElement("div");
+      valEl.className = "bar-val";
+      valEl.textContent = v;
+      var barEl = document.createElement("div");
+      barEl.className = "bar";
+      barEl.style.height = (20 + (Math.abs(v) / maxV) * 110) + "px";
+      var idxEl = document.createElement("div");
+      idxEl.className = "idx-label";
+      idxEl.textContent = "a[" + idx + "]";
+      col.appendChild(valEl);
+      col.appendChild(barEl);
+      col.appendChild(idxEl);
+      row.appendChild(col);
+    }
+    boardEl.appendChild(row);
+
+    var legend = document.createElement("div");
+    legend.className = "legend";
+    legend.innerHTML =
+      '<span><span class="dot" style="background:var(--blue-light);border:1px solid var(--blue)"></span>当前最小候选</span>' +
+      '<span><span class="dot" style="background:var(--orange-light);border:1px solid var(--orange)"></span>正在比较</span>' +
+      '<span><span class="dot" style="background:#ffebee;border:1px solid #c62828"></span>本轮交换</span>' +
+      '<span><span class="dot" style="background:var(--green-light);border:1px solid var(--green)"></span>已归位</span>';
+    boardEl.appendChild(legend);
+  }
+
+  function renderBinary(snap) {
+    boardEl.innerHTML = "";
+    var status = document.createElement("div");
+    status.className = "status-line";
+    status.innerHTML = snap.done
+      ? (snap.ans === -1 ? "查找结束：<b>没有找到</b>" : "查找结束：第一次出现在位置 <b>" + snap.pos1 + "</b>")
+      : ("当前范围 l=<b>" + snap.l + "</b>，r=<b>" + snap.r + "</b>" + (snap.mid !== null ? "，mid=<b>" + snap.mid + "</b>" : ""));
+    boardEl.appendChild(status);
+
+    var row = document.createElement("div");
+    row.className = "bs-row";
+    for (var i = 0; i < snap.arr.length; i++) {
+      var col = document.createElement("div");
+      col.className = "bs-col";
+      var ptr = document.createElement("div");
+      ptr.className = "bs-pointer";
+      var marks = [];
+      if (i === snap.l && !snap.done) marks.push("l");
+      if (i === snap.r && !snap.done) marks.push("r");
+      ptr.textContent = marks.join("/");
+      var cell = document.createElement("div");
+      cell.className = "bs-cell";
+      cell.textContent = snap.arr[i];
+      var inRange = i >= snap.l && i <= snap.r;
+      if (!snap.done) {
+        if (!inRange) cell.classList.add("out");
+        else cell.classList.add("range");
+        if (snap.mid === i) cell.classList.add("mid");
+      } else if (snap.ans === i) {
+        cell.classList.add("found");
+      } else {
+        cell.classList.add("out");
+      }
+      var idxEl = document.createElement("div");
+      idxEl.className = "idx-label";
+      idxEl.textContent = "a[" + i + "]";
+      col.appendChild(ptr);
+      col.appendChild(cell);
+      col.appendChild(idxEl);
+      row.appendChild(col);
+    }
+    boardEl.appendChild(row);
+  }
+
+  function render() {
+    if (stepIndex < 0) {
+      boardEl.innerHTML = '<div class="board-empty">点击"生成演示"开始</div>';
+      logEl.innerHTML = '<div class="placeholder">// 这里会实时打印每一步的运算过程</div>';
+      return;
+    }
+    var snap = steps[stepIndex];
+    if (mode === "select") renderSelect(snap);
+    else renderBinary(snap);
+
+    var lines = [];
+    for (var i = 0; i <= stepIndex; i++) lines.push("<div>" + (i + 1) + ". " + steps[i].log + "</div>");
+    logEl.innerHTML = lines.join("");
+    logEl.scrollTop = logEl.scrollHeight;
+
+    btnStep.disabled = stepIndex >= steps.length - 1;
+  }
+
+  function generate() {
+    stopAuto();
+    var v1 = (input1.value || MODE_DEFAULTS[mode].a).trim();
+    input1.value = v1;
+    var aArr = parseIntArray(v1);
+    if (aArr.length === 0) aArr = parseIntArray(MODE_DEFAULTS[mode].a);
+
+    if (mode === "select") {
+      steps = buildSelectSteps(aArr);
+    } else {
+      var xv = (input2.value || MODE_DEFAULTS.binary.x).trim();
+      input2.value = xv;
+      var x = parseInt(xv, 10);
+      var sorted = aArr.slice().sort(function (p, q) { return p - q; });
+      input1.value = sorted.join(",");
+      steps = buildBinarySteps(sorted, x);
+    }
+
+    stepIndex = -1;
+    nextStep();
+  }
+
+  function nextStep() {
+    if (stepIndex < steps.length - 1) { stepIndex++; render(); }
+    if (stepIndex >= steps.length - 1) stopAuto();
+  }
+
+  function resetAll() {
+    stopAuto();
+    stepIndex = -1;
+    steps = [];
+    render();
+  }
+
+  function stopAuto() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; btnAuto.textContent = "自动播放"; }
+  }
+
+  function toggleAuto() {
+    if (autoTimer) { stopAuto(); return; }
+    if (steps.length === 0) generate();
+    btnAuto.textContent = "暂停";
+    autoTimer = setInterval(function () {
+      if (stepIndex >= steps.length - 1) { stopAuto(); return; }
+      nextStep();
+    }, 900);
+  }
+
+  function switchMode(m) {
+    mode = m;
+    document.querySelectorAll(".tab").forEach(function (t) {
+      t.classList.toggle("active", t.dataset.mode === m);
+    });
+    input1.value = MODE_DEFAULTS[m].a;
+    label2.style.display = m === "binary" ? "" : "none";
+    if (m === "binary") input2.value = MODE_DEFAULTS.binary.x;
+    $("hint").textContent = MODE_HINTS[m];
+    resetAll();
+  }
+
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function () { switchMode(t.dataset.mode); });
+  });
+  $("btnGen").addEventListener("click", generate);
+  btnStep.addEventListener("click", nextStep);
+  btnAuto.addEventListener("click", toggleAuto);
+  $("btnReset").addEventListener("click", resetAll);
+
+  switchMode("select");
+})();
+</script>
+</body>
+</html>

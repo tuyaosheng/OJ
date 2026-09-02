@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>贪心排队接水 · 板书演示</title>
+<style>
+  :root {
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+    --green: #2e7d32;
+    --green-light: #e8f5e9;
+    --orange: #ef6c00;
+    --orange-light: #fff3e0;
+    --gray: #9e9e9e;
+    --ink: #263238;
+    --border: #cfd8dc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    background: #f0f2f5;
+    color: var(--ink);
+    padding: 24px;
+  }
+  h1 { text-align: center; color: var(--blue); margin: 0 0 4px; font-size: 26px; }
+  .sub { text-align: center; color: #607d8b; margin-bottom: 20px; font-size: 14px; }
+  .wrap {
+    max-width: 1100px; margin: 0 auto; background: #fff; border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08); padding: 24px 28px 28px;
+  }
+  .controls {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #f5f7fa; padding: 14px 16px; border-radius: 8px; margin-bottom: 12px;
+  }
+  .controls label { font-size: 14px; color: #455a64; display: flex; align-items: center; gap: 6px; }
+  .controls input[type="text"] {
+    width: 220px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 15px; font-family: "Consolas", monospace;
+  }
+  .controls button {
+    padding: 7px 16px; border: none; border-radius: 6px; cursor: pointer;
+    font-size: 14px; font-weight: 600; color: #fff; background: var(--blue); transition: opacity .15s;
+  }
+  .controls button:hover { opacity: .85; }
+  .controls button.secondary { background: #78909c; }
+  .controls button.go { background: var(--green); }
+  .controls button:disabled { background: #cfd8dc; cursor: not-allowed; }
+  .hint { font-size: 13px; color: #90a4ae; margin: 0 0 16px 2px; }
+
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab {
+    flex: 1; min-width: 140px; padding: 9px 12px; border: 2px solid var(--border);
+    background: #fafafa; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;
+    color: #546e7a; transition: all .15s; text-align: center;
+  }
+  .tab:hover { border-color: var(--blue); color: var(--blue); }
+  .tab.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+  .stats { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 14px; font-size: 14px; }
+  .stat-pill { background: var(--blue-light); color: var(--blue); border-radius: 16px; padding: 5px 14px; font-weight: 600; }
+  .stat-pill.orange { background: var(--orange-light); color: var(--orange); }
+  .stat-pill.green { background: var(--green-light); color: var(--green); }
+
+  .board-outer {
+    background: #fbfcfd; border: 1px solid var(--border); border-radius: 10px;
+    padding: 24px 20px 12px; overflow-x: auto; min-height: 220px;
+  }
+  .board-empty { text-align: center; color: #b0bec5; padding: 60px 0; font-size: 15px; }
+  .queue-row { display: flex; align-items: flex-end; gap: 14px; min-height: 190px; padding-bottom: 6px; justify-content: center; }
+  .person {
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    width: 56px; transition: opacity .2s;
+  }
+  .person .bar {
+    width: 40px; border-radius: 6px 6px 2px 2px; background: #cfd8dc;
+    display: flex; align-items: flex-start; justify-content: center; color: #fff;
+    font-weight: 700; font-size: 13px; padding-top: 4px; transition: background .2s, box-shadow .2s;
+  }
+  .person .name { margin-top: 6px; font-size: 12px; color: #78909c; font-family: "Consolas", monospace; }
+  .person .wait-tag {
+    margin-top: 2px; font-size: 11px; font-weight: 700; color: var(--orange);
+    background: var(--orange-light); border-radius: 8px; padding: 1px 6px; min-height: 16px;
+  }
+  .person.pending .bar { background: #e0e0e0; }
+  .person.pending .name { color: #b0bec5; }
+  .person.current .bar { background: var(--blue); box-shadow: 0 0 0 3px rgba(21,101,192,0.25); }
+  .person.done .bar { background: var(--green); }
+
+  .total-line {
+    text-align: center; font-size: 15px; font-weight: 700; color: var(--ink); margin: 4px 0 10px;
+  }
+  .total-line .num { color: var(--orange); font-family: "Consolas", monospace; }
+
+  table.cmp-table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; }
+  table.cmp-table th, table.cmp-table td { border: 1px solid var(--border); padding: 8px 10px; text-align: center; }
+  table.cmp-table th { background: #eceff1; color: #455a64; }
+  table.cmp-table td.order-seq { font-family: "Consolas", monospace; font-size: 12px; color: #607d8b; }
+  table.cmp-table tr.best td { background: var(--green-light); color: var(--green); font-weight: 700; }
+
+  .log {
+    margin-top: 18px; background: #263238; color: #b2ff59; border-radius: 8px;
+    padding: 14px 16px; font-family: "Consolas", monospace; font-size: 14px;
+    min-height: 90px; max-height: 220px; overflow-y: auto; line-height: 1.7;
+  }
+  .log div { opacity: .55; }
+  .log div:last-child { opacity: 1; color: #eeff41; }
+  .log .placeholder { color: #607d8b; opacity: 1; }
+
+  @media (prefers-color-scheme: dark) {
+    body { background: #14181b; color: #e0e0e0; }
+    .wrap { background: #1e2428; box-shadow: none; }
+    .controls { background: #262c30; }
+    .board-outer { background: #1a1f22; border-color: #37474f; }
+    table.cmp-table th { background: #263238; color: #cfd8dc; }
+    table.cmp-table td { border-color: #37474f; }
+    .person .name { color: #90a4ae; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>贪心排队接水 · 电子板书</h1>
+  <div class="sub">第 16 章配套演示 &nbsp;|&nbsp; 用同一批同学的接水时间，比较不同排队顺序下的总等待时间</div>
+
+  <div class="controls">
+    <label>各人接水用时（逗号分隔）：<input id="inputTimes" type="text" value="3,5,6,10,4" /></label>
+    <button class="go" id="btnGen">生成演示</button>
+    <button id="btnStep">下一步 →</button>
+    <button id="btnAuto">自动播放</button>
+    <button class="secondary" id="btnReset">重置</button>
+  </div>
+  <div class="hint">默认数据就是例1 讲解稿里的样例（5 位同学，用时 3 5 6 10 4）。先在下面选一种排队顺序，点"下一步"看每个人要等多久；切换顺序对比总等待时间，表格会记录每种顺序算出来的结果。</div>
+
+  <div class="tabs">
+    <button class="tab active" data-order="asc">贪心：从小到大</button>
+    <button class="tab" data-order="original">原始输入顺序</button>
+    <button class="tab" data-order="desc">从大到小（最差情况）</button>
+    <button class="tab" data-order="shuffle">打乱一次</button>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="board-outer">
+    <div class="board" id="board"><div class="board-empty">点击"生成演示"开始</div></div>
+  </div>
+  <div class="total-line" id="totalLine"></div>
+
+  <div id="tableWrap"></div>
+
+  <div class="log" id="log"><div class="placeholder">// 这里会实时打印每一步在算什么</div></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var boardEl = $("board"), logEl = $("log"), statsEl = $("stats"), totalLineEl = $("totalLine"), tableWrapEl = $("tableWrap");
+  var inputTimes = $("inputTimes");
+  var btnStep = $("btnStep"), btnAuto = $("btnAuto");
+
+  var ORDER_NAMES = { asc: "贪心：从小到大", original: "原始输入顺序", desc: "从大到小（最差情况）", shuffle: "打乱一次" };
+  var ORDER_KEYS = ["asc", "original", "desc", "shuffle"];
+
+  var baseTimes = [];      // parsed once per "生成演示"
+  var orders = {};         // key -> array of times in that serving order
+  var results = {};        // key -> { total, avg, waits }
+  var activeOrder = "asc";
+  var run = null;           // events for the currently active order
+  var stepIndex = -1;
+  var autoTimer = null;
+
+  function computeSchedule(seq) {
+    var total = 0, wait = 0, waits = [];
+    for (var i = 0; i < seq.length; i++) {
+      waits.push(wait);
+      total += wait;
+      wait += seq[i];
+    }
+    return { total: total, avg: seq.length ? total / seq.length : 0, waits: waits };
+  }
+
+  function shuffleOnce(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function buildEventsFor(key) {
+    var seq = orders[key], res = results[key];
+    var events = [];
+    for (var i = 0; i < seq.length; i++) {
+      events.push({
+        idx: i, time: seq[i], waitBefore: res.waits[i],
+        log: "第 " + (i + 1) + " 位同学接水用时 " + seq[i] + " 分钟；轮到他之前，排在他前面的所有人一共用掉了 " +
+          res.waits[i] + " 分钟，所以他要等 " + res.waits[i] + " 分钟才能开始接水。"
+      });
+    }
+    events.push({ idx: -1, final: true, log: "全部接完。总等待时间 = 每个人等待时间之和 = " + res.total + "，平均等待时间 = " + res.total + " / " + seq.length + " = " + res.avg.toFixed(2) + "。" });
+    return events;
+  }
+
+  function renderTable() {
+    var bestKey = ORDER_KEYS[0];
+    ORDER_KEYS.forEach(function (k) { if (results[k].total < results[bestKey].total) bestKey = k; });
+    var rows = ORDER_KEYS.map(function (k) {
+      return '<tr class="' + (k === bestKey ? "best" : "") + '"><td>' + ORDER_NAMES[k] + '</td>' +
+        '<td class="order-seq">[' + orders[k].join(", ") + ']</td>' +
+        '<td>' + results[k].total + '</td><td>' + results[k].avg.toFixed(2) + '</td></tr>';
+    }).join("");
+    tableWrapEl.innerHTML =
+      '<table class="cmp-table"><thead><tr><th>顺序</th><th>接水用时序列</th><th>总等待时间</th><th>平均等待时间</th></tr></thead><tbody>' +
+      rows + '</tbody></table>' +
+      '<div class="hint" style="margin-top:8px;">绿色高亮行就是总等待时间最小的顺序——正常情况下应该始终是"贪心：从小到大"。</div>';
+  }
+
+  function render() {
+    if (!run || stepIndex < 0) {
+      boardEl.innerHTML = '<div class="board-empty">点击"生成演示"开始</div>';
+      logEl.innerHTML = '<div class="placeholder">// 这里会实时打印每一步在算什么</div>';
+      statsEl.innerHTML = "";
+      totalLineEl.innerHTML = "";
+      return;
+    }
+    var seq = orders[activeOrder], res = results[activeOrder];
+    var maxTime = Math.max.apply(null, seq);
+    var lastEv = run[stepIndex];
+
+    var html = '<div class="queue-row">';
+    for (var i = 0; i < seq.length; i++) {
+      var state = i < lastEv.idx || (lastEv.final) ? "done" : (i === lastEv.idx ? "current" : "pending");
+      var barHeight = 30 + Math.round((seq[i] / maxTime) * 130);
+      var waitTag = state === "done" || (i === lastEv.idx && !lastEv.final) ? (res.waits[i] + " 分钟") : "";
+      var showWait = i <= (lastEv.final ? seq.length - 1 : lastEv.idx);
+      html += '<div class="person ' + state + '">' +
+        '<div class="bar" style="height:' + barHeight + 'px;">' + seq[i] + '</div>' +
+        '<div class="name">第' + (i + 1) + '位</div>' +
+        '<div class="wait-tag">' + (showWait ? "等 " + res.waits[i] : "&nbsp;") + '</div>' +
+        '</div>';
+    }
+    html += '</div>';
+    boardEl.innerHTML = html;
+
+    var runningTotal = 0;
+    var doneCount = lastEv.final ? seq.length : lastEv.idx + 1;
+    for (var j = 0; j < doneCount; j++) runningTotal += res.waits[j];
+
+    totalLineEl.innerHTML = '当前累计等待时间：<span class="num">' + runningTotal + '</span> 分钟' +
+      (lastEv.final ? '　|　平均等待时间：<span class="num">' + res.avg.toFixed(2) + '</span> 分钟' : "");
+
+    statsEl.innerHTML =
+      '<span class="stat-pill">当前顺序：' + ORDER_NAMES[activeOrder] + '</span>' +
+      '<span class="stat-pill orange">已服务 ' + doneCount + ' / ' + seq.length + ' 人</span>';
+
+    var lines = [];
+    for (var k = 0; k <= stepIndex; k++) lines.push("<div>" + (k + 1) + ". " + run[k].log + "</div>");
+    logEl.innerHTML = lines.join("");
+    logEl.scrollTop = logEl.scrollHeight;
+
+    renderTable();
+
+    btnStep.disabled = stepIndex >= run.length - 1;
+  }
+
+  function parseTimes() {
+    var raw = (inputTimes.value || "").split(",").map(function (s) { return parseInt(s.trim(), 10); }).filter(function (v) { return !isNaN(v) && v >= 0; });
+    if (raw.length < 2) raw = [3, 5, 6, 10, 4];
+    return raw;
+  }
+
+  function generate() {
+    stopAuto();
+    baseTimes = parseTimes();
+    inputTimes.value = baseTimes.join(",");
+    orders.asc = baseTimes.slice().sort(function (a, b) { return a - b; });
+    orders.original = baseTimes.slice();
+    orders.desc = baseTimes.slice().sort(function (a, b) { return b - a; });
+    orders.shuffle = shuffleOnce(baseTimes);
+    ORDER_KEYS.forEach(function (k) { results[k] = computeSchedule(orders[k]); });
+
+    run = buildEventsFor(activeOrder);
+    stepIndex = -1;
+    nextStep();
+  }
+
+  function nextStep() {
+    if (!run) return;
+    if (stepIndex < run.length - 1) { stepIndex++; render(); }
+    if (stepIndex >= run.length - 1) stopAuto();
+  }
+
+  function resetAll() {
+    stopAuto();
+    run = null; stepIndex = -1;
+    render();
+    tableWrapEl.innerHTML = "";
+  }
+
+  function stopAuto() { if (autoTimer) { clearInterval(autoTimer); autoTimer = null; btnAuto.textContent = "自动播放"; } }
+  function toggleAuto() {
+    if (autoTimer) { stopAuto(); return; }
+    if (!run) generate();
+    btnAuto.textContent = "暂停";
+    autoTimer = setInterval(function () {
+      if (!run || stepIndex >= run.length - 1) { stopAuto(); return; }
+      nextStep();
+    }, 700);
+  }
+
+  function switchOrder(key) {
+    activeOrder = key;
+    document.querySelectorAll(".tab").forEach(function (t) { t.classList.toggle("active", t.dataset.order === key); });
+    if (Object.keys(orders).length === 0) { render(); return; }
+    stopAuto();
+    run = buildEventsFor(activeOrder);
+    stepIndex = -1;
+    nextStep();
+  }
+
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function () { switchOrder(t.dataset.order); });
+  });
+  $("btnGen").addEventListener("click", generate);
+  btnStep.addEventListener("click", nextStep);
+  btnAuto.addEventListener("click", toggleAuto);
+  $("btnReset").addEventListener("click", resetAll);
+
+  render();
+})();
+</script>
+</body>
+</html>

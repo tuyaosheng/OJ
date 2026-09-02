@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>分支路径点亮器 · 板书演示</title>
+<style>
+  :root {
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+    --green: #2e7d32;
+    --green-light: #e8f5e9;
+    --orange: #ef6c00;
+    --orange-light: #fff3e0;
+    --gray: #9e9e9e;
+    --ink: #263238;
+    --border: #cfd8dc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    background: #f0f2f5;
+    color: var(--ink);
+    padding: 24px;
+  }
+  h1 { text-align: center; color: var(--blue); margin: 0 0 4px; font-size: 26px; }
+  .sub { text-align: center; color: #607d8b; margin-bottom: 20px; font-size: 14px; }
+  .wrap {
+    max-width: 980px; margin: 0 auto; background: #fff; border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08); padding: 24px 28px 28px;
+  }
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab {
+    flex: 1; min-width: 140px; padding: 10px 14px; border: 2px solid var(--border);
+    background: #fafafa; border-radius: 8px; cursor: pointer; font-size: 15px;
+    font-weight: 600; color: #546e7a; transition: all .15s;
+  }
+  .tab:hover { border-color: var(--blue); color: var(--blue); }
+  .tab.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+  .controls {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #f5f7fa; padding: 14px 16px; border-radius: 8px; margin-bottom: 8px;
+  }
+  .controls label { font-size: 14px; color: #455a64; }
+  .controls input, .controls select {
+    width: 90px; padding: 6px 10px; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 15px; font-family: "Consolas", monospace;
+  }
+  .controls button {
+    padding: 7px 16px; border: none; border-radius: 6px; cursor: pointer;
+    font-size: 14px; font-weight: 600; color: #fff; background: var(--blue);
+    transition: opacity .15s;
+  }
+  .controls button:hover { opacity: .85; }
+  .controls button.secondary { background: #78909c; }
+  .controls button.go { background: var(--green); }
+  .controls button:disabled { background: #cfd8dc; cursor: not-allowed; }
+  .hint { font-size: 13px; color: #90a4ae; margin: 0 0 18px 2px; }
+  .field[hidden] { display: none; }
+
+  .board {
+    background: #fbfcfd; border: 1px solid var(--border); border-radius: 10px;
+    padding: 28px 20px; min-height: 260px;
+  }
+  .board-empty { text-align: center; color: #b0bec5; padding: 70px 0; font-size: 15px; }
+
+  .flow { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .fbox {
+    padding: 10px 20px; border-radius: 8px; border: 2px solid var(--border);
+    background: #fff; font-family: "Consolas", monospace; font-size: 15px;
+    text-align: center; min-width: 170px; transition: all .2s; color: #455a64;
+  }
+  .fbox.decision { border-radius: 24px; background: #eceff1; font-weight: 700; }
+  .fbox.current {
+    border-color: var(--blue); background: var(--blue-light); color: var(--blue);
+    box-shadow: 0 0 0 4px rgba(21,101,192,0.15); font-weight: 700;
+  }
+  .fbox.taken { border-color: var(--green); background: var(--green-light); color: var(--green); font-weight: 700; }
+  .fbox.faded { opacity: .32; }
+  .fbox.warn-taken { border-color: var(--orange); background: var(--orange-light); color: var(--orange); font-weight: 700; }
+  .arrow-down { color: #b0bec5; font-size: 20px; line-height: 1; margin: -2px 0; }
+  .arrow-down.lit { color: var(--blue); }
+
+  .branch-row { display: flex; gap: 36px; justify-content: center; margin-top: 4px; }
+  .branch-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .branch-label {
+    font-size: 12px; font-weight: 700; color: #90a4ae; padding: 1px 10px;
+    border-radius: 10px; background: #eceff1;
+  }
+  .branch-label.lit-yes { background: var(--green-light); color: var(--green); }
+  .branch-label.lit-no { background: var(--orange-light); color: var(--orange); }
+
+  .case-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
+  .case-row .fbox { min-width: 96px; padding: 10px 8px; }
+
+  .log {
+    margin-top: 18px; background: #263238; color: #b2ff59; border-radius: 8px;
+    padding: 14px 16px; font-family: "Consolas", monospace; font-size: 14px;
+    min-height: 90px; max-height: 200px; overflow-y: auto; line-height: 1.7;
+  }
+  .log div { opacity: .55; }
+  .log div:last-child { opacity: 1; color: #eeff41; }
+  .log .placeholder { color: #607d8b; opacity: 1; }
+
+  @media (prefers-color-scheme: dark) {
+    body { background: #14181b; color: #e0e0e0; }
+    .wrap { background: #1e2428; box-shadow: none; }
+    .board { background: #1a1f22; border-color: #37474f; }
+    .fbox { background: #263238; color: #cfd8dc; border-color: #37474f; }
+    .fbox.decision { background: #2c3639; }
+    .branch-label { background: #2c3639; color: #90a4ae; }
+    .controls { background: #262c30; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>分支路径点亮器</h1>
+  <div class="sub">第 3 章配套演示 &nbsp;|&nbsp; 输入一个值，逐格看条件怎么被判定、走的是哪条路、最后停在哪个输出上</div>
+
+  <div class="tabs">
+    <button class="tab active" data-mode="even">偶数判断</button>
+    <button class="tab" data-mode="luggage">行李托运费</button>
+    <button class="tab" data-mode="calc">简单计算器</button>
+  </div>
+
+  <div class="controls">
+    <label class="field" id="fieldN">n：<input id="inputN" /></label>
+    <label class="field" id="fieldW" hidden>w（公斤）：<input id="inputW" /></label>
+    <label class="field" id="fieldA" hidden>a：<input id="inputA" /></label>
+    <label class="field" id="fieldOp" hidden>op：
+      <select id="inputOp">
+        <option value="+">+</option>
+        <option value="-">-</option>
+        <option value="*">*</option>
+        <option value="/">/</option>
+        <option value="?">？（非法符号）</option>
+      </select>
+    </label>
+    <label class="field" id="fieldB" hidden>b：<input id="inputB" /></label>
+    <button class="go" id="btnGen">生成演示</button>
+    <button id="btnStep">下一步 →</button>
+    <button id="btnAuto">自动播放</button>
+    <button class="secondary" id="btnReset">重置</button>
+  </div>
+  <div class="hint" id="hint"></div>
+
+  <div class="board" id="board">
+    <div class="board-empty">点击"生成演示"开始</div>
+  </div>
+
+  <div class="log" id="log"><div class="placeholder">// 这里会实时打印每一步在做什么</div></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- step builders ----------
+  // Each mode builds an array of "snapshot" objects; render*() reads a snapshot
+  // and paints the flowchart accordingly. Every snapshot is self-contained.
+
+  function buildEvenSteps(n) {
+    var isEven = (n % 2 === 0);
+    var steps = [];
+    steps.push({
+      phase: "decision",
+      log: "输入 n = " + n + "，先计算 n % 2 = " + (((n % 2) + 2) % 2) + "（真正参与判断的是 n%2==0 是否成立）。"
+    });
+    steps.push({
+      phase: "branch", branch: isEven ? "yes" : "no",
+      log: isEven ? "n % 2 == 0 成立，走“是”这条路。" : "n % 2 == 0 不成立，走“否”这条路。"
+    });
+    steps.push({
+      phase: "done", branch: isEven ? "yes" : "no",
+      output: isEven ? "yes" : "no",
+      log: "输出结果：" + (isEven ? "yes" : "no") + "。"
+    });
+    return { kind: "even", n: n, isEven: isEven, steps: steps };
+  }
+
+  function buildLuggageSteps(w) {
+    var light = w <= 20;
+    var cost = light ? w * 1.68 : w * 1.98;
+    var costStr = cost.toFixed(2);
+    var steps = [];
+    steps.push({
+      phase: "decision",
+      log: "输入 w = " + w + " 公斤，判断 w <= 20 是否成立。"
+    });
+    steps.push({
+      phase: "branch", branch: light ? "yes" : "no",
+      log: light ? "w <= 20 成立，走“是”这条路，用每公斤 1.68 元计费。" : "w <= 20 不成立，走“否”这条路，用每公斤 1.98 元计费。"
+    });
+    steps.push({
+      phase: "process", branch: light ? "yes" : "no",
+      log: "计算费用：cost = " + w + " × " + (light ? "1.68" : "1.98") + " = " + costStr + "。"
+    });
+    steps.push({
+      phase: "done", branch: light ? "yes" : "no",
+      output: costStr,
+      log: "保留两位小数输出：" + costStr + "。"
+    });
+    return { kind: "luggage", w: w, light: light, costStr: costStr, steps: steps };
+  }
+
+  function buildCalcSteps(a, op, b) {
+    var cases = ["+", "-", "*", "/"];
+    var matched = cases.indexOf(op) >= 0 ? op : "default";
+    var steps = [];
+    steps.push({
+      phase: "switch",
+      log: "根据 op = '" + op + "' 决定进入 switch 的哪一个 case。"
+    });
+    steps.push({
+      phase: "case", matched: matched,
+      log: matched === "default"
+        ? "'" + op + "' 不是 + - * / 中的任何一个，四个 case 都对不上，落入 default。"
+        : "命中 case '" + matched + "'。"
+    });
+
+    if (matched === "/") {
+      var byZero = (b === 0);
+      steps.push({
+        phase: "nested", matched: matched, nestedCurrent: true,
+        log: "case '/' 内部还嵌套了一层判断：b 是否等于 0？此时 b = " + b + "。"
+      });
+      steps.push({
+        phase: "nested-branch", matched: matched, nestedBranch: byZero ? "yes" : "no",
+        log: byZero ? "b == 0 成立，走“是”这条路。" : "b == 0 不成立，走“否”这条路，正常做除法。"
+      });
+      var out = byZero ? "Divided by zero!" : String(Math.trunc(a / b));
+      steps.push({
+        phase: "done", matched: matched, nestedBranch: byZero ? "yes" : "no",
+        output: out,
+        log: byZero ? "输出：Divided by zero!" : "a / b = " + a + " / " + b + " = " + Math.trunc(a / b) + "（整数除法，舍去小数），输出：" + out + "。"
+      });
+    } else if (matched === "default") {
+      steps.push({
+        phase: "done", matched: matched,
+        output: "Invalid operator!",
+        log: "输出：Invalid operator!"
+      });
+    } else {
+      var val;
+      var expr;
+      if (matched === "+") { val = a + b; expr = a + " + " + b; }
+      else if (matched === "-") { val = a - b; expr = a + " - " + b; }
+      else { val = a * b; expr = a + " * " + b; }
+      steps.push({
+        phase: "done", matched: matched,
+        output: String(val),
+        log: "计算 " + expr + " = " + val + "，输出：" + val + "。"
+      });
+    }
+    return { kind: "calc", a: a, op: op, b: b, matched: matched, steps: steps };
+  }
+
+  // ---------- rendering ----------
+
+  function el(tag, cls, text) {
+    var e = document.createElement("div");
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function renderEven(data, snap) {
+    boardEl.innerHTML = "";
+    var flow = el("div", "flow");
+
+    var decision = el("div", "fbox decision", "n % 2 == 0 ?");
+    if (snap.phase === "decision") decision.classList.add("current");
+    else decision.classList.add("taken");
+    flow.appendChild(decision);
+
+    var arrow = el("div", "arrow-down", "↓");
+    if (snap.phase !== "decision") arrow.classList.add("lit");
+    flow.appendChild(arrow);
+
+    var row = el("div", "branch-row");
+    ["yes", "no"].forEach(function (b) {
+      var col = el("div", "branch-col");
+      var label = el("div", "branch-label" + (snap.branch === b ? (b === "yes" ? " lit-yes" : " lit-no") : ""), b === "yes" ? "是" : "否");
+      col.appendChild(label);
+      var box = el("div", "fbox", b === "yes" ? 'cout << "yes"' : 'cout << "no"');
+      if (snap.phase !== "decision" && snap.branch === b) {
+        box.classList.add(snap.phase === "done" ? "taken" : "current");
+      } else if (snap.phase !== "decision") {
+        box.classList.add("faded");
+      }
+      col.appendChild(box);
+      row.appendChild(col);
+    });
+    flow.appendChild(row);
+    boardEl.appendChild(flow);
+  }
+
+  function renderLuggage(data, snap) {
+    boardEl.innerHTML = "";
+    var flow = el("div", "flow");
+
+    var decision = el("div", "fbox decision", "w <= 20 ?");
+    if (snap.phase === "decision") decision.classList.add("current");
+    else decision.classList.add("taken");
+    flow.appendChild(decision);
+
+    var arrow = el("div", "arrow-down", "↓");
+    if (snap.phase !== "decision") arrow.classList.add("lit");
+    flow.appendChild(arrow);
+
+    var row = el("div", "branch-row");
+    [
+      { key: "yes", label: "是", text: "cost = w * 1.68" },
+      { key: "no", label: "否", text: "cost = w * 1.98" }
+    ].forEach(function (b) {
+      var col = el("div", "branch-col");
+      var label = el("div", "branch-label" + (snap.branch === b.key ? (b.key === "yes" ? " lit-yes" : " lit-no") : ""), b.label);
+      col.appendChild(label);
+      var box = el("div", "fbox", b.text);
+      if (snap.phase !== "decision" && snap.branch === b.key) {
+        box.classList.add((snap.phase === "process" || snap.phase === "done") ? "taken" : "current");
+      } else if (snap.phase !== "decision") {
+        box.classList.add("faded");
+      }
+      col.appendChild(box);
+      row.appendChild(col);
+    });
+    flow.appendChild(row);
+
+    if (snap.phase === "process" || snap.phase === "done") {
+      var arrow2 = el("div", "arrow-down lit", "↓");
+      flow.appendChild(arrow2);
+      var outBox = el("div", "fbox", "cout << fixed << setprecision(2) << cost");
+      outBox.classList.add(snap.phase === "done" ? "taken" : "current");
+      flow.appendChild(outBox);
+    }
+    if (snap.phase === "done") {
+      var arrow3 = el("div", "arrow-down lit", "↓");
+      flow.appendChild(arrow3);
+      var resBox = el("div", "fbox taken", "输出：" + snap.output);
+      flow.appendChild(resBox);
+    }
+
+    boardEl.appendChild(flow);
+  }
+
+  function renderCalc(data, snap) {
+    boardEl.innerHTML = "";
+    var flow = el("div", "flow");
+
+    var sw = el("div", "fbox decision", "switch (op)  [op='" + data.op + "']");
+    if (snap.phase === "switch") sw.classList.add("current");
+    else sw.classList.add("taken");
+    flow.appendChild(sw);
+
+    var arrow = el("div", "arrow-down", "↓");
+    if (snap.phase !== "switch") arrow.classList.add("lit");
+    flow.appendChild(arrow);
+
+    var caseRow = el("div", "case-row");
+    var caseDefs = [
+      { key: "+", text: "case '+'" },
+      { key: "-", text: "case '-'" },
+      { key: "*", text: "case '*'" },
+      { key: "/", text: "case '/'" },
+      { key: "default", text: "default" }
+    ];
+    caseDefs.forEach(function (c) {
+      var box = el("div", "fbox", c.text);
+      if (snap.matched === c.key) {
+        var isFinalDone = (snap.phase === "done" && data.matched !== "/");
+        var isNestedFlow = (data.matched === "/" && (snap.phase === "nested" || snap.phase === "nested-branch" || snap.phase === "done"));
+        box.classList.add((isFinalDone || isNestedFlow) ? "taken" : "current");
+      } else if (snap.phase !== "switch") {
+        box.classList.add("faded");
+      }
+      caseRow.appendChild(box);
+    });
+    flow.appendChild(caseRow);
+
+    if (data.matched === "/" && (snap.phase === "nested" || snap.phase === "nested-branch" || snap.phase === "done")) {
+      var arrow2 = el("div", "arrow-down lit", "↓");
+      flow.appendChild(arrow2);
+      var nested = el("div", "fbox decision", "b == 0 ?");
+      if (snap.phase === "nested") nested.classList.add("current");
+      else nested.classList.add("taken");
+      flow.appendChild(nested);
+
+      var arrow3 = el("div", "arrow-down", "↓");
+      if (snap.phase !== "nested") arrow3.classList.add("lit");
+      flow.appendChild(arrow3);
+
+      var nrow = el("div", "branch-row");
+      [
+        { key: "yes", label: "是", text: 'cout << "Divided by zero!"' },
+        { key: "no", label: "否", text: "cout << a / b" }
+      ].forEach(function (b) {
+        var col = el("div", "branch-col");
+        var label = el("div", "branch-label" + (snap.nestedBranch === b.key ? (b.key === "yes" ? " lit-no" : " lit-yes") : ""), b.label);
+        col.appendChild(label);
+        var box = el("div", "fbox", b.text);
+        if (snap.phase !== "nested" && snap.nestedBranch === b.key) {
+          box.classList.add(b.key === "yes" ? "warn-taken" : "taken");
+        } else if (snap.phase !== "nested" && snap.nestedBranch) {
+          box.classList.add("faded");
+        }
+        col.appendChild(box);
+        nrow.appendChild(col);
+      });
+      flow.appendChild(nrow);
+    }
+
+    if (snap.phase === "done") {
+      var arrowF = el("div", "arrow-down lit", "↓");
+      flow.appendChild(arrowF);
+      var resBox = el("div", "fbox " + (data.matched === "/" && snap.output === "Divided by zero!" ? "warn-taken" : (data.matched === "default" ? "warn-taken" : "taken")), "输出：" + snap.output);
+      flow.appendChild(resBox);
+    }
+
+    boardEl.appendChild(flow);
+  }
+
+  // ---------- controller ----------
+
+  var MODE_HINTS = {
+    even: "输入一个整数，看流程图怎么判断奇偶并点亮对应分支。",
+    luggage: "输入行李重量（公斤），看 w<=20 这个判断把重量分流到两种计费公式的哪一种。",
+    calc: "选一个运算符，除号还会再往下多亮一层——除数是否为 0 的特判。"
+  };
+
+  var mode = "even";
+  var steps = [];
+  var stepIndex = -1;
+  var autoTimer = null;
+  var currentData = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var boardEl = $("board"), logEl = $("log");
+  var btnStep = $("btnStep"), btnAuto = $("btnAuto");
+  var fieldN = $("fieldN"), fieldW = $("fieldW"), fieldA = $("fieldA"), fieldOp = $("fieldOp"), fieldB = $("fieldB");
+  var inputN = $("inputN"), inputW = $("inputW"), inputA = $("inputA"), inputOp = $("inputOp"), inputB = $("inputB");
+
+  function render() {
+    if (stepIndex < 0 || !currentData) {
+      boardEl.innerHTML = '<div class="board-empty">点击"生成演示"开始</div>';
+      logEl.innerHTML = '<div class="placeholder">// 这里会实时打印每一步在做什么</div>';
+      return;
+    }
+    var snap = steps[stepIndex];
+    if (mode === "even") renderEven(currentData, snap);
+    else if (mode === "luggage") renderLuggage(currentData, snap);
+    else renderCalc(currentData, snap);
+
+    var lines = [];
+    for (var i = 0; i <= stepIndex; i++) lines.push("<div>" + (i + 1) + ". " + steps[i].log + "</div>");
+    logEl.innerHTML = lines.join("");
+    logEl.scrollTop = logEl.scrollHeight;
+    btnStep.disabled = stepIndex >= steps.length - 1;
+  }
+
+  function generate() {
+    stopAuto();
+    var result;
+    if (mode === "even") {
+      var n = parseInt(inputN.value, 10);
+      if (!Number.isFinite(n)) n = 7;
+      inputN.value = n;
+      result = buildEvenSteps(n);
+    } else if (mode === "luggage") {
+      var w = parseFloat(inputW.value);
+      if (!Number.isFinite(w) || w < 0) w = 15;
+      inputW.value = w;
+      result = buildLuggageSteps(w);
+    } else {
+      var a = parseInt(inputA.value, 10);
+      var b = parseInt(inputB.value, 10);
+      if (!Number.isFinite(a)) a = 6;
+      if (!Number.isFinite(b)) b = 3;
+      inputA.value = a; inputB.value = b;
+      result = buildCalcSteps(a, inputOp.value, b);
+    }
+    currentData = result;
+    steps = result.steps;
+    stepIndex = -1;
+    nextStep();
+  }
+
+  function nextStep() {
+    if (stepIndex < steps.length - 1) {
+      stepIndex++;
+      render();
+    }
+    if (stepIndex >= steps.length - 1) stopAuto();
+  }
+
+  function resetAll() {
+    stopAuto();
+    stepIndex = -1;
+    steps = [];
+    currentData = null;
+    render();
+  }
+
+  function stopAuto() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; btnAuto.textContent = "自动播放"; }
+  }
+
+  function toggleAuto() {
+    if (autoTimer) { stopAuto(); return; }
+    if (steps.length === 0) generate();
+    btnAuto.textContent = "暂停";
+    autoTimer = setInterval(function () {
+      if (stepIndex >= steps.length - 1) { stopAuto(); return; }
+      nextStep();
+    }, 1100);
+  }
+
+  function switchMode(m) {
+    mode = m;
+    document.querySelectorAll(".tab").forEach(function (t) {
+      t.classList.toggle("active", t.dataset.mode === m);
+    });
+    fieldN.hidden = m !== "even";
+    fieldW.hidden = m !== "luggage";
+    fieldA.hidden = m !== "calc";
+    fieldOp.hidden = m !== "calc";
+    fieldB.hidden = m !== "calc";
+    if (m === "even") inputN.value = 7;
+    if (m === "luggage") inputW.value = 15;
+    if (m === "calc") { inputA.value = 6; inputOp.value = "/"; inputB.value = 0; }
+    $("hint").textContent = MODE_HINTS[m];
+    resetAll();
+  }
+
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function () { switchMode(t.dataset.mode); });
+  });
+  $("btnGen").addEventListener("click", generate);
+  btnStep.addEventListener("click", nextStep);
+  btnAuto.addEventListener("click", toggleAuto);
+  $("btnReset").addEventListener("click", resetAll);
+
+  switchMode("even");
+})();
+</script>
+</body>
+</html>

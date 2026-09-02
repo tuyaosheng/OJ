@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>变量交换动画 · 板书演示</title>
+<style>
+  :root {
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+    --green: #2e7d32;
+    --green-light: #e8f5e9;
+    --orange: #ef6c00;
+    --orange-light: #fff3e0;
+    --gray: #9e9e9e;
+    --ink: #263238;
+    --border: #cfd8dc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    background: #f0f2f5;
+    color: var(--ink);
+    padding: 24px;
+  }
+  h1 { text-align: center; color: var(--blue); margin: 0 0 4px; font-size: 26px; }
+  .sub { text-align: center; color: #607d8b; margin-bottom: 20px; font-size: 14px; }
+  .wrap {
+    max-width: 900px; margin: 0 auto; background: #fff; border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08); padding: 24px 28px 28px;
+  }
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab {
+    flex: 1; min-width: 140px; padding: 10px 14px; border: 2px solid var(--border);
+    background: #fafafa; border-radius: 8px; cursor: pointer; font-size: 15px;
+    font-weight: 600; color: #546e7a; transition: all .15s;
+  }
+  .tab:hover { border-color: var(--blue); color: var(--blue); }
+  .tab.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .tab.wrong-tab.active { background: var(--orange); border-color: var(--orange); }
+
+  .controls {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #f5f7fa; padding: 14px 16px; border-radius: 8px; margin-bottom: 8px;
+  }
+  .controls label { font-size: 14px; color: #455a64; }
+  .controls input {
+    width: 90px; padding: 6px 10px; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 15px; font-family: "Consolas", monospace;
+  }
+  .controls button {
+    padding: 7px 16px; border: none; border-radius: 6px; cursor: pointer;
+    font-size: 14px; font-weight: 600; color: #fff; background: var(--blue);
+    transition: opacity .15s;
+  }
+  .controls button:hover { opacity: .85; }
+  .controls button.secondary { background: #78909c; }
+  .controls button.go { background: var(--green); }
+  .controls button:disabled { background: #cfd8dc; cursor: not-allowed; }
+  .hint { font-size: 13px; color: #90a4ae; margin: 0 0 18px 2px; }
+
+  .board {
+    background: #fbfcfd; border: 1px solid var(--border); border-radius: 10px;
+    padding: 24px; min-height: 220px;
+  }
+  .board-empty { text-align: center; color: #b0bec5; padding: 60px 0; font-size: 15px; }
+
+  .code-block {
+    font-family: "Consolas", monospace; font-size: 15px; background: #eceff1;
+    border-radius: 8px; padding: 10px 16px; margin-bottom: 22px;
+  }
+  .code-block .cline {
+    padding: 4px 8px; border-radius: 4px; border-left: 4px solid transparent;
+    color: #455a64;
+  }
+  .code-block .cline.current {
+    background: #fff; border-left-color: var(--blue); color: var(--blue);
+    font-weight: 700;
+  }
+  .code-block .cline.done { color: #b0bec5; }
+
+  .boxes-row { display: flex; justify-content: center; gap: 48px; margin: 20px 0 8px; }
+  .varbox { text-align: center; }
+  .varbox .vname { font-size: 15px; font-weight: 700; color: #607d8b; margin-bottom: 8px; font-family: "Consolas", monospace; }
+  .varbox .vcell {
+    width: 84px; height: 66px; display: flex; align-items: center; justify-content: center;
+    font-family: "Consolas", monospace; font-size: 28px; font-weight: 700;
+    border-radius: 10px; border: 3px solid var(--border); background: #fff; color: var(--ink);
+    transition: all .25s; position: relative;
+  }
+  .varbox .vcell.empty { color: #cfd8dc; font-size: 20px; }
+  .varbox .vcell.current {
+    border-color: var(--blue); background: var(--blue-light);
+    box-shadow: 0 0 0 4px rgba(21,101,192,0.15);
+  }
+  .varbox .vcell.done { border-color: var(--green); background: var(--green-light); color: var(--green); }
+  .varbox .vcell.warn {
+    border-color: var(--orange); background: var(--orange-light); color: var(--orange);
+    animation: shake .3s;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+  }
+  .varbox .note {
+    margin-top: 8px; font-size: 12px; color: var(--orange); font-weight: 700; min-height: 16px;
+  }
+  .arrow-note {
+    text-align: center; color: #90a4ae; font-size: 13px; margin: 4px 0 18px;
+  }
+
+  .result-banner {
+    text-align: center; margin-top: 14px; font-size: 14px; font-weight: 700; border-radius: 8px;
+    padding: 10px; display: none;
+  }
+  .result-banner.show { display: block; }
+  .result-banner.ok { background: var(--green-light); color: var(--green); }
+  .result-banner.bad { background: var(--orange-light); color: var(--orange); }
+
+  .log {
+    margin-top: 18px; background: #263238; color: #b2ff59; border-radius: 8px;
+    padding: 14px 16px; font-family: "Consolas", monospace; font-size: 14px;
+    min-height: 90px; max-height: 200px; overflow-y: auto; line-height: 1.7;
+  }
+  .log div { opacity: .55; }
+  .log div:last-child { opacity: 1; color: #eeff41; }
+  .log .placeholder { color: #607d8b; opacity: 1; }
+
+  @media (prefers-color-scheme: dark) {
+    body { background: #14181b; color: #e0e0e0; }
+    .wrap { background: #1e2428; box-shadow: none; }
+    .board { background: #1a1f22; border-color: #37474f; }
+    .code-block { background: #232a2e; }
+    .code-block .cline { color: #b0bec5; }
+    .varbox .vcell { background: #263238; color: #e0e0e0; border-color: #37474f; }
+    .controls { background: #262c30; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>变量交换动画</h1>
+  <div class="sub">第 2 章配套演示 &nbsp;|&nbsp; 看着 a、b（还有 temp）格子里的数字随代码逐行变化，理解“赋值”到底在做什么</div>
+
+  <div class="tabs">
+    <button class="tab wrong-tab active" data-mode="wrong">错误写法（没有临时变量）</button>
+    <button class="tab" data-mode="correct">正确写法（借助临时变量）</button>
+  </div>
+
+  <div class="controls">
+    <label>a 的初始值：<input id="inputA" /></label>
+    <label>b 的初始值：<input id="inputB" /></label>
+    <button class="go" id="btnGen">生成演示</button>
+    <button id="btnStep">下一步 →</button>
+    <button id="btnAuto">自动播放</button>
+    <button class="secondary" id="btnReset">重置</button>
+  </div>
+  <div class="hint" id="hint"></div>
+
+  <div class="board" id="board">
+    <div class="board-empty">点击“生成演示”开始</div>
+  </div>
+
+  <div class="log" id="log"><div class="placeholder">// 这里会实时打印每一步在做什么</div></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var WRONG_LINES = ["a = b;", "b = a;"];
+  var CORRECT_LINES = ["int t = a;", "a = b;", "b = t;"];
+
+  // step: { line, vars: {a,b,t(optional)}, cur: name-just-changed, warn: name-about-to-be-lost, log }
+  function buildWrongSteps(a, b) {
+    var steps = [];
+    steps.push({ line: -1, vars: { a: a, b: b }, log: "初始状态：a = " + a + "，b = " + b + "。" });
+    steps.push({
+      line: 0, vars: { a: b, b: b }, cur: "a", warn: "a",
+      log: "a = b：把 b 的值（" + b + "）复制给 a。a 原来的 " + a + " 被永久覆盖，再也拿不回来了。"
+    });
+    steps.push({
+      line: 1, vars: { a: b, b: b }, cur: "b",
+      log: "b = a：这时 a 已经变成 " + b + " 了，再把 a 的值抄给 b，b 并没有变成原来 a 的 " + a + "。"
+    });
+    steps.push({
+      line: -1, vars: { a: b, b: b }, done: true, bug: true,
+      log: "结果：a = " + b + "，b = " + b + "，两个变量都变成了 " + b + "——原本应该属于 b 的 " + a + " 彻底丢失了。"
+    });
+    return steps;
+  }
+
+  function buildCorrectSteps(a, b) {
+    var steps = [];
+    steps.push({ line: -1, vars: { a: a, b: b, t: null }, log: "初始状态：a = " + a + "，b = " + b + "，临时变量 t 还没有值。" });
+    steps.push({
+      line: 0, vars: { a: a, b: b, t: a }, cur: "t",
+      log: "int t = a：先把 a 的值（" + a + "）备份进临时变量 t，留一个“存根”。"
+    });
+    steps.push({
+      line: 1, vars: { a: b, b: b, t: a }, cur: "a",
+      log: "a = b：a 被覆盖成 " + b + " 也没关系，原来的 " + a + " 已经安全地存在 t 里了。"
+    });
+    steps.push({
+      line: 2, vars: { a: b, b: a, t: a }, cur: "b",
+      log: "b = t：把 t 里存的原始 a 值（" + a + "）交给 b，交换正式完成。"
+    });
+    steps.push({
+      line: -1, vars: { a: b, b: a, t: a }, done: true,
+      log: "结果：a = " + b + "，b = " + a + "，两个值真正交换成功。"
+    });
+    return steps;
+  }
+
+  var MODE_HINTS = {
+    wrong: "这是很多人第一反应会写的版本——盯着 b 的格子看，它在第二步“悄悄”出了问题。",
+    correct: "多了一句 int t = a，看 t 是怎么在覆盖发生之前就把原始值稳稳接住的。"
+  };
+
+  var mode = "wrong";
+  var steps = [];
+  var stepIndex = -1;
+  var autoTimer = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var boardEl = $("board"), logEl = $("log");
+  var inputA = $("inputA"), inputB = $("inputB");
+  var btnStep = $("btnStep"), btnAuto = $("btnAuto");
+
+  function renderBoard() {
+    boardEl.innerHTML = "";
+    if (stepIndex < 0) {
+      boardEl.innerHTML = '<div class="board-empty">点击“生成演示”开始</div>';
+      return;
+    }
+    var snap = steps[stepIndex];
+    var lines = mode === "wrong" ? WRONG_LINES : CORRECT_LINES;
+
+    var codeBlock = document.createElement("div");
+    codeBlock.className = "code-block";
+    lines.forEach(function (text, idx) {
+      var div = document.createElement("div");
+      div.className = "cline";
+      if (snap.line === idx) div.classList.add("current");
+      else if (snap.line > idx || (snap.done && idx <= lines.length - 1)) div.classList.add("done");
+      div.textContent = text;
+      codeBlock.appendChild(div);
+    });
+    boardEl.appendChild(codeBlock);
+
+    var row = document.createElement("div");
+    row.className = "boxes-row";
+    var names = mode === "wrong" ? ["a", "b"] : ["a", "b", "t"];
+    names.forEach(function (name) {
+      var box = document.createElement("div");
+      box.className = "varbox";
+      var label = document.createElement("div");
+      label.className = "vname";
+      label.textContent = name;
+      var cell = document.createElement("div");
+      var val = snap.vars[name];
+      cell.className = "vcell";
+      if (val === null || val === undefined) { cell.classList.add("empty"); cell.textContent = "空"; }
+      else cell.textContent = val;
+      if (snap.cur === name) cell.classList.add("current");
+      else if (snap.done) cell.classList.add(snap.bug && name !== "t" ? "warn" : "done");
+      if (snap.warn === name) cell.classList.add("warn");
+      var note = document.createElement("div");
+      note.className = "note";
+      if (snap.warn === name) note.textContent = "原值将丢失";
+      box.appendChild(label);
+      box.appendChild(cell);
+      box.appendChild(note);
+      row.appendChild(box);
+    });
+    boardEl.appendChild(row);
+
+    if (snap.done) {
+      var banner = document.createElement("div");
+      banner.className = "result-banner show " + (snap.bug ? "bad" : "ok");
+      banner.textContent = snap.bug
+        ? "交换失败：a、b 变成了同一个值，b 原来的数据永久丢失"
+        : "交换成功：a、b 的值被正确互换";
+      boardEl.appendChild(banner);
+    }
+  }
+
+  function render() {
+    renderBoard();
+    if (stepIndex < 0) {
+      logEl.innerHTML = '<div class="placeholder">// 这里会实时打印每一步在做什么</div>';
+      return;
+    }
+    var lines = [];
+    for (var i = 0; i <= stepIndex; i++) lines.push("<div>" + (i + 1) + ". " + steps[i].log + "</div>");
+    logEl.innerHTML = lines.join("");
+    logEl.scrollTop = logEl.scrollHeight;
+    btnStep.disabled = stepIndex >= steps.length - 1;
+  }
+
+  function generate() {
+    stopAuto();
+    var a = parseInt(inputA.value, 10);
+    var b = parseInt(inputB.value, 10);
+    if (!Number.isFinite(a)) a = 3;
+    if (!Number.isFinite(b)) b = 5;
+    inputA.value = a; inputB.value = b;
+    steps = mode === "wrong" ? buildWrongSteps(a, b) : buildCorrectSteps(a, b);
+    stepIndex = -1;
+    nextStep();
+  }
+
+  function nextStep() {
+    if (stepIndex < steps.length - 1) {
+      stepIndex++;
+      render();
+    }
+    if (stepIndex >= steps.length - 1) stopAuto();
+  }
+
+  function resetAll() {
+    stopAuto();
+    stepIndex = -1;
+    steps = [];
+    render();
+  }
+
+  function stopAuto() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; btnAuto.textContent = "自动播放"; }
+  }
+
+  function toggleAuto() {
+    if (autoTimer) { stopAuto(); return; }
+    if (steps.length === 0) generate();
+    btnAuto.textContent = "暂停";
+    autoTimer = setInterval(function () {
+      if (stepIndex >= steps.length - 1) { stopAuto(); return; }
+      nextStep();
+    }, 1100);
+  }
+
+  function switchMode(m) {
+    mode = m;
+    document.querySelectorAll(".tab").forEach(function (t) {
+      t.classList.toggle("active", t.dataset.mode === m);
+    });
+    $("hint").textContent = MODE_HINTS[m];
+    resetAll();
+  }
+
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function () { switchMode(t.dataset.mode); });
+  });
+  $("btnGen").addEventListener("click", generate);
+  btnStep.addEventListener("click", nextStep);
+  btnAuto.addEventListener("click", toggleAuto);
+  $("btnReset").addEventListener("click", resetAll);
+
+  inputA.value = 3; inputB.value = 5;
+  switchMode("wrong");
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>代码执行可视化 · 板书演示</title>
+<style>
+  :root {
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+    --green: #2e7d32;
+    --green-light: #e8f5e9;
+    --orange: #ef6c00;
+    --orange-light: #fff3e0;
+    --gray: #9e9e9e;
+    --ink: #263238;
+    --border: #cfd8dc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    background: #f0f2f5;
+    color: var(--ink);
+    padding: 24px;
+  }
+  h1 { text-align: center; color: var(--blue); margin: 0 0 4px; font-size: 26px; }
+  .sub { text-align: center; color: #607d8b; margin-bottom: 20px; font-size: 14px; }
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+    padding: 24px 28px 28px;
+  }
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab {
+    flex: 1; min-width: 140px; padding: 10px 14px;
+    border: 2px solid var(--border); background: #fafafa; border-radius: 8px;
+    cursor: pointer; font-size: 15px; font-weight: 600; color: #546e7a;
+    transition: all .15s;
+  }
+  .tab:hover { border-color: var(--blue); color: var(--blue); }
+  .tab.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+  .controls {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #f5f7fa; padding: 14px 16px; border-radius: 8px; margin-bottom: 8px;
+  }
+  .controls label { font-size: 14px; color: #455a64; }
+  .controls input {
+    width: 90px; padding: 6px 10px; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 15px; font-family: "Consolas", monospace;
+  }
+  .controls button {
+    padding: 7px 16px; border: none; border-radius: 6px; cursor: pointer;
+    font-size: 14px; font-weight: 600; color: #fff; background: var(--blue);
+    transition: opacity .15s;
+  }
+  .controls button:hover { opacity: .85; }
+  .controls button.secondary { background: #78909c; }
+  .controls button.go { background: var(--green); }
+  .controls button:disabled { background: #cfd8dc; cursor: not-allowed; }
+  .hint { font-size: 13px; color: #90a4ae; margin: 0 0 18px 2px; }
+  .input-row[hidden] { display: none; }
+
+  .stage { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+  .panel {
+    flex: 1; min-width: 300px; border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; background: #fbfcfd;
+  }
+  .panel-title {
+    font-size: 13px; font-weight: 700; color: #546e7a; background: #eceff1;
+    padding: 8px 14px; letter-spacing: .5px;
+  }
+  .code-body { padding: 10px 0; min-height: 220px; }
+  .code-line {
+    padding: 3px 16px; font-family: "Consolas", monospace; font-size: 15px;
+    white-space: pre; color: #37474f; border-left: 4px solid transparent;
+  }
+  .code-line.done { color: #b0bec5; }
+  .code-line.current {
+    background: var(--blue-light); border-left-color: var(--blue);
+    color: var(--blue); font-weight: 700;
+  }
+  .console-body {
+    background: #12181c; color: #d7ffd9; min-height: 220px;
+    font-family: "Consolas", monospace; font-size: 15px; padding: 14px 16px;
+    white-space: pre-wrap; line-height: 1.6;
+  }
+  .console-body .cursor { display: inline-block; width: 8px; background: #d7ffd9; animation: blink 1s step-start infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .console-body.empty::before { content: "（还没有任何输出）"; color: #4b6157; }
+
+  .vars-row { display: flex; gap: 14px; flex-wrap: wrap; padding: 4px 4px 4px; margin-bottom: 16px; min-height: 0; }
+  .varbox { text-align: center; }
+  .varbox .vlabel { font-size: 12px; color: #90a4ae; margin-bottom: 4px; font-family: "Consolas", monospace; }
+  .varbox .vcell {
+    width: 64px; height: 46px; display: flex; align-items: center; justify-content: center;
+    font-family: "Consolas", monospace; font-size: 20px; font-weight: 700;
+    border-radius: 6px; border: 2px solid var(--border); background: #fff; color: var(--ink);
+    transition: all .2s;
+  }
+  .varbox .vcell.empty { color: #cfd8dc; }
+  .varbox .vcell.current { border-color: var(--blue); background: var(--blue-light); box-shadow: 0 0 0 3px rgba(21,101,192,0.15); }
+  .varbox .vcell.done { border-color: var(--green); background: var(--green-light); color: var(--green); }
+
+  .log {
+    margin-top: 8px; background: #263238; color: #b2ff59; border-radius: 8px;
+    padding: 14px 16px; font-family: "Consolas", monospace; font-size: 14px;
+    min-height: 90px; max-height: 200px; overflow-y: auto; line-height: 1.7;
+  }
+  .log div { opacity: .55; }
+  .log div:last-child { opacity: 1; color: #eeff41; }
+  .log .placeholder { color: #607d8b; opacity: 1; }
+
+  @media (prefers-color-scheme: dark) {
+    body { background: #14181b; color: #e0e0e0; }
+    .wrap { background: #1e2428; box-shadow: none; }
+    .panel { background: #1a1f22; border-color: #37474f; }
+    .panel-title { background: #232a2e; color: #90a4ae; }
+    .code-line { color: #cfd8dc; }
+    .code-line.done { color: #55636a; }
+    .varbox .vcell { background: #263238; color: #e0e0e0; border-color: #37474f; }
+    .controls { background: #262c30; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>代码执行可视化器</h1>
+  <div class="sub">第 1 章配套演示 &nbsp;|&nbsp; 一步步"执行"代码，右边控制台同步显示输出，看清楚哪一行真正产生了动作</div>
+
+  <div class="tabs">
+    <button class="tab active" data-mode="hello">Hello World</button>
+    <button class="tab" data-mode="diamond">字符菱形</button>
+    <button class="tab" data-mode="rect">长方形周长面积</button>
+  </div>
+
+  <div class="controls">
+    <div class="input-row" id="inputRow" hidden>
+      <label>长 a：<input id="inputA" /></label>
+      <label>宽 b：<input id="inputB" /></label>
+    </div>
+    <button class="go" id="btnGen">生成演示</button>
+    <button id="btnStep">下一步 →</button>
+    <button id="btnAuto">自动播放</button>
+    <button class="secondary" id="btnReset">重置</button>
+  </div>
+  <div class="hint" id="hint"></div>
+
+  <div class="stage">
+    <div class="panel">
+      <div class="panel-title">源代码</div>
+      <div class="code-body" id="codeBody"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">控制台输出</div>
+      <div class="console-body empty" id="consoleBody"></div>
+    </div>
+  </div>
+
+  <div class="vars-row" id="varsRow"></div>
+
+  <div class="log" id="log"><div class="placeholder">// 这里会实时打印每一步在做什么</div></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- program definitions ----------
+  // Each program: lines (source text array), and a buildSteps(inputs) -> steps[]
+  // step: { line (index into lines, or -1 for none), output (text to append, optional),
+  //         vars (array of {name,value} full snapshot, optional), log (string), consoleReset (bool) }
+
+  var HELLO_LINES = [
+    "#include <iostream>",
+    "using namespace std;",
+    "int main()",
+    "{",
+    '    cout << "Hello World!" << endl;',
+    "    return 0;",
+    "}"
+  ];
+
+  function buildHelloSteps() {
+    return [
+      { line: 0, log: "预处理：把 iostream 这个工具箱“搬”进来，这一行本身不产生任何输出。" },
+      { line: 1, log: "告诉编译器直接用 std 抽屉里的名字（比如 cout），不用每次都加前缀。" },
+      { line: 2, log: "程序真正的入口，从这里开始逐条执行——前两行只是准备工作。" },
+      { line: 4, output: "Hello World!\n", log: "执行到这一句才第一次产生动作：把双引号里的文字送进控制台，endl 负责换行。" },
+      { line: 5, log: "return 0 告诉操作系统“程序正常结束”，同样不会在屏幕上留下任何字符。" }
+    ];
+  }
+
+  var DIAMOND_LINES = [
+    "#include <iostream>",
+    "using namespace std;",
+    "int main()",
+    "{",
+    '    cout << "  *" << endl;',
+    '    cout << " ***" << endl;',
+    '    cout << "*****" << endl;',
+    '    cout << " ***" << endl;',
+    '    cout << "  *" << endl;',
+    "    return 0;",
+    "}"
+  ];
+
+  function diamondRow(i) {
+    // i: 0..4, center = 2, matches statement's exact pattern
+    var dist = Math.abs(i - 2);
+    var spaces = dist;
+    var stars = 5 - 2 * dist;
+    return { spaces: spaces, stars: stars, text: " ".repeat(spaces) + "*".repeat(stars) };
+  }
+
+  function buildDiamondSteps() {
+    var steps = [];
+    for (var i = 0; i < 5; i++) {
+      var row = diamondRow(i);
+      steps.push({
+        line: 4 + i,
+        output: row.text + "\n",
+        log: "第" + (i + 1) + "行：" + row.spaces + " 个空格 + " + row.stars + " 个星号（距中心行 " + Math.abs(i - 2) + " 行）"
+      });
+    }
+    steps.push({ line: 9, log: "5 条 cout 全部执行完毕，return 0 结束程序，不再有输出。" });
+    return steps;
+  }
+
+  var RECT_LINES = [
+    "#include <iostream>",
+    "using namespace std;",
+    "int main()",
+    "{",
+    "    int a, b;",
+    "    cin >> a >> b;",
+    "    int c = (a + b) * 2;",
+    "    int s = a * b;",
+    '    cout << c << " " << s << endl;',
+    "    return 0;",
+    "}"
+  ];
+
+  function buildRectSteps(a, b) {
+    var c = (a + b) * 2;
+    var s = a * b;
+    return [
+      { line: 4, vars: [ {name:"a", value:null}, {name:"b", value:null} ],
+        log: "声明两个整型变量 a、b，此刻它们还没有确定的值。" },
+      { line: 5, vars: [ {name:"a", value:a, cur:true}, {name:"b", value:b, cur:true} ],
+        log: "cin 按顺序读入两个数，依次装进 a 和 b：a = " + a + "，b = " + b + "。" },
+      { line: 6, vars: [ {name:"a", value:a}, {name:"b", value:b}, {name:"c", value:c, cur:true} ],
+        log: "计算周长：c = (a+b)×2 = (" + a + "+" + b + ")×2 = " + c + "。" },
+      { line: 7, vars: [ {name:"a", value:a}, {name:"b", value:b}, {name:"c", value:c}, {name:"s", value:s, cur:true} ],
+        log: "计算面积：s = a×b = " + a + "×" + b + " = " + s + "。" },
+      { line: 8, output: c + " " + s + "\n",
+        vars: [ {name:"a", value:a}, {name:"b", value:b}, {name:"c", value:c}, {name:"s", value:s} ],
+        log: "cout 按 \"周长 空格 面积\" 的顺序输出：" + c + " " + s + "。" }
+    ];
+  }
+
+  var MODES = {
+    hello:   { title: "Hello World", lines: HELLO_LINES, needsInput: false, hint: "没有输入，5 行代码里只有那一条 cout 会在控制台留下痕迹。", build: buildHelloSteps },
+    diamond: { title: "字符菱形", lines: DIAMOND_LINES, needsInput: false, hint: "5 条 cout 对应图形的 5 行，每点一次“下一步”，控制台就多冒出一行。", build: buildDiamondSteps },
+    rect:    { title: "长方形周长面积", lines: RECT_LINES, needsInput: true, hint: "在上面填两个整数当作长和宽，看 cin 怎么把它们装进变量框，再看 c、s 怎么被算出来。", build: null } // build set below using inputs
+  };
+
+  var mode = "hello";
+  var steps = [];
+  var stepIndex = -1;
+  var autoTimer = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var codeBody = $("codeBody"), consoleBody = $("consoleBody"), varsRow = $("varsRow"), logEl = $("log");
+  var inputRow = $("inputRow"), inputA = $("inputA"), inputB = $("inputB");
+  var btnStep = $("btnStep"), btnAuto = $("btnAuto");
+
+  function renderCode() {
+    var cfg = MODES[mode];
+    codeBody.innerHTML = "";
+    cfg.lines.forEach(function (text, idx) {
+      var div = document.createElement("div");
+      div.className = "code-line";
+      div.textContent = text;
+      div.dataset.idx = idx;
+      codeBody.appendChild(div);
+    });
+  }
+
+  function highlightCode(currentLine) {
+    var lineEls = codeBody.querySelectorAll(".code-line");
+    lineEls.forEach(function (el) {
+      var idx = parseInt(el.dataset.idx, 10);
+      el.classList.remove("current", "done");
+      if (currentLine !== null && idx === currentLine) el.classList.add("current");
+      else if (currentLine !== null && idx < currentLine) el.classList.add("done");
+    });
+  }
+
+  function renderConsole() {
+    var text = "";
+    for (var i = 0; i <= stepIndex; i++) {
+      if (steps[i].output) text += steps[i].output;
+    }
+    consoleBody.classList.toggle("empty", text.length === 0);
+    consoleBody.textContent = text;
+    if (text.length > 0) {
+      var cursor = document.createElement("span");
+      cursor.className = "cursor";
+      cursor.textContent = "█";
+      consoleBody.appendChild(cursor);
+    }
+  }
+
+  function renderVars() {
+    varsRow.innerHTML = "";
+    if (stepIndex < 0 || !steps[stepIndex].vars) return;
+    steps[stepIndex].vars.forEach(function (v) {
+      var box = document.createElement("div");
+      box.className = "varbox";
+      var label = document.createElement("div");
+      label.className = "vlabel";
+      label.textContent = v.name;
+      var cell = document.createElement("div");
+      cell.className = "vcell" + (v.value === null ? " empty" : "") + (v.cur ? " current" : " done");
+      cell.textContent = v.value === null ? "?" : v.value;
+      box.appendChild(label);
+      box.appendChild(cell);
+      varsRow.appendChild(box);
+    });
+  }
+
+  function render() {
+    if (stepIndex < 0) {
+      renderCode();
+      highlightCode(null);
+      consoleBody.classList.add("empty");
+      consoleBody.textContent = "";
+      varsRow.innerHTML = "";
+      logEl.innerHTML = '<div class="placeholder">// 这里会实时打印每一步在做什么</div>';
+      return;
+    }
+    var snap = steps[stepIndex];
+    highlightCode(snap.line);
+    renderConsole();
+    renderVars();
+
+    var lines = [];
+    for (var i = 0; i <= stepIndex; i++) lines.push("<div>" + (i + 1) + ". " + steps[i].log + "</div>");
+    logEl.innerHTML = lines.join("");
+    logEl.scrollTop = logEl.scrollHeight;
+
+    btnStep.disabled = stepIndex >= steps.length - 1;
+  }
+
+  function generate() {
+    stopAuto();
+    var cfg = MODES[mode];
+    if (mode === "rect") {
+      var a = parseInt(inputA.value, 10);
+      var b = parseInt(inputB.value, 10);
+      if (!Number.isFinite(a) || a < 0) a = 3;
+      if (!Number.isFinite(b) || b < 0) b = 5;
+      inputA.value = a; inputB.value = b;
+      steps = buildRectSteps(a, b);
+    } else {
+      steps = cfg.build();
+    }
+    stepIndex = -1;
+    renderCode();
+    nextStep();
+  }
+
+  function nextStep() {
+    if (stepIndex < steps.length - 1) {
+      stepIndex++;
+      render();
+    }
+    if (stepIndex >= steps.length - 1) stopAuto();
+  }
+
+  function resetAll() {
+    stopAuto();
+    stepIndex = -1;
+    steps = [];
+    render();
+  }
+
+  function stopAuto() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; btnAuto.textContent = "自动播放"; }
+  }
+
+  function toggleAuto() {
+    if (autoTimer) { stopAuto(); return; }
+    if (steps.length === 0) generate();
+    btnAuto.textContent = "暂停";
+    autoTimer = setInterval(function () {
+      if (stepIndex >= steps.length - 1) { stopAuto(); return; }
+      nextStep();
+    }, 1100);
+  }
+
+  function switchMode(m) {
+    mode = m;
+    document.querySelectorAll(".tab").forEach(function (t) {
+      t.classList.toggle("active", t.dataset.mode === m);
+    });
+    inputRow.hidden = !MODES[m].needsInput;
+    if (MODES[m].needsInput) {
+      inputA.value = 3; inputB.value = 5;
+    }
+    $("hint").textContent = MODES[m].hint;
+    resetAll();
+    renderCode();
+  }
+
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function () { switchMode(t.dataset.mode); });
+  });
+  $("btnGen").addEventListener("click", generate);
+  btnStep.addEventListener("click", nextStep);
+  btnAuto.addEventListener("click", toggleAuto);
+  $("btnReset").addEventListener("click", resetAll);
+
+  switchMode("hello");
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>前缀和与差分 · 板书演示</title>
+<style>
+  :root {
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+    --green: #2e7d32;
+    --green-light: #e8f5e9;
+    --orange: #ef6c00;
+    --orange-light: #fff3e0;
+    --gray: #9e9e9e;
+    --ink: #263238;
+    --border: #cfd8dc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    background: #f0f2f5;
+    color: var(--ink);
+    padding: 24px;
+  }
+  h1 { text-align: center; color: var(--blue); margin: 0 0 4px; font-size: 26px; }
+  .sub { text-align: center; color: #607d8b; margin-bottom: 20px; font-size: 14px; }
+  .wrap {
+    max-width: 1040px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+    padding: 24px 28px 28px;
+  }
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab {
+    flex: 1; min-width: 120px; padding: 10px 14px;
+    border: 2px solid var(--border); background: #fafafa; border-radius: 8px;
+    cursor: pointer; font-size: 15px; font-weight: 600; color: #546e7a;
+    transition: all .15s;
+  }
+  .tab:hover { border-color: var(--blue); color: var(--blue); }
+  .tab.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .controls {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #f5f7fa; padding: 14px 16px; border-radius: 8px; margin-bottom: 20px;
+  }
+  .controls label { font-size: 14px; color: #455a64; }
+  .controls input {
+    width: 200px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 15px; font-family: "Consolas", monospace;
+  }
+  .controls button {
+    padding: 7px 16px; border: none; border-radius: 6px; cursor: pointer;
+    font-size: 14px; font-weight: 600; color: #fff; background: var(--blue);
+    transition: opacity .15s;
+  }
+  .controls button:hover { opacity: .85; }
+  .controls button.secondary { background: #78909c; }
+  .controls button.go { background: var(--green); }
+  .controls button:disabled { background: #cfd8dc; cursor: not-allowed; }
+  .hint { font-size: 13px; color: #90a4ae; margin: -12px 0 18px 2px; }
+
+  .board { background: #fbfcfd; border: 1px solid var(--border); border-radius: 10px; padding: 24px; min-height: 200px; }
+  .board-empty { text-align: center; color: #b0bec5; padding: 40px 0; font-size: 15px; }
+
+  .section-title { font-size: 13px; color: #90a4ae; margin: 14px 0 6px 2px; font-weight: 600; }
+
+  .hrow { display: flex; gap: 6px; flex-wrap: wrap; align-items: flex-end; }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .idx-label { font-size: 11px; color: #90a4ae; font-family: "Consolas", monospace; }
+  .cell {
+    width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-family: "Consolas", monospace; font-weight: 700;
+    border-radius: 6px; border: 2px solid transparent; background: #fff; color: var(--ink);
+    position: relative;
+  }
+  .cell.faded { opacity: .35; }
+  .cell.current { border-color: var(--blue); background: var(--blue-light); box-shadow: 0 0 0 3px rgba(21,101,192,0.15); }
+  .cell.current2 { border-color: var(--orange); background: var(--orange-light); box-shadow: 0 0 0 3px rgba(239,108,0,0.15); }
+  .cell.done { background: var(--green-light); color: var(--green); }
+  .cell.unknown { color: #cfd8dc; background: #fafafa; }
+  .badge {
+    position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+    font-size: 12px; font-weight: 700; color: #fff; background: var(--orange);
+    border-radius: 10px; padding: 1px 7px; white-space: nowrap; animation: pop .3s ease;
+  }
+  .badge.minus { background: #6a1b9a; }
+  @keyframes pop {
+    0% { transform: translateX(-50%) translateY(6px) scale(.6); opacity: 0; }
+    100% { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
+  }
+  .formula-line {
+    margin-top: 14px; padding: 10px 14px; background: #eceff1; border-radius: 8px;
+    font-family: "Consolas", monospace; font-size: 15px; color: #37474f; text-align: center;
+  }
+  .compare-box {
+    margin-top: 12px; display: flex; gap: 14px; flex-wrap: wrap;
+  }
+  .compare-item {
+    flex: 1; min-width: 200px; padding: 10px 14px; border-radius: 8px; font-size: 13px;
+  }
+  .compare-item.slow { background: #fff3e0; color: #e65100; }
+  .compare-item.fast { background: #e8f5e9; color: #2e7d32; }
+  .compare-item b { font-size: 18px; }
+
+  .log {
+    margin-top: 18px; background: #263238; color: #b2ff59; border-radius: 8px;
+    padding: 14px 16px; font-family: "Consolas", monospace; font-size: 14px;
+    min-height: 90px; max-height: 220px; overflow-y: auto; line-height: 1.7;
+  }
+  .log div { opacity: .55; }
+  .log div:last-child { opacity: 1; color: #eeff41; }
+  .log .placeholder { color: #607d8b; opacity: 1; }
+
+  @media (prefers-color-scheme: dark) {
+    body { background: #14181b; color: #e0e0e0; }
+    .wrap { background: #1e2428; box-shadow: none; }
+    .cell { background: #263238; color: #e0e0e0; }
+    .cell.unknown { background: #1c2226; color: #546e7a; }
+    .controls { background: #262c30; }
+    .board { background: #1a1f22; border-color: #37474f; }
+    .formula-line { background: #26313a; color: #cfd8dc; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>前缀和与差分 · 电子板书</h1>
+  <div class="sub">第 10 章配套演示 &nbsp;|&nbsp; 输入数据、点"下一步"，看预处理数组怎么一格格搭起来、查询/还原怎么一步做完</div>
+
+  <div class="tabs">
+    <button class="tab active" data-mode="prefix">前缀和</button>
+    <button class="tab" data-mode="diff">差分</button>
+  </div>
+
+  <div class="controls">
+    <label id="label1">数组 a：<input id="input1" /></label>
+    <label id="label2">查询 l r：<input id="input2" /></label>
+    <button class="go" id="btnGen">生成演示</button>
+    <button id="btnStep">下一步 →</button>
+    <button id="btnAuto">自动播放</button>
+    <button class="secondary" id="btnReset">重置</button>
+  </div>
+  <div class="hint" id="hint"></div>
+
+  <div class="board" id="board">
+    <div class="board-empty">点击"生成演示"开始</div>
+  </div>
+
+  <div class="log" id="log"><div class="placeholder">// 这里会实时打印每一步的运算过程</div></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var MODE_DEFAULTS = {
+    prefix: { a: "1,2,3,4,5", b: "2 4", label1: "数组 a：", label2: "查询 l r：" },
+    diff:   { a: "5",         b: "1 3 2; 2 5 3", label1: "数组长度 n：", label2: "操作 l r v（分号分隔多组）：" }
+  };
+  var MODE_HINTS = {
+    prefix: "数组随便改；查询的 l r 按 1 开始编号，比如\"2 4\"表示查 a[2]..a[4] 的和。",
+    diff:   "先给出数组长度 n（初始全 0），再给一串 \"l r v\" 操作，用分号隔开，比如例2的两次操作。"
+  };
+
+  var mode = "prefix";
+  var steps = [];
+  var stepIndex = -1;
+  var autoTimer = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var boardEl = $("board"), logEl = $("log");
+  var input1 = $("input1"), input2 = $("input2");
+  var label1 = $("label1"), label2 = $("label2");
+  var btnStep = $("btnStep"), btnAuto = $("btnAuto");
+
+  function parseIntArray(str) {
+    return (str.match(/-?\d+/g) || []).map(function (s) { return parseInt(s, 10); });
+  }
+
+  function parseOps(str) {
+    return str.split(";").map(function (part) {
+      var nums = parseIntArray(part);
+      return { l: nums[0], r: nums[1], v: nums[2] };
+    }).filter(function (op) { return op.l !== undefined && op.r !== undefined && op.v !== undefined; });
+  }
+
+  // ---------- pure logic: prefix sum ----------
+  // a is 1-indexed conceptually but stored 0-indexed (a[0] = a_1 ... )
+  function buildPrefixSteps(aArr, l, r) {
+    var n = aArr.length;
+    var s = new Array(n + 1).fill(null);
+    s[0] = 0;
+    var steps = [];
+    steps.push({ phase: "build", s: s.slice(), current: 0, aArr: aArr, n: n,
+      log: "约定 s[0] = 0，表示\"前 0 个数的和\"，这是让公式对 l=1 也成立的关键。" });
+    for (var i = 1; i <= n; i++) {
+      s[i] = s[i - 1] + aArr[i - 1];
+      steps.push({ phase: "build", s: s.slice(), current: i, aArr: aArr, n: n,
+        log: "s[" + i + "] = s[" + (i - 1) + "] + a[" + i + "] = " + s[i - 1] + " + " + aArr[i - 1] + " = " + s[i] });
+    }
+    var validQuery = l >= 1 && r >= l && r <= n;
+    if (validQuery) {
+      var naive = r - l + 1;
+      var ans = s[r] - s[l - 1];
+      steps.push({ phase: "query", s: s.slice(), n: n, aArr: aArr, queryL: l, queryR: r, queryStage: 1,
+        log: "查询 [" + l + "," + r + "]：先看 s[" + r + "] = " + s[r] });
+      steps.push({ phase: "query", s: s.slice(), n: n, aArr: aArr, queryL: l, queryR: r, queryStage: 2,
+        log: "再看 s[" + (l - 1) + "] = " + s[l - 1] });
+      steps.push({ phase: "query", s: s.slice(), n: n, aArr: aArr, queryL: l, queryR: r, queryStage: 3, naive: naive, ans: ans, done: true,
+        log: "s[" + r + "] − s[" + (l - 1) + "] = " + s[r] + " − " + s[l - 1] + " = " + ans + "，O(1) 完成；笨办法要老老实实加 " + naive + " 次才能得到同样的答案。" });
+    } else {
+      steps.push({ phase: "query", s: s.slice(), n: n, aArr: aArr, queryL: null, queryR: null, queryStage: 0, done: true,
+        log: "（未提供合法的查询 l r，s 数组已经搭好，可以自己在控制区改一组 l r 再生成一次。）" });
+    }
+    return steps;
+  }
+
+  // ---------- pure logic: difference array ----------
+  function buildDiffSteps(n, ops) {
+    var d = new Array(n + 2).fill(0); // index 0..n+1, index n+1 is sentinel
+    var steps = [];
+    steps.push({ phase: "mark", d: d.slice(), n: n, ops: ops, opIndex: -1, subStep: -1,
+      log: "差分数组 d 初始全 0，长度开到 n+1 是为了给 r+1 留位置（哨兵）。" });
+    for (var oi = 0; oi < ops.length; oi++) {
+      var op = ops[oi];
+      d[op.l] += op.v;
+      steps.push({ phase: "mark", d: d.slice(), n: n, ops: ops, opIndex: oi, subStep: 0, markIndex: op.l, markVal: op.v,
+        log: "操作 " + (oi + 1) + "（[" + op.l + "," + op.r + "] 整体 +" + op.v + "）：d[" + op.l + "] += " + op.v + " → d[" + op.l + "]=" + d[op.l] });
+      var rp1 = op.r + 1;
+      d[rp1] -= op.v;
+      steps.push({ phase: "mark", d: d.slice(), n: n, ops: ops, opIndex: oi, subStep: 1, markIndex: rp1, markVal: -op.v,
+        log: "把多加的 " + op.v + " 在 " + rp1 + " 处撤销：d[" + rp1 + "] −= " + op.v + " → d[" + rp1 + "]=" + d[rp1] });
+    }
+    var a = new Array(n + 1).fill(null);
+    a[0] = 0;
+    for (var i = 1; i <= n; i++) {
+      a[i] = a[i - 1] + d[i];
+      steps.push({ phase: "restore", d: d.slice(), a: a.slice(), n: n, current: i,
+        log: "还原 a[" + i + "] = a[" + (i - 1) + "] + d[" + i + "] = " + a[i - 1] + " + " + d[i] + " = " + a[i] });
+    }
+    var finalArr = a.slice(1);
+    steps.push({ phase: "restore", d: d.slice(), a: a.slice(), n: n, current: -1, done: true,
+      log: "全部还原完毕，最终数组是 [" + finalArr.join(", ") + "]。" });
+    return steps;
+  }
+
+  // ---------- rendering ----------
+  function renderHRow(container, arr, opts) {
+    opts = opts || {};
+    var row = document.createElement("div");
+    row.className = "hrow";
+    for (var i = 0; i < arr.length; i++) {
+      var col = document.createElement("div");
+      col.className = "col";
+      var cell = document.createElement("div");
+      var v = arr[i];
+      cell.className = "cell";
+      if (v === undefined) { cell.classList.add("unknown"); cell.textContent = ""; }
+      else if (v === null) { cell.classList.add("unknown"); cell.textContent = "?"; }
+      else { cell.textContent = v; }
+      if (opts.currentSet && opts.currentSet.indexOf(i) !== -1) cell.classList.add("current");
+      if (opts.current2Set && opts.current2Set.indexOf(i) !== -1) cell.classList.add("current2");
+      if (opts.doneUpTo !== undefined && i <= opts.doneUpTo) cell.classList.add("done");
+      if (opts.fadedSet && opts.fadedSet.indexOf(i) !== -1) cell.classList.add("faded");
+      if (opts.badges && opts.badges[i] !== undefined) {
+        var badge = document.createElement("span");
+        badge.className = "badge" + (opts.badges[i] < 0 ? " minus" : "");
+        badge.textContent = (opts.badges[i] > 0 ? "+" : "") + opts.badges[i];
+        cell.appendChild(badge);
+      }
+      col.appendChild(cell);
+      var label = document.createElement("div");
+      label.className = "idx-label";
+      label.textContent = opts.labelFn ? opts.labelFn(i) : String(i);
+      col.appendChild(label);
+      row.appendChild(col);
+    }
+    container.appendChild(row);
+  }
+
+  function renderPrefix(snap) {
+    boardEl.innerHTML = "";
+    var t1 = document.createElement("div");
+    t1.className = "section-title";
+    t1.textContent = "原始数组 a（下标从 1 开始）";
+    boardEl.appendChild(t1);
+    renderHRow(boardEl, snap.aArr, { labelFn: function (i) { return "a[" + (i + 1) + "]"; } });
+
+    var t2 = document.createElement("div");
+    t2.className = "section-title";
+    t2.textContent = "前缀和数组 s（s[i] = 前 i 个数的和，s[0] = 0）";
+    boardEl.appendChild(t2);
+
+    if (snap.phase === "build") {
+      renderHRow(boardEl, snap.s, {
+        labelFn: function (i) { return "s[" + i + "]"; },
+        currentSet: [snap.current],
+        doneUpTo: snap.current
+      });
+    } else {
+      var currentSet = [], current2Set = [];
+      if (snap.queryStage >= 1) currentSet.push(snap.queryR);
+      if (snap.queryStage >= 2) current2Set.push(snap.queryL - 1);
+      renderHRow(boardEl, snap.s, {
+        labelFn: function (i) { return "s[" + i + "]"; },
+        currentSet: currentSet,
+        current2Set: current2Set,
+        doneUpTo: snap.s.length - 1
+      });
+      if (snap.queryStage === 3) {
+        var f = document.createElement("div");
+        f.className = "formula-line";
+        f.textContent = "答案 = s[" + snap.queryR + "] − s[" + (snap.queryL - 1) + "] = " + snap.s[snap.queryR] + " − " + snap.s[snap.queryL - 1] + " = " + snap.ans;
+        boardEl.appendChild(f);
+        var cmp = document.createElement("div");
+        cmp.className = "compare-box";
+        cmp.innerHTML =
+          '<div class="compare-item slow">笨办法：从 a[' + snap.queryL + '] 加到 a[' + snap.queryR + ']，要做 <b>' + snap.naive + '</b> 次加法</div>' +
+          '<div class="compare-item fast">前缀和：s[r] − s[l-1]，只要 <b>1</b> 次减法</div>';
+        boardEl.appendChild(cmp);
+      }
+    }
+  }
+
+  function renderDiff(snap) {
+    boardEl.innerHTML = "";
+    var t1 = document.createElement("div");
+    t1.className = "section-title";
+    t1.textContent = "差分数组 d（下标 1..n，多留一格 n+1 当哨兵）";
+    boardEl.appendChild(t1);
+
+    var badges = {};
+    if (snap.phase === "mark" && snap.markIndex !== undefined) badges[snap.markIndex] = snap.markVal;
+    var currentSet = snap.phase === "mark" && snap.markIndex !== undefined ? [snap.markIndex] : [];
+    renderHRow(boardEl, snap.d, {
+      labelFn: function (i) { return "d[" + i + "]"; },
+      currentSet: currentSet,
+      badges: badges
+    });
+
+    if (snap.phase === "restore") {
+      var t2 = document.createElement("div");
+      t2.className = "section-title";
+      t2.textContent = "还原出的真实数组 a（a[i] = a[i-1] + d[i]）";
+      boardEl.appendChild(t2);
+      renderHRow(boardEl, snap.a, {
+        labelFn: function (i) { return "a[" + i + "]"; },
+        currentSet: [snap.current],
+        doneUpTo: snap.current >= 0 ? snap.current : snap.a.length - 1
+      });
+    }
+  }
+
+  function render() {
+    if (stepIndex < 0) {
+      boardEl.innerHTML = '<div class="board-empty">点击"生成演示"开始</div>';
+      logEl.innerHTML = '<div class="placeholder">// 这里会实时打印每一步的运算过程</div>';
+      return;
+    }
+    var snap = steps[stepIndex];
+    if (mode === "prefix") renderPrefix(snap);
+    else renderDiff(snap);
+
+    var lines = [];
+    for (var i = 0; i <= stepIndex; i++) lines.push("<div>" + (i + 1) + ". " + steps[i].log + "</div>");
+    logEl.innerHTML = lines.join("");
+    logEl.scrollTop = logEl.scrollHeight;
+
+    btnStep.disabled = stepIndex >= steps.length - 1;
+  }
+
+  function generate() {
+    stopAuto();
+    var v1 = (input1.value || MODE_DEFAULTS[mode].a).trim();
+    var v2 = (input2.value || MODE_DEFAULTS[mode].b).trim();
+    input1.value = v1; input2.value = v2;
+
+    if (mode === "prefix") {
+      var aArr = parseIntArray(v1);
+      if (aArr.length === 0) aArr = parseIntArray(MODE_DEFAULTS.prefix.a);
+      var qn = parseIntArray(v2);
+      var l = qn[0], r = qn[1];
+      steps = buildPrefixSteps(aArr, l, r);
+    } else {
+      var n = parseIntArray(v1)[0];
+      if (!n || n <= 0) n = parseIntArray(MODE_DEFAULTS.diff.a)[0];
+      var ops = parseOps(v2);
+      steps = buildDiffSteps(n, ops);
+    }
+
+    stepIndex = -1;
+    nextStep();
+  }
+
+  function nextStep() {
+    if (stepIndex < steps.length - 1) { stepIndex++; render(); }
+    if (stepIndex >= steps.length - 1) stopAuto();
+  }
+
+  function resetAll() {
+    stopAuto();
+    stepIndex = -1;
+    steps = [];
+    render();
+  }
+
+  function stopAuto() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; btnAuto.textContent = "自动播放"; }
+  }
+
+  function toggleAuto() {
+    if (autoTimer) { stopAuto(); return; }
+    if (steps.length === 0) generate();
+    btnAuto.textContent = "暂停";
+    autoTimer = setInterval(function () {
+      if (stepIndex >= steps.length - 1) { stopAuto(); return; }
+      nextStep();
+    }, 1100);
+  }
+
+  function switchMode(m) {
+    mode = m;
+    document.querySelectorAll(".tab").forEach(function (t) {
+      t.classList.toggle("active", t.dataset.mode === m);
+    });
+    input1.value = MODE_DEFAULTS[m].a;
+    input2.value = MODE_DEFAULTS[m].b;
+    label1.firstChild.textContent = MODE_DEFAULTS[m].label1;
+    label2.firstChild.textContent = MODE_DEFAULTS[m].label2;
+    $("hint").textContent = MODE_HINTS[m];
+    resetAll();
+  }
+
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function () { switchMode(t.dataset.mode); });
+  });
+  $("btnGen").addEventListener("click", generate);
+  btnStep.addEventListener("click", nextStep);
+  btnAuto.addEventListener("click", toggleAuto);
+  $("btnReset").addEventListener("click", resetAll);
+
+  switchMode("prefix");
+})();
+</script>
+</body>
+</html>
