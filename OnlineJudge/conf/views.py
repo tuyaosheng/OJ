@@ -105,7 +105,9 @@ class WebsiteConfigAPI(APIView):
         return self.success()
 
 
-class LogoUploadAPI(APIView):
+class LogoUploadAPI(CSRFExemptAPIView):
+    request_parsers = ()
+
     @super_admin_required
     def post(self, request):
         f = request.FILES.get("file")

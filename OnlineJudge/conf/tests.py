@@ -1,8 +1,10 @@
 import hashlib
+from io import BytesIO
 from unittest import mock
 
 from django.conf import settings
 from django.utils import timezone
+from rest_framework.test import APIClient
 
 from options.options import SysOptions
 from utils.api.tests import APITestCase
@@ -77,6 +79,23 @@ class WebsiteConfigAPITest(APITestCase):
         # do not need to login
         url = self.reverse("website_info_api")
         resp = self.client.get(url)
+        self.assertSuccess(resp)
+
+
+class LogoUploadAPITest(APITestCase):
+    def setUp(self):
+        self.create_super_admin(login=False)
+        self.url = self.reverse("logo_upload_api")
+
+    def test_upload_logo_from_real_browser(self):
+        # el-upload in the admin panel submits a raw multipart form POST
+        # (not through the ajax() helper), so this must work with Django's
+        # CSRF protection actually enforced, like a real browser session.
+        client = APIClient(enforce_csrf_checks=True)
+        client.login(username="root", password="root")
+        logo_file = BytesIO(b"\x89PNG\r\n\x1a\n" + b"0" * 100)
+        logo_file.name = "logo.png"
+        resp = client.post(self.url, data={"file": logo_file}, format="multipart")
         self.assertSuccess(resp)
 
 
