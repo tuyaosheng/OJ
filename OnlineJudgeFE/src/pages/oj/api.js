@@ -255,6 +255,13 @@ export default {
       }
     })
   },
+  submissionDelete (id) {
+    return ajax('admin/submission', 'delete', {
+      params: {
+        id
+      }
+    })
+  },
   getSubmissionTestCaseDetail (submissionId) {
     return ajax('admin/submission/test_case_detail', 'get', {
       params: { submission_id: submissionId }

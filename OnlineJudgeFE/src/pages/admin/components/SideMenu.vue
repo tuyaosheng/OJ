@@ -22,6 +22,7 @@
       <el-menu-item index="/problem/chapters">章节管理</el-menu-item>
       <el-menu-item index="/problem/class_session">课堂管理</el-menu-item>
       <el-menu-item index="/ai/diagnosis">AI 诊断记录</el-menu-item>
+      <el-menu-item index="/problem/videos">题目视频管理</el-menu-item>
 
     </el-submenu>
     <el-submenu index="contest">

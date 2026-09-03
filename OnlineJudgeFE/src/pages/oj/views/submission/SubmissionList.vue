@@ -254,7 +254,7 @@
           title: this.$i18n.t('m.Option'),
           fixed: 'right',
           align: 'center',
-          width: 170,
+          width: 230,
           render: (h, params) => {
             return h('div', [
               h('Button', {
@@ -264,8 +264,13 @@
               }, this.$i18n.t('m.Rejudge')),
               h('Button', {
                 props: { size: 'small' },
+                style: { marginRight: '6px' },
                 on: { click: () => { this.$router.push('/status/' + params.row.id) } }
-              }, '详情')
+              }, '详情'),
+              h('Button', {
+                props: { type: 'error', size: 'small', loading: params.row.loading },
+                on: { click: () => { this.handleDelete(params.row.id, params.index) } }
+              }, '删除')
             ])
           }
         }
@@ -289,6 +294,21 @@
           this.getSubmissions()
         }, () => {
           this.submissions[index].loading = false
+        })
+      },
+      handleDelete (id, index) {
+        this.$Modal.confirm({
+          title: 'Confirm',
+          content: '确定要删除这条提交记录吗？此操作不可恢复。',
+          onOk: () => {
+            this.submissions[index].loading = true
+            api.submissionDelete(id).then(res => {
+              this.$success('Succeeded')
+              this.getSubmissions()
+            }, () => {
+              this.submissions[index].loading = false
+            })
+          }
         })
       }
     },

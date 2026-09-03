@@ -19,7 +19,7 @@ from .utils import parse_problem_template
 
 DEFAULT_PROBLEM_DATA = {"_id": "A-110", "title": "test", "description": "<p>test</p>", "input_description": "test",
                         "output_description": "test", "time_limit": 1000, "memory_limit": 256, "difficulty": "Low",
-                        "visible": True, "tags": ["test"], "languages": ["C", "C++", "Java", "Python2"], "template": {},
+                        "visible": True, "tags": ["test"], "languages": ["C", "C++", "Java", "Python3"], "template": {},
                         "samples": [{"input": "test", "output": "test"}], "spj": False, "spj_language": "C",
                         "spj_code": "", "spj_compile_ok": True, "test_case_id": "499b26290cc7994e0b497212e842ea85",
                         "test_case_score": [{"output_name": "1.out", "input_name": "1.in", "output_size": 0,
@@ -175,6 +175,25 @@ class ProblemAdminAPITest(APITestCase):
         data["id"] = problem_id
         resp = self.client.put(self.url, data=data)
         self.assertSuccess(resp)
+
+    def test_filter_has_video(self):
+        with_video_id = self.test_create_problem().data["data"]["id"]
+        data2 = copy.deepcopy(self.data)
+        data2["_id"] = "A-111"
+        without_video_id = self.client.post(self.url, data=data2).data["data"]["id"]
+        Problem.objects.filter(id=with_video_id).update(video="/public/upload/videos/x.mp4")
+
+        resp = self.client.get(self.url + "?has_video=true")
+        self.assertSuccess(resp)
+        ids = [p["id"] for p in resp.data["data"]["results"]]
+        self.assertIn(with_video_id, ids)
+        self.assertNotIn(without_video_id, ids)
+
+        resp = self.client.get(self.url + "?has_video=false")
+        self.assertSuccess(resp)
+        ids = [p["id"] for p in resp.data["data"]["results"]]
+        self.assertIn(without_video_id, ids)
+        self.assertNotIn(with_video_id, ids)
 
 
 class ProblemAPITest(ProblemCreateTestBase):

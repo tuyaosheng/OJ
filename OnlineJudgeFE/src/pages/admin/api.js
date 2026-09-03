@@ -305,6 +305,14 @@ export default {
       params: {problem_id: problemId}
     })
   },
+  uploadProblemVideo (problemId, file) {
+    let formData = new FormData()
+    formData.append('problem_id', problemId)
+    formData.append('file', file)
+    return ajax('admin/problem/video', 'post', {
+      data: formData
+    })
+  },
   getChapterList () {
     return ajax('admin/chapter', 'get')
   },

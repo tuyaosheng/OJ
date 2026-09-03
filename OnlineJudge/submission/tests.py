@@ -3,7 +3,7 @@ from unittest import mock
 
 from problem.models import Problem, ProblemTag
 from utils.api.tests import APITestCase
-from .models import Submission
+from .models import Submission, AICodeDiagnosis
 
 DEFAULT_PROBLEM_DATA = {"_id": "A-110", "title": "test", "description": "<p>test</p>", "input_description": "test",
                         "output_description": "test", "time_limit": 1000, "memory_limit": 256, "difficulty": "Low",
@@ -76,3 +76,62 @@ class SubmissionAPITest(SubmissionPrepare):
         self.assertDictEqual(resp.data, {"error": "error",
                                          "data": "Python3 is now allowed in the problem"})
         judge_task.assert_not_called()
+
+
+class SubmissionAdminDeleteAPITest(SubmissionPrepare):
+    def setUp(self):
+        self._create_problem_and_submission()
+        self.url = self.reverse("submission_delete_api")
+
+    def test_delete_without_login(self):
+        resp = self.client.delete(self.url + "?id=" + str(self.submission.id))
+        self.assertFailed(resp)
+        self.assertTrue(Submission.objects.filter(id=self.submission.id).exists())
+
+    def test_delete_as_regular_user(self):
+        self.create_user("regular", "regular123")
+        resp = self.client.delete(self.url + "?id=" + str(self.submission.id))
+        self.assertFailed(resp)
+        self.assertTrue(Submission.objects.filter(id=self.submission.id).exists())
+
+    def test_delete_as_admin_forbidden(self):
+        self.create_admin("admin2", "admin123")
+        resp = self.client.delete(self.url + "?id=" + str(self.submission.id))
+        self.assertFailed(resp)
+        self.assertTrue(Submission.objects.filter(id=self.submission.id).exists())
+
+    def test_delete_missing_id(self):
+        self.create_super_admin()
+        resp = self.client.delete(self.url)
+        self.assertFailed(resp)
+
+    def test_delete_nonexistent_submission(self):
+        self.create_super_admin()
+        resp = self.client.delete(self.url + "?id=nonexistent-id")
+        self.assertFailed(resp)
+
+    def test_delete_as_super_admin(self):
+        self.create_super_admin()
+        resp = self.client.delete(self.url + "?id=" + str(self.submission.id))
+        self.assertSuccess(resp)
+        self.assertFalse(Submission.objects.filter(id=self.submission.id).exists())
+
+
+class AIDiagnosisListAPITest(SubmissionPrepare):
+    def setUp(self):
+        self._create_problem_and_submission()
+        self.create_super_admin()
+        AICodeDiagnosis.objects.create(
+            submission=self.submission,
+            problem=self.problem,
+            user_id=1,
+            username="test",
+            submission_result=self.submission.result,
+            result="some diagnosis text"
+        )
+        self.url = self.reverse("ai_diagnosis_list_api")
+
+    def test_get_list(self):
+        resp = self.client.get(self.url)
+        self.assertSuccess(resp)
+        self.assertEqual(len(resp.data["data"]["results"]), 1)

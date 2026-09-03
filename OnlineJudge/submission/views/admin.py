@@ -7,6 +7,7 @@ from account.decorators import super_admin_required, admin_role_required
 from judge.tasks import judge_task
 from options.options import SysOptions
 from utils.api import APIView
+from utils.shortcuts import datetime2str
 from ..models import Submission, AICodeDiagnosis
 
 
@@ -24,6 +25,20 @@ class SubmissionRejudgeAPI(APIView):
         submission.save()
 
         judge_task.send(submission.id, submission.problem.id)
+        return self.success()
+
+
+class SubmissionAdminDeleteAPI(APIView):
+    @super_admin_required
+    def delete(self, request):
+        id = request.GET.get("id")
+        if not id:
+            return self.error("Parameter error, id is required")
+        try:
+            submission = Submission.objects.get(id=id)
+        except Submission.DoesNotExist:
+            return self.error("Submission does not exists")
+        submission.delete()
         return self.success()
 
 
@@ -155,6 +170,6 @@ class AIDiagnosisListAPI(APIView):
             "problem_title": d.problem.title,
             "submission_result": d.submission_result,
             "result": d.result,
-            "create_time": d.create_time,
+            "create_time": datetime2str(d.create_time),
         } for d in data["results"]]
         return self.success(data)

@@ -66,6 +66,15 @@
           </template>
         </el-table-column>
         <el-table-column
+          width="90"
+          label="视频">
+          <template slot-scope="scope">
+            <el-tag :type="scope.row.video ? 'success' : 'info'" size="small">
+              {{scope.row.video ? '已上传' : '未上传'}}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column
           fixed="right"
           label="Operation"
           width="250">

@@ -16,9 +16,10 @@ import ClassSession from './problem/ClassSession.vue'
 import ClassDashboard from './problem/ClassDashboard.vue'
 import AIConfig from './general/AIConfig.vue'
 import AIDiagnosisList from './problem/AIDiagnosisList.vue'
+import ProblemVideoManage from './problem/ProblemVideoManage.vue'
 
 export {
   Announcement, User, Conf, JudgeServer, Problem, ProblemList, Contest,
   ContestList, Login, Home, PruneTestCase, Dashboard, ProblemImportOrExport,
-  ChapterList, ClassSession, ClassDashboard, AIConfig, AIDiagnosisList
+  ChapterList, ClassSession, ClassDashboard, AIConfig, AIDiagnosisList, ProblemVideoManage
 }

@@ -5,8 +5,16 @@ OnlineJudgeDeploy (旧系统，包括数据)/
 # 备份文件
 *.sql
 *.dump
+*.tar
 *.tar.gz
 backups/
+
+# 部署用的镜像导出/传输中转文件（不入库，体积太大）
+docker-images-export/
+oj-backend-custom*.tar
+
+# 远程操作过程中的截图（个人工作文件，不入库）
+ubuntu截图/
 
 # 教程课件 / 论文等大文件资料（不入库）
 *.ppt
