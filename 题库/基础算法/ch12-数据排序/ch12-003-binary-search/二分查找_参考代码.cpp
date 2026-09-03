@@ -1,10 +1,13 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
+//   <algorithm> —— sort
+//
 // 二分查找：先排序，再对每次询问用二分定位 x 第一次出现的位置。
 // 思路：有序数组里，每次比较中间元素，就能砍掉一半搜索范围 -> 单次 O(log n)。
 //       暴力扫描是 O(nq) = 100 亿，必然超时；排序+二分是 O((n+q) log n)，轻松通过。
 // 本题要的是"第一次出现的位置"，即二分下界（lower_bound）。
-#include <iostream>
-#include <algorithm>
-using namespace std;
 
 const int N = 100005;
 

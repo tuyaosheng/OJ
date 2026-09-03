@@ -1,11 +1,14 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
+//   <algorithm> —— sort、upper_bound、lower_bound
+//
 // A-B 数对：统计满足 a[i] - a[j] = C 的下标对 (i, j) 个数。
 // 核心变形：a[i] - a[j] = C  <=>  a[i] = a[j] + C
 //   于是枚举 j，数出"数组里等于 a[j]+C 的元素有多少个"，累加即可。
 // 快速计数：排序后相同的数连成一段，用 upper_bound - lower_bound 求出段长。
 // 复杂度：O(n log n)。暴力两重循环是 O(n^2) = 100 亿，必然超时。
-#include <iostream>
-#include <algorithm>
-using namespace std;
 
 const int N = 100005;
 

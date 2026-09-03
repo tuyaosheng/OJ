@@ -1,3 +1,8 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//
 // 逆序对：求满足 i < j 且 a[i] > a[j] 的下标对个数。
 //
 // 核心：在【归并排序的合并步骤】里顺便数逆序对。
@@ -5,8 +10,6 @@
 //   都 > R[j]（因为 L 有序），而它们的下标都比 j 小 —— 一口气产生 (mid - i + 1) 个逆序对。
 //
 // 复杂度：O(n log n)。暴力两重循环是 O(n^2) = 100 亿，必然超时。
-#include <iostream>
-using namespace std;
 
 const int N = 100005;
 

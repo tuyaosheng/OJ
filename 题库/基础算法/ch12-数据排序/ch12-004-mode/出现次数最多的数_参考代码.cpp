@@ -1,10 +1,13 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
+//   <algorithm> —— sort
+//
 // 出现次数最多的数（众数）：排序 + 扫描。
 // 核心思想：排序会把相同的数聚成连续的一"块"，于是"计数"问题变成"数每块有多长"。
 // 数值范围 ±10^9，没法开桶数组计数，所以用排序。
 // 复杂度：O(n log n)。
-#include <iostream>
-#include <algorithm>
-using namespace std;
 
 const int N = 100005;
 

@@ -1,15 +1,16 @@
-// 匹配对手
-// 考点：排序 + lower_bound 二分、边界处理
-#include <iostream>
-#include <algorithm>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
+//   <algorithm> —— sort、lower_bound
+// 考点：排序 + lower_bound 二分、边界处理
 
 int b[100005];
 
 int main()
 {
     ios::sync_with_stdio(false);
-    cin.tie(0);
+    cin.tie(nullptr);
     int n;
     cin >> n;
     for (int i = 0; i < n; i++) cin >> b[i];

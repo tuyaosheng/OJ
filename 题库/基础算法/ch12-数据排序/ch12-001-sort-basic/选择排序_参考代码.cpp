@@ -1,9 +1,12 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
+//   <algorithm> —— swap
+//
 // 选择排序：每一轮从"还没排好的部分"里挑出最小的数，放到当前位置。
 // 思路：第 i 轮确定第 i 个位置该放谁 —— 到 [i, n) 里找最小值，和 a[i] 交换。
 // 复杂度：两重循环 O(n^2)。n = 2000 时约 200 万次比较，很快。
-#include <iostream>
-#include <algorithm>    // swap
-using namespace std;
 
 const int N = 2005;
 

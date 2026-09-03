@@ -1,3 +1,9 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
+//   <algorithm> —— swap
+//
 // 快速排序：分治思想的代表作。
 // 思路：选一个基准数 -> 把比它小的甩到左边、比它大的甩到右边（分区）
 //       -> 基准归位后，对左右两半递归做同样的事。
@@ -5,9 +11,6 @@
 //
 // 注：竞赛中一般直接用 <algorithm> 里的 sort（底层就是优化版快排），
 //     这里手写一遍是为了理解 O(n log n) 排序的原理。
-#include <iostream>
-#include <algorithm>
-using namespace std;
 
 const int N = 100005;
 
