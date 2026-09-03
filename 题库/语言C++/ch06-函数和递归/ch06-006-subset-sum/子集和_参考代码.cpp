@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 int n, a[25];
 long long m;
@@ -23,6 +25,6 @@ int main()
     cin >> n >> m;
     for (int i = 1; i <= n; i++) cin >> a[i];
     dfs(1, 0);
-    cout << (found ? "YES" : "NO") << endl;
+    cout << (found ? "YES" : "NO") << "\n";
     return 0;
 }

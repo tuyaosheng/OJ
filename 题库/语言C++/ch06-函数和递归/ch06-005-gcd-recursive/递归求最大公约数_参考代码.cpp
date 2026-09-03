@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 // 递归辗转相除：gcd(m,n) = gcd(n, m%n)，n 为 0 时返回 m
 int gcd(int m, int n)
@@ -12,6 +14,6 @@ int main()
 {
     int m, n;
     cin >> m >> n;
-    cout << gcd(m, n) << endl;
+    cout << gcd(m, n) << "\n";
     return 0;
 }

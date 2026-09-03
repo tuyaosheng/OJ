@@ -1,8 +1,9 @@
-// 迷你汉诺塔（只求步数）
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 // 考点：递归函数、递归边界、long long
 // T(1) = 1, T(n) = 2*T(n-1) + 1，封闭形式是 2^n - 1
-#include <iostream>
-using namespace std;
 
 long long T(int n)
 {
@@ -14,6 +15,6 @@ int main()
 {
     int n;
     cin >> n;
-    cout << T(n) << endl;
+    cout << T(n) << "\n";
     return 0;
 }

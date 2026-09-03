@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 // 判断 n 是否为素数：是返回 true，否返回 false
 bool isPrime(int n)
@@ -14,7 +16,7 @@ int main()
 {
     int n;
     cin >> n;
-    if (isPrime(n)) cout << "yes" << endl;
-    else            cout << "no" << endl;
+    if (isPrime(n)) cout << "yes" << "\n";
+    else            cout << "no" << "\n";
     return 0;
 }

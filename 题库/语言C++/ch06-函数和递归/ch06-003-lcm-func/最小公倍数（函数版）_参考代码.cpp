@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 // 辗转相除法求最大公约数
 int gcd(int a, int b)
@@ -19,6 +21,6 @@ int main()
     cin >> x >> y;
     // LCM = x*y/gcd，先除后乘防溢出：x/gcd 一定整除
     long long lcm = (long long)(x / gcd(x, y)) * y;
-    cout << lcm << endl;
+    cout << lcm << "\n";
     return 0;
 }

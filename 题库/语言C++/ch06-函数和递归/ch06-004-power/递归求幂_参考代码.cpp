@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 // 递归求 x 的 n 次方
 long long power(int x, int n)
@@ -12,6 +14,6 @@ int main()
 {
     int x, n;
     cin >> x >> n;
-    cout << power(x, n) << endl;
+    cout << power(x, n) << "\n";
     return 0;
 }

@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 // 求 x 的阶乘 x! = 1*2*...*x，返回 long long 防溢出
 long long fact(int x)
@@ -15,6 +17,6 @@ int main()
     cin >> m >> n;
     // C(m,n) = m! / (n! * (m-n)!)，fact 函数复用三次
     long long ans = fact(m) / (fact(n) * fact(m - n));
-    cout << ans << endl;
+    cout << ans << "\n";
     return 0;
 }
