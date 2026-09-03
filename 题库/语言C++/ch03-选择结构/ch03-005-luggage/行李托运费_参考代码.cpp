@@ -1,6 +1,8 @@
-#include <iostream>
-#include <iomanip>           // fixed / setprecision 需要这个头文件
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//   <iomanip>  —— fixed、setprecision
 
 int main()
 {
@@ -11,6 +13,6 @@ int main()
     else
         cost = w * 1.98;
     // fixed + setprecision(2)：固定小数格式，保留 2 位
-    cout << fixed << setprecision(2) << cost << endl;
+    cout << fixed << setprecision(2) << cost << "\n";
     return 0;
 }
