@@ -1,5 +1,7 @@
-#include <cstdio>
-
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
 typedef long long ll;
 
 const int MAXN = 25;
@@ -10,7 +12,7 @@ int hx[9] = {0, -1, -1, 1, 1, -2, -2, 2, 2};
 int hy[9] = {0, -2, 2, -2, 2, -1, 1, -1, 1};
 
 int main() {
-    scanf("%d %d %d %d", &n, &m, &bx, &by);
+    cin >> n >> m >> bx >> by;
 
     for (int k = 0; k < 9; k++) {
         int x = bx + hx[k], y = by + hy[k];
@@ -28,6 +30,6 @@ int main() {
         }
     }
 
-    printf("%lld\n", dp[n][m]);
+    cout << dp[n][m] << "\n";
     return 0;
 }

@@ -1,5 +1,7 @@
-#include <cstdio>
-
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
 typedef long long ll;
 const ll MOD = 1000000007;
 
@@ -8,15 +10,15 @@ ll dp[MAXS];
 int n, S;
 
 int main() {
-    scanf("%d %d", &n, &S);
+    cin >> n >> S;
     dp[0] = 1;
     for (int i = 1; i <= n; i++) {
         int w;
-        scanf("%d", &w);
+        cin >> w;
         for (int j = w; j <= S; j++) {
             dp[j] = (dp[j] + dp[j - w]) % MOD;
         }
     }
-    printf("%lld\n", dp[S]);
+    cout << dp[S] << "\n";
     return 0;
 }
