@@ -1,3 +1,8 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//
 // 递归求斐波那契 —— 兼学【记忆化搜索】
 //
 // 朴素递归 fib(n) = fib(n-1) + fib(n-2) 看似优雅，实则致命：
@@ -8,8 +13,6 @@
 //   每个 fib(i) 最多真正计算一次 => 复杂度骤降到 O(n)。
 //
 // 记忆化是"递归"通往"动态规划"的桥梁：用递归的写法，达到递推的效率。
-#include <iostream>
-using namespace std;
 
 const int N = 95;
 

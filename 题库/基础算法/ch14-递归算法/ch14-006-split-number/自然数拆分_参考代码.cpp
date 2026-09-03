@@ -1,3 +1,8 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//
 // 自然数拆分：把 n 拆成若干个（至少 2 个）正整数之和，输出所有方案。
 //
 // 核心难点：如何避免把 "2 3" 和 "3 2" 数成两种？
@@ -6,8 +11,6 @@
 //
 // 实现：给递归加一个参数 start，表示"这一层最小只能从 start 开始选"。
 // 复杂度：方案数级别（n=30 时约 5600 种）。
-#include <iostream>
-using namespace std;
 
 const int N = 35;
 

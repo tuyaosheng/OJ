@@ -1,3 +1,8 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//
 // 快速幂：求 a^b mod p，b 可达 10^18。
 //
 // 朴素做法循环 b 次，O(b) = 10^18 次 —— 跑三十多年。
@@ -5,8 +10,6 @@
 // 分治思想：a^b = (a^(b/2))^2      （b 为偶数）
 //           a^b = (a^(b/2))^2 * a  （b 为奇数，整数除法丢了余数 1，要补乘一个 a）
 // 每递归一层，指数【砍掉一半】=> 只需 O(log b) ≈ 60 层。
-#include <iostream>
-using namespace std;
 
 long long power(long long a, long long b, long long p)
 {

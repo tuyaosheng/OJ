@@ -1,3 +1,8 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//
 // 十进制转任意进制（递归版）
 //
 // 进制转换靠"不断除以 k、取余数"，但余数是【从低位到高位】产生的，
@@ -7,8 +12,6 @@
 // 而返回顺序恰好与调用顺序相反 —— 于是顺序自动反转过来了，无需数组！
 //
 // 口诀：想正序输出，cout 放递归【前】；想倒序输出，cout 放递归【后】。
-#include <iostream>
-using namespace std;
 
 // 把一个数位（0~15）转成对应字符
 char digitChar(int r)

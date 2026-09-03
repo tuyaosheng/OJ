@@ -1,3 +1,8 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//
 // 全排列问题：按字典序输出 1..n 的所有排列。
 //
 // 思路：一个位置一个位置地填。第 pos 位可以填任何"还没用过"的数字。
@@ -10,8 +15,6 @@
 //
 // 第 ③ 步是灵魂，漏掉它会导致大量排列丢失。
 // 复杂度：O(n! * n)。n=8 时 8! = 40320 个排列。
-#include <iostream>
-using namespace std;
 
 const int N = 10;
 

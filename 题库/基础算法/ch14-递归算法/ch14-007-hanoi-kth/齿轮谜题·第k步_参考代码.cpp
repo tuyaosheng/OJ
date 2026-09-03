@@ -1,8 +1,9 @@
-// 齿轮谜题·第k步
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 // 考点：利用汉诺塔递归结构定位第 k 步（分治递归）
 // n 盘最优解 = [n-1 盘子问题] + [移第 n 号盘] + [n-1 盘子问题]
-#include <iostream>
-using namespace std;
 
 int solve(int n, long long k)
 {
@@ -17,6 +18,6 @@ int main()
     int n;
     long long k;                            // k 最大 2^60-1，必须 long long
     cin >> n >> k;
-    cout << solve(n, k) << endl;
+    cout << solve(n, k) << "\n";
     return 0;
 }
