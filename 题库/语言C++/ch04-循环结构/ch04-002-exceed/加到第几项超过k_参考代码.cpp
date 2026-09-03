@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 int main()
 {
@@ -11,6 +13,6 @@ int main()
         n++;                 // 项数加一
         s += n;              // 加上第 n 项
     }
-    cout << n << " " << s << endl;
+    cout << n << " " << s << "\n";
     return 0;
 }

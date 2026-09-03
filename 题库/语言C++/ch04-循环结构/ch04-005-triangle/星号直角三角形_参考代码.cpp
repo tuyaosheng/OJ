@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 int main()
 {
@@ -9,7 +11,7 @@ int main()
     {
         for (int j = 1; j <= i; j++)  // 内层：这一行打 i 个星
             cout << "*";
-        cout << endl;                 // 一行打完再换行
+        cout << "\n";                 // 一行打完再换行
     }
     return 0;
 }

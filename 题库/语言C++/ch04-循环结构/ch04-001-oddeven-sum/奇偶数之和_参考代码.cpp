@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 int main()
 {
@@ -13,6 +15,6 @@ int main()
         else                         // 偶数
             sum2 += i;
     }
-    cout << sum1 << " " << sum2 << endl;
+    cout << sum1 << " " << sum2 << "\n";
     return 0;
 }

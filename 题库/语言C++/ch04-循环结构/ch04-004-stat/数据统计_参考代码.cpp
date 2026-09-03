@@ -1,6 +1,8 @@
-#include <iostream>
-#include <iomanip>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//   <iomanip>  —— fixed、setprecision
 
 int main()
 {
@@ -18,6 +20,6 @@ int main()
     }
     double avg = (double)sum / n;    // 强制转 double，避免整数除法
     cout << minn << " " << maxn << " "
-         << fixed << setprecision(3) << avg << endl;
+         << fixed << setprecision(3) << avg << "\n";
     return 0;
 }

@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 int main()
 {
@@ -18,11 +20,11 @@ int main()
         }
         if (isPrime)
         {
-            cout << i << endl;
+            cout << i << "\n";
             cnt++;
         }
     }
     if (cnt == 0)                // 区间内一个素数都没有
-        cout << -1 << endl;
+        cout << -1 << "\n";
     return 0;
 }

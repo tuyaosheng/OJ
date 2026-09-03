@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 int main()
 {
@@ -12,6 +14,6 @@ int main()
         n++;
         s += 1.0 / n;        // 1.0/n 才是浮点除法；写 1/n 恒为 0
     }
-    cout << n << endl;
+    cout << n << "\n";
     return 0;
 }

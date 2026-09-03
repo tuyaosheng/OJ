@@ -1,8 +1,9 @@
-// 挂机金币
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 // 考点：while 条件循环、long long
 // 每秒收益翻倍，问累计 >= k 至少需要几秒
-#include <iostream>
-using namespace std;
 
 int main()
 {
@@ -15,6 +16,6 @@ int main()
         gain *= 2;                  // 下一秒收益翻倍
         t++;
     }
-    cout << t << endl;
+    cout << t << "\n";
     return 0;
 }
