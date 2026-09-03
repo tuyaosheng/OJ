@@ -1,6 +1,8 @@
-#include <iostream>
-#include <algorithm>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
+//   <algorithm> —— sort
 
 struct Node {
     int val;    // 数值
@@ -31,6 +33,6 @@ int main()
         if (i > 0) cout << " ";
         cout << rankArr[i];
     }
-    cout << endl;
+    cout << "\n";
     return 0;
 }

@@ -1,6 +1,8 @@
-#include <iostream>
-#include <algorithm>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
+//   <algorithm> —— sort
 
 struct Stu {
     int id;        // 学号（输入顺序）
@@ -31,6 +33,6 @@ int main()
     }
     sort(s, s + n, cmp);
     for (int i = 0; i < 5; i++)   // 输出前 5 名
-        cout << s[i].id << " " << s[i].total << endl;
+        cout << s[i].id << " " << s[i].total << "\n";
     return 0;
 }

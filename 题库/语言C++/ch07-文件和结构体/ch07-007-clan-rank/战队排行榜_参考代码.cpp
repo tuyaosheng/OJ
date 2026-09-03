@@ -1,9 +1,10 @@
-// 战队排行榜
-// 考点：结构体、sort 多关键字排序
-#include <iostream>
-#include <string>
-#include <algorithm>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
+//   <string>    —— string
+//   <algorithm> —— sort
+// 考点：结构体、sort 多关键字排序
 
 struct Team {
     string name;

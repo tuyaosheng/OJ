@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 int g[1005][1005];
 // 方向增量：下标 1=上,2=下,3=左,4=右
@@ -21,6 +23,6 @@ int main()
         x += dx[d];
         y += dy[d];
     }
-    cout << sum << endl;
+    cout << sum << "\n";
     return 0;
 }

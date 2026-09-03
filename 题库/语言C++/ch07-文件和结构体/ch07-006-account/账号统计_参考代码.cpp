@@ -1,6 +1,8 @@
-#include <iostream>
-#include <string>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//   <string>   —— string
 
 int main()
 {
@@ -29,6 +31,6 @@ int main()
             qqCnt++;
         }
     }
-    cout << male << " " << female << " " << qqSum / qqCnt << endl;
+    cout << male << " " << female << " " << qqSum / qqCnt << "\n";
     return 0;
 }

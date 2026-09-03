@@ -1,7 +1,9 @@
-#include <iostream>
-#include <algorithm>
-#include <string>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
+//   <algorithm> —— stable_sort
+//   <string>    —— string
 
 struct Student {           // 结构体：把一个学生的信息打包
     string name;
@@ -28,6 +30,6 @@ int main()
     // stable_sort 稳定排序：总分相同者保持输入先后
     stable_sort(s, s + n, cmp);
     for (int i = 0; i < n; i++)
-        cout << s[i].name << " " << s[i].total << endl;
+        cout << s[i].name << " " << s[i].total << "\n";
     return 0;
 }
