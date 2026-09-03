@@ -153,7 +153,7 @@ class AIDiagnosisConfigAPI(APIView):
 class AIDiagnosisListAPI(APIView):
     @admin_role_required
     def get(self, request):
-        diagnoses = AICodeDiagnosis.objects.select_related("problem").all()
+        diagnoses = AICodeDiagnosis.objects.select_related("problem", "submission").all()
         username = request.GET.get("username")
         problem_keyword = request.GET.get("problem")
         if username:
@@ -166,9 +166,12 @@ class AIDiagnosisListAPI(APIView):
             "id": d.id,
             "submission_id": d.submission_id,
             "username": d.username,
+            "problem_pk": d.problem.id,
             "problem_id": d.problem._id,
             "problem_title": d.problem.title,
             "submission_result": d.submission_result,
+            "code": d.submission.code,
+            "language": d.submission.language,
             "result": d.result,
             "create_time": datetime2str(d.create_time),
         } for d in data["results"]]

@@ -44,11 +44,43 @@
       </div>
     </panel>
 
-    <el-dialog title="AI 诊断结果" :visible.sync="dialogVisible" width="60%">
+    <el-dialog title="AI 诊断结果" :visible.sync="dialogVisible" width="70%">
       <div v-if="current">
         <p style="margin-bottom:10px;color:#666;">
-          {{current.username}} · {{current.problem_id}} {{current.problem_title}} · {{current.create_time | localtime}}
+          {{current.username}} ·
+          <span class="problem-link" @click="toggleProblemDetail">
+            {{current.problem_id}} {{current.problem_title}}
+            <i :class="problemDetailVisible ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"></i>
+          </span>
+          · {{current.create_time | localtime}}
         </p>
+
+        <div v-if="problemDetailVisible" class="problem-detail" v-loading="problemDetailLoading">
+          <template v-if="problemDetail">
+            <h4>题目描述</h4>
+            <div class="markdown-body" v-html="problemDetail.description"></div>
+            <h4>输入描述</h4>
+            <div class="markdown-body" v-html="problemDetail.input_description"></div>
+            <h4>输出描述</h4>
+            <div class="markdown-body" v-html="problemDetail.output_description"></div>
+            <h4>样例</h4>
+            <div v-for="(s, i) in problemDetail.samples" :key="i" class="sample">
+              <div>
+                <b>输入 {{i + 1}}</b>
+                <pre>{{s.input}}</pre>
+              </div>
+              <div>
+                <b>输出 {{i + 1}}</b>
+                <pre>{{s.output}}</pre>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <h4>学生提交代码（{{current.language}}）</h4>
+        <Highlight :code="current.code" :language="current.language"></Highlight>
+
+        <h4>AI 诊断结果</h4>
         <div class="markdown-body" v-html="currentHtml"></div>
       </div>
     </el-dialog>
@@ -58,6 +90,7 @@
 <script>
   import marked from 'marked'
   import api from '../../api'
+  import Highlight from '@/pages/oj/components/Highlight'
 
   const RESULT_MAP = {
     '-2': '编译错误',
@@ -71,6 +104,9 @@
 
   export default {
     name: 'AIDiagnosisList',
+    components: {
+      Highlight
+    },
     data () {
       return {
         loading: false,
@@ -83,7 +119,10 @@
           problem: ''
         },
         dialogVisible: false,
-        current: null
+        current: null,
+        problemDetailVisible: false,
+        problemDetailLoading: false,
+        problemDetail: null
       }
     },
     mounted () {
@@ -117,6 +156,20 @@
       view (row) {
         this.current = row
         this.dialogVisible = true
+        this.problemDetailVisible = false
+        this.problemDetail = null
+      },
+      toggleProblemDetail () {
+        this.problemDetailVisible = !this.problemDetailVisible
+        if (this.problemDetailVisible && !this.problemDetail) {
+          this.problemDetailLoading = true
+          api.getProblem(this.current.problem_pk).then(res => {
+            this.problemDetailLoading = false
+            this.problemDetail = res.data.data
+          }, () => {
+            this.problemDetailLoading = false
+          })
+        }
       },
       resultText (code) {
         return RESULT_MAP[String(code)] || '未通过'
@@ -129,3 +182,37 @@
     }
   }
 </script>
+
+<style scoped lang="less">
+  .problem-link {
+    cursor: pointer;
+    color: #409EFF;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+  .problem-detail {
+    background: #f7f8fa;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    h4 {
+      margin: 10px 0 5px 0;
+    }
+    .sample {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 10px;
+      > div {
+        flex: 1;
+        pre {
+          background: #fff;
+          border: 1px solid #eee;
+          padding: 8px;
+          white-space: pre-wrap;
+        }
+      }
+    }
+  }
+</style>

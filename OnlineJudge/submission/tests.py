@@ -134,4 +134,9 @@ class AIDiagnosisListAPITest(SubmissionPrepare):
     def test_get_list(self):
         resp = self.client.get(self.url)
         self.assertSuccess(resp)
-        self.assertEqual(len(resp.data["data"]["results"]), 1)
+        results = resp.data["data"]["results"]
+        self.assertEqual(len(results), 1)
+        item = results[0]
+        self.assertEqual(item["code"], self.submission_data["code"])
+        self.assertEqual(item["language"], self.submission_data["language"])
+        self.assertEqual(item["problem_pk"], self.problem.id)
