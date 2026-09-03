@@ -1,17 +1,17 @@
-// 矿车配对
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
+//   <algorithm> —— sort
 // 考点：双指针贪心（配对问题）
 // 结论：排序后，最重的优先配最轻的；配不上就最重的单独一辆车
-#include <cstdio>
-#include <algorithm>
-using namespace std;
 
 int w[100005];
 
-int main()
-{
+int main() {
     int n, W;
-    scanf("%d %d", &n, &W);
-    for (int i = 0; i < n; i++) scanf("%d", &w[i]);
+    cin >> n >> W;
+    for (int i = 0; i < n; i++) cin >> w[i];
     sort(w, w + n);
 
     int i = 0, j = n - 1, cars = 0;
@@ -22,6 +22,6 @@ int main()
         j--;              // 最重的这块必然走了（不管有没有配对成功）
         cars++;
     }
-    printf("%d\n", cars);
+    cout << cars << "\n";
     return 0;
 }

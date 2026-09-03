@@ -1,20 +1,20 @@
-// 教室排课
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
+//   <algorithm> —— sort
 // 考点：区间贪心（活动选择问题）
 // 结论：按结束时间从早到晚排序，能选就选
-#include <cstdio>
-#include <algorithm>
-using namespace std;
 
 struct Act { long long s, e; };
 Act act[100005];
 
 bool cmp(const Act &a, const Act &b) { return a.e < b.e; }
 
-int main()
-{
+int main() {
     int n;
-    scanf("%d", &n);
-    for (int i = 0; i < n; i++) scanf("%lld %lld", &act[i].s, &act[i].e);
+    cin >> n;
+    for (int i = 0; i < n; i++) cin >> act[i].s >> act[i].e;
     sort(act, act + n, cmp);            // 按结束时间从早到晚排序
 
     int cnt = 0;
@@ -25,6 +25,6 @@ int main()
             last_end = act[i].e;
         }
     }
-    printf("%d\n", cnt);
+    cout << cnt << "\n";
     return 0;
 }
