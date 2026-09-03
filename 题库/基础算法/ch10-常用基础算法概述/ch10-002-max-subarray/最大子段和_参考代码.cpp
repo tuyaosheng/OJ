@@ -1,6 +1,8 @@
-#include <iostream>
-#include <algorithm>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
+//   <algorithm> —— max
 
 int main()
 {
@@ -16,6 +18,6 @@ int main()
         cur = max(x, cur + x);       // 要么另起一段，要么接在前面
         ans = max(ans, cur);         // 更新全局最大
     }
-    cout << ans << endl;
+    cout << ans << "\n";
     return 0;
 }

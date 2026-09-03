@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 int main()
 {
@@ -16,6 +18,6 @@ int main()
         }
         if (x == 0 && d == 0) cnt++; // x=0 特例（本题 L>=1 用不到，保险）
     }
-    cout << cnt << endl;
+    cout << cnt << "\n";
     return 0;
 }

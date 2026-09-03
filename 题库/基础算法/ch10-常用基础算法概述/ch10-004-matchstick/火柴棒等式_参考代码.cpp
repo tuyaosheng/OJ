@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 int digit[10] = {6, 2, 5, 5, 4, 5, 6, 3, 7, 6};  // 每个数字用的火柴数
 
@@ -33,6 +35,6 @@ int main()
                     ans++;
             }
     }
-    cout << ans << endl;
+    cout << ans << "\n";
     return 0;
 }

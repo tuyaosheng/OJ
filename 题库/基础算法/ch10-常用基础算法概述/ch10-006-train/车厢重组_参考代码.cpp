@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 int a[10005];
 
@@ -13,6 +15,6 @@ int main()
     for (int i = 0; i < n; i++)
         for (int j = i + 1; j < n; j++)
             if (a[i] > a[j]) cnt++;
-    cout << cnt << endl;
+    cout << cnt << "\n";
     return 0;
 }

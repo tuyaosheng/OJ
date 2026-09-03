@@ -1,7 +1,8 @@
-// 矿区资源统计
-// 考点：二维前缀和（建表 + 容斥查询）
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+// 考点：二维前缀和（建表 + 容斥查询）
 
 long long s[505][505];   // 二维前缀和，全局数组自动清零，s[0][*]=s[*][0]=0
 
