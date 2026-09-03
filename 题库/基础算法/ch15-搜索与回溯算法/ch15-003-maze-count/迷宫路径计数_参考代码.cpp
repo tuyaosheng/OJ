@@ -1,3 +1,8 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//
 // 迷宫路径计数：从起点走到终点，四方向移动，格子不能重复经过，统计路径数。
 //
 // 这是回溯的经典战场。核心是 vis 数组的含义：
@@ -7,8 +12,6 @@
 // 它就不再属于当前路径了。漏掉这一步，会错失所有经过该格子的其他路径。
 //
 // 口诀：进来画叉，出去擦掉。
-#include <iostream>
-using namespace std;
 
 const int N = 10;
 

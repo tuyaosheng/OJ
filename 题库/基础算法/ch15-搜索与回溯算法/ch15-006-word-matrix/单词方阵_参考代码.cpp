@@ -1,3 +1,9 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//   <string>   —— string
+//
 // 单词方阵：在 n×n 字母方阵中找出所有 8 个方向【直线】排列的 "yizhong"，
 //           保留这些字母，其余位置输出 '*'。
 //
@@ -11,9 +17,6 @@
 //   边找边改方阵会破坏还没检查的字母。
 //
 // 复杂度：O(n^2 * 8 * 7)，n=100 时约 56 万次。
-#include <iostream>
-#include <string>
-using namespace std;
 
 const int N = 105;
 const string word = "yizhong";      // 目标单词，共 7 个字母

@@ -1,3 +1,9 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//   <string>   —— string
+//
 // 细胞个数（连通块计数 / 洪水填充 Flood Fill）
 //
 // 思路：扫描每个格子，一旦发现"非 0 且还没被访问过"的格子，
@@ -11,9 +17,6 @@
 //   若错误地撤销：同一细胞会被反复计数，且 DFS 会 A->B->A 来回横跳，无限递归爆栈。
 //
 // 复杂度：每个格子只访问一次，O(n*m)。
-#include <iostream>
-#include <string>
-using namespace std;
 
 const int N = 105;
 

@@ -1,3 +1,8 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//
 // N 皇后：n×n 棋盘放 n 个皇后，任意两个不能同行、同列、同对角线。求方案数。
 //
 // 关键优化一：【逐行摆放】—— 规定第 i 个皇后放在第 i 行。
@@ -11,8 +16,6 @@
 // 关键优化三：【剪枝】—— 发现位置会被攻击就立刻 continue，不再往下递归。
 //
 // 答案参考：n=4 -> 2，n=8 -> 92，n=12 -> 14200。
-#include <iostream>
-using namespace std;
 
 const int N = 15;
 

@@ -1,3 +1,8 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//
 // 选数：从 n 个数中任选 k 个相加，统计"和为素数"的选法数。
 //
 // = 组合枚举（上一题）+ 素数判定
@@ -7,8 +12,6 @@
 //
 // 素数判定：只需试除到 sqrt(x) —— 因为若 x 有大于 √x 的因子 a，
 //   必有对应的因子 x/a 小于 √x，所以小范围内没找到，大范围内也不会有。
-#include <iostream>
-using namespace std;
 
 const int N = 25;
 

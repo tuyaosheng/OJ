@@ -1,3 +1,8 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//
 // 组合的输出：从 1~n 中取 r 个，输出所有组合（不考虑顺序）。
 //
 // 组合 vs 排列：组合【不看顺序】，"1 2 3" 和 "3 2 1" 是同一个。
@@ -7,8 +12,6 @@
 //
 // 实现：加 start 参数，表示"这一层最小能选的数"，递归时传 v+1（严格递增）。
 // 复杂度：O(C(n,r) * r)。
-#include <iostream>
-using namespace std;
 
 const int N = 25;
 

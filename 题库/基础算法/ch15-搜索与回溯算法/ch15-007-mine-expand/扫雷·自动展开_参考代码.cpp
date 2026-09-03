@@ -1,7 +1,8 @@
-// 扫雷·自动展开
-// 考点：洪水填充变式（0 格扩展、数字格封边）、vis 永不撤销
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+// 考点：洪水填充变式（0 格扩展、数字格封边）、vis 永不撤销
 
 int n, m, cnt;
 char g[105][105];
@@ -39,6 +40,6 @@ int main()
     int x, y;
     cin >> x >> y;
     dfs(x - 1, y - 1);      // 转成 0 下标
-    cout << cnt << endl;
+    cout << cnt << "\n";
     return 0;
 }
