@@ -1,8 +1,8 @@
-// 跑酷跳台阶·陷阱版
-// 考点：线性递推 + 障碍状态置零 + 取模
-#include <iostream>
-#include <cstring>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+// 考点：线性递推 + 障碍状态置零 + 取模
 
 const int MOD = 1000000007;
 bool trap[100005];
@@ -11,7 +11,7 @@ long long f[100005];
 int main()
 {
     ios::sync_with_stdio(false);
-    cin.tie(0);
+    cin.tie(nullptr);
     int n, k;
     cin >> n >> k;
     for (int i = 0; i < k; i++) {
@@ -25,6 +25,6 @@ int main()
         f[i] = f[i - 1];                       // 从 i-1 跳 1 级
         if (i >= 2) f[i] = (f[i] + f[i - 2]) % MOD;  // 从 i-2 跳 2 级
     }
-    cout << f[n] << endl;
+    cout << f[n] << "\n";
     return 0;
 }

@@ -1,3 +1,8 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//
 // 传球游戏：n 人围成圆圈，球从 1 号出发，每次只能传给左右相邻的人，
 //           恰好传 m 次后回到 1 号手里，求方案数。
 //
@@ -9,8 +14,6 @@
 //
 // 难点：环形下标 —— 1 号的左邻居是 n，n 号的右邻居是 1。
 // 复杂度：O(n * m)，30 * 30 = 900。
-#include <iostream>
-using namespace std;
 
 const int N = 35;
 

@@ -1,3 +1,8 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//
 // 骨牌铺方格：用 1x2 骨牌铺满 2xn 棋盘，求方案数。
 //
 // 建模：盯住【最右边】怎么铺，只有两种情况（不重不漏）——
@@ -8,8 +13,6 @@
 //
 // 注意：n=50 时答案约 2*10^10，超过 int 范围，必须用 long long。
 // 复杂度：O(n)。
-#include <iostream>
-using namespace std;
 
 const int N = 55;
 

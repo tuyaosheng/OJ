@@ -1,3 +1,8 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//
 // 爬楼梯（每次 1/2/3 级）：递推的入门题。
 //
 // 推导：盯住【最后一步】——要到第 i 级，最后一步只可能是
@@ -6,8 +11,6 @@
 // 边界：f[0] = 1（不动也算一种）、f[1] = 1、f[2] = 2。
 //
 // 复杂度：O(n)，空间用滚动变量优化到 O(1)。
-#include <iostream>
-using namespace std;
 
 const long long MOD = 1000000007;
 

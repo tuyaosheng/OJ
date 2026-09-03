@@ -1,3 +1,8 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//
 // 错位排列（装错信封问题）：n 封信全部装错，求方案数 D(n)。
 //
 // 推导：考虑第 n 封信进了哪个信封，设它进了 k 号（k 有 n-1 种选择，不能是 n）。
@@ -11,8 +16,6 @@
 // 边界：D(1) = 0（唯一的信只能装对）、D(2) = 1（互换）。
 //
 // 复杂度：O(n)。
-#include <iostream>
-using namespace std;
 
 const long long MOD = 1000000007;
 

@@ -1,3 +1,8 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//
 // 出栈序列的数目（卡特兰数）
 //
 // 推导：盯住【数字 1 是第几个出栈的】。设 1 出栈前已有 k 个数先出栈（k = 0..n-1）。
@@ -10,8 +15,6 @@
 // 边界：f[0] = 1（空序列也算一种）。
 //
 // 复杂度：O(n^2)。n = 5000 时约 1250 万次，可以接受。
-#include <iostream>
-using namespace std;
 
 const int N = 5005;
 const long long MOD = 1000000007;

@@ -1,3 +1,9 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
+//   <algorithm> —— max
+//
 // 数字三角形：从顶走到底，每步只能走到下一行相邻的两个格子之一，求最大路径和。
 //
 // 暴力枚举所有路径是 2^(n-1) 条，n=1000 时天文数字，必须递推。
@@ -10,9 +16,6 @@
 //   答案：f[1][1]（从顶点出发走到底的最大和）。
 //
 // 复杂度：O(n^2)，n=1000 约 50 万个格子。
-#include <iostream>
-#include <algorithm>
-using namespace std;
 
 const int N = 1005;
 
