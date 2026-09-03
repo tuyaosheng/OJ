@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 int a[1005];
 
@@ -22,6 +24,6 @@ int main()
         if (i > 1) cout << " ";
         cout << a[i];
     }
-    cout << endl;
+    cout << "\n";
     return 0;
 }

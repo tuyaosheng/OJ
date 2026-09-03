@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 bool door[10005];            // false=关, true=开；全局数组自动清零
 
@@ -20,6 +22,6 @@ int main()
             first = false;
         }
     }
-    cout << endl;
+    cout << "\n";
     return 0;
 }

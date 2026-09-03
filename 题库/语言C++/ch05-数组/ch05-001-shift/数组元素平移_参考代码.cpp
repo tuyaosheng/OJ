@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 int main()
 {
@@ -15,6 +17,6 @@ int main()
         if (i > 1) cout << " ";       // 数与数之间输出空格（行尾无空格）
         cout << a[i];
     }
-    cout << endl;
+    cout << "\n";
     return 0;
 }

@@ -1,7 +1,8 @@
-// 扫雷·数雷
-// 考点：二维字符数组、8 邻域枚举、越界判断
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+// 考点：二维字符数组、8 邻域枚举、越界判断
 
 char g[105][105];
 

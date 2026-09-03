@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 long long a[35][35];         // a[i][j]: 第 i 行第 j 个数
 
@@ -20,7 +22,7 @@ int main()
             if (j > 1) cout << " ";
             cout << a[i][j];
         }
-        cout << endl;
+        cout << "\n";
     }
     return 0;
 }
