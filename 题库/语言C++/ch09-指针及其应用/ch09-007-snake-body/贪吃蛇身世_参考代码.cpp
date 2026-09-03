@@ -1,7 +1,8 @@
-// 贪吃蛇身世
-// 考点：链表节点定义、头插法建表、遍历输出
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+// 考点：链表节点定义、头插法建表、遍历输出
 
 struct Node {
     int val;        // 这一节记录的食物编号
@@ -28,6 +29,6 @@ int main()
         cout << p->val;
         first = false;
     }
-    cout << endl;
+    cout << "\n";
     return 0;
 }

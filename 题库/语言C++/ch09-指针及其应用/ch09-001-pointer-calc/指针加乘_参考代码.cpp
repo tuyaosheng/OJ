@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 int main()
 {
@@ -9,6 +11,6 @@ int main()
     // *pa 就是 a 的值，*pb 就是 b 的值
     long long sum = (long long)(*pa) + (*pb);
     long long prod = (long long)(*pa) * (*pb);
-    cout << sum << " " << prod << endl;
+    cout << sum << " " << prod << "\n";
     return 0;
 }

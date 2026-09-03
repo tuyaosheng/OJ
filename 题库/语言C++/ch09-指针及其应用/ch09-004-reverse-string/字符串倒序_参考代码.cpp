@@ -1,6 +1,8 @@
-#include <iostream>
-#include <cstring>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//   <cstring>  —— strlen
 
 char s[100005];
 
@@ -16,6 +18,6 @@ int main()
         p++;
         q--;
     }
-    cout << s << endl;
+    cout << s << "\n";
     return 0;
 }

@@ -1,5 +1,7 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
 
 int a[100005];
 
@@ -16,6 +18,6 @@ int main()
         sum += *p;                   // *p 就是当前元素
         if (*p > maxv) maxv = *p;
     }
-    cout << sum << " " << maxv << endl;
+    cout << sum << " " << maxv << "\n";
     return 0;
 }
