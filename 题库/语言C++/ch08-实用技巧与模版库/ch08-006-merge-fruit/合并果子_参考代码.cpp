@@ -1,7 +1,10 @@
-#include <iostream>
-#include <queue>
-#include <vector>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>    —— cin / cout
+//   <queue>       —— priority_queue
+//   <vector>      —— vector（priority_queue 的底层容器）
+//   <functional>  —— greater
 
 int main()
 {
@@ -24,6 +27,6 @@ int main()
         ans += a + b;                // 本次合并花费
         pq.push(a + b);              // 合并后的新堆放回
     }
-    cout << ans << endl;
+    cout << ans << "\n";
     return 0;
 }

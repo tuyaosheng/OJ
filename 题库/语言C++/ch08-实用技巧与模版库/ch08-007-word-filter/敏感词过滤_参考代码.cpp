@@ -1,8 +1,9 @@
-// 敏感词过滤
-// 考点：string 的 find / replace、循环查找
-#include <iostream>
-#include <string>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//   <string>   —— string
+// 考点：string 的 find / replace、循环查找
 
 int main()
 {
@@ -13,6 +14,6 @@ int main()
         s.replace(p, w.size(), string(w.size(), '*'));  // 换成等长的 *
         p = s.find(w, p + w.size());       // 从被替换段之后继续找
     }
-    cout << s << endl;
+    cout << s << "\n";
     return 0;
 }

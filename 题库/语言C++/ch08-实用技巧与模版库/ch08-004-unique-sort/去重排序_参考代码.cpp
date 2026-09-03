@@ -1,6 +1,8 @@
-#include <iostream>
-#include <set>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//   <set>      —— set
 
 int main()
 {
@@ -13,7 +15,7 @@ int main()
         cin >> x;
         s.insert(x);
     }
-    cout << s.size() << endl;        // 去重后的个数
+    cout << s.size() << "\n";        // 去重后的个数
     bool first = true;
     for (int x : s)                  // 遍历 set 即从小到大
     {
@@ -21,6 +23,6 @@ int main()
         cout << x;
         first = false;
     }
-    cout << endl;
+    cout << "\n";
     return 0;
 }
