@@ -1,12 +1,12 @@
 #include <bits/stdc++.h>
 using namespace std;
 // 不用万能头时，需要单独引入：
-//   <iostream> —— cin / cout（也用来读入 string）
+//   <iostream> —— cin / cout（也用来读写 string）
 //   <string>   —— string
 //   <algorithm> —— max
 
 const int MAXN = 1005;
-int dp[MAXN][MAXN];
+int dp[MAXN][MAXN];   // dp[i][j] = A 的前 i 个字符与 B 的前 j 个字符的最长公共子序列长度
 
 int main() {
     ios::sync_with_stdio(false);
@@ -18,9 +18,9 @@ int main() {
     for (int i = 1; i <= n; i++) {
         for (int j = 1; j <= m; j++) {
             if (A[i - 1] == B[j - 1]) {
-                dp[i][j] = dp[i - 1][j - 1] + 1;
+                dp[i][j] = dp[i - 1][j - 1] + 1;         // 两字符相同：接在公共子序列末尾
             } else {
-                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]);
+                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]);   // 不同：舍弃 A[i-1] 或舍弃 B[j-1]，取较优
             }
         }
     }
