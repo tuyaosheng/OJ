@@ -1,6 +1,8 @@
-#include <cstdio>
-#include <algorithm>
-
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
+//   <algorithm> —— sort
 typedef long long ll;
 
 const int MAXN = 100005;
@@ -21,9 +23,9 @@ bool check(ll mid) {
 }
 
 int main() {
-    scanf("%d %d", &n, &k);
-    for (int i = 1; i <= n; i++) scanf("%lld", &pos[i]);
-    std::sort(pos + 1, pos + n + 1);
+    cin >> n >> k;
+    for (int i = 1; i <= n; i++) cin >> pos[i];
+    sort(pos + 1, pos + n + 1);
 
     ll L = 0, R = pos[n] - pos[1];
     while (L < R) {
@@ -34,6 +36,6 @@ int main() {
             R = mid - 1;    // mid 不可行，答案一定更小，去左半区间找
         }
     }
-    printf("%lld\n", L);
+    cout << L << "\n";
     return 0;
 }

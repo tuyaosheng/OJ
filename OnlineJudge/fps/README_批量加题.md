@@ -45,7 +45,7 @@ python fps_generator.py example_problems -o example_problems/example_import.xml
 
 ## 1.5 标程编译 & 测试点生成：`build_chapter.py`
 
-出完题后，用它**批量编译每题的 `solution.cpp`，跑遍所有 `.in` 生成对应 `.out`**——保证测试点答案是标程**实际跑出来**的，而不是手写臆测的。
+出完题后，用它**批量编译每题的参考代码（题目文件夹下唯一的 `.cpp`，命名约定 `<题目标题>_参考代码.cpp`），跑遍所有 `.in` 生成对应 `.out`**——保证测试点答案是标程**实际跑出来**的，而不是手写臆测的。
 
 ```powershell
 cd E:\QingDaoOJ\OnlineJudge\fps

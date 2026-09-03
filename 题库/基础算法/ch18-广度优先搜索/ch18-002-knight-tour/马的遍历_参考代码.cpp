@@ -1,6 +1,9 @@
-#include <cstdio>
-#include <cstring>
-#include <queue>
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//   <queue>    —— queue
+//   <cstring>  —— memset
 
 const int MAXN = 405;
 int dist[MAXN][MAXN];
@@ -9,11 +12,13 @@ int dx[8] = {-2, -2, -1, -1, 1, 1, 2, 2};
 int dy[8] = {-1, 1, -2, 2, -2, 2, -1, 1};
 
 int main() {
+    ios::sync_with_stdio(false);   // 关闭和 C 输入输出的同步，避免 cin/cout 在大数据量下过慢
+    cin.tie(nullptr);
     int sx, sy;
-    scanf("%d %d %d %d", &n, &m, &sx, &sy);
+    cin >> n >> m >> sx >> sy;
 
     memset(dist, -1, sizeof(dist));
-    std::queue<std::pair<int, int>> q;
+    queue<pair<int, int>> q;
     dist[sx][sy] = 0;
     q.push({sx, sy});
 
@@ -31,7 +36,7 @@ int main() {
 
     for (int i = 1; i <= n; i++) {
         for (int j = 1; j <= m; j++) {
-            printf("%d%c", dist[i][j], j == m ? '\n' : ' ');
+            cout << dist[i][j] << (j == m ? '\n' : ' ');
         }
     }
     return 0;

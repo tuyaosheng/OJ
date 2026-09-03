@@ -1,5 +1,7 @@
-#include <cstdio>
-
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
 typedef long long ll;
 
 const int MAXN = 100005;
@@ -34,9 +36,9 @@ void mergeSort(int l, int r) {
 
 int main() {
     int n;
-    scanf("%d", &n);
-    for (int i = 1; i <= n; i++) scanf("%d", &a[i]);
+    cin >> n;
+    for (int i = 1; i <= n; i++) cin >> a[i];
     mergeSort(1, n);
-    printf("%lld\n", invCount);
+    cout << invCount << "\n";
     return 0;
 }

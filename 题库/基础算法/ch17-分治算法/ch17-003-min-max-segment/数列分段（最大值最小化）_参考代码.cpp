@@ -1,5 +1,7 @@
-#include <cstdio>
-
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
 typedef long long ll;
 
 const int MAXN = 100005;
@@ -22,10 +24,10 @@ bool check(ll limit) {
 }
 
 int main() {
-    scanf("%d %d", &n, &m);
+    cin >> n >> m;
     ll maxA = 0, sum = 0;
     for (int i = 1; i <= n; i++) {
-        scanf("%lld", &a[i]);
+        cin >> a[i];
         if (a[i] > maxA) maxA = a[i];
         sum += a[i];
     }
@@ -40,6 +42,6 @@ int main() {
             L = mid + 1;   // mid 不可行，答案一定更大，去右半区间找
         }
     }
-    printf("%lld\n", L);
+    cout << L << "\n";
     return 0;
 }

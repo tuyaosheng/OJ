@@ -1,6 +1,9 @@
-#include <cstdio>
-#include <cstring>
-#include <queue>
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//   <queue>    —— queue
+//   <cstring>  —— memset
 
 const int MAXN = 1005;
 char grid[MAXN][MAXN];
@@ -10,13 +13,15 @@ int dx[4] = {-1, 1, 0, 0};
 int dy[4] = {0, 0, -1, 1};
 
 int main() {
-    scanf("%d %d", &n, &m);
-    for (int i = 1; i <= n; i++) scanf("%s", grid[i] + 1);
+    ios::sync_with_stdio(false);   // 关闭和 C 输入输出的同步，避免 cin/cout 在大数据量下过慢
+    cin.tie(nullptr);
+    cin >> n >> m;
+    for (int i = 1; i <= n; i++) cin >> (grid[i] + 1);
     int sx, sy, tx, ty;
-    scanf("%d %d %d %d", &sx, &sy, &tx, &ty);
+    cin >> sx >> sy >> tx >> ty;
 
     memset(dist, -1, sizeof(dist));
-    std::queue<std::pair<int, int>> q;
+    queue<pair<int, int>> q;
     dist[sx][sy] = 0;
     q.push({sx, sy});
 
@@ -34,6 +39,6 @@ int main() {
         }
     }
 
-    printf("%d\n", dist[tx][ty]);
+    cout << dist[tx][ty] << "\n";
     return 0;
 }

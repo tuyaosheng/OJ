@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-用 judge 容器里的 g++ 编译每题 solution.cpp，跑遍 samples/*.in 和 tests/*.in 生成 .out。
+用 judge 容器里的 g++ 编译每题的参考代码（题目文件夹下唯一的 .cpp 文件，
+命名约定 "<题目标题>_参考代码.cpp"），跑遍 samples/*.in 和 tests/*.in 生成 .out。
 
 为什么这么绕：
 - judge 容器根文件系统只读，/tmp 与 /dev/shm 是 noexec 的 tmpfs，docker cp 也写不进 tmpfs。
@@ -41,7 +42,13 @@ def build_one(pdir):
     shutil.rmtree(stage, ignore_errors=True)
     os.makedirs(os.path.join(stage, "tests"), exist_ok=True)
     os.makedirs(os.path.join(stage, "samples"), exist_ok=True)
-    shutil.copy(os.path.join(pdir, "solution.cpp"), os.path.join(stage, "solution.cpp"))
+
+    # 参考代码文件名不再固定为 solution.cpp，而是 "<题目标题>_参考代码.cpp"；
+    # 在题目文件夹里找唯一的 .cpp 文件，暂存时统一改名为 solution.cpp 编译。
+    cpp_files = glob.glob(os.path.join(pdir, "*.cpp"))
+    if len(cpp_files) != 1:
+        return name, False, f"未找到唯一的 .cpp 参考代码文件（找到 {len(cpp_files)} 个）", 0, "", tl
+    shutil.copy(cpp_files[0], os.path.join(stage, "solution.cpp"))
     for sub in ("tests", "samples"):
         for inf in glob.glob(os.path.join(pdir, sub, "*.in")):
             shutil.copy(inf, os.path.join(stage, sub, os.path.basename(inf)))

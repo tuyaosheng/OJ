@@ -1,6 +1,8 @@
-#include <cstdio>
-#include <cstring>
-#include <queue>
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//   <queue>    —— queue
 
 const int MAXN = 1005;
 char grid[MAXN][MAXN];
@@ -10,7 +12,7 @@ int dx[4] = {-1, 1, 0, 0};
 int dy[4] = {0, 0, -1, 1};
 
 void bfs(int sx, int sy) {
-    std::queue<std::pair<int, int>> q;
+    queue<pair<int, int>> q;
     visited[sx][sy] = true;   // 入队时立刻标记，避免重复入队
     q.push({sx, sy});
     while (!q.empty()) {
@@ -27,8 +29,10 @@ void bfs(int sx, int sy) {
 }
 
 int main() {
-    scanf("%d %d", &n, &m);
-    for (int i = 1; i <= n; i++) scanf("%s", grid[i] + 1);
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+    cin >> n >> m;
+    for (int i = 1; i <= n; i++) cin >> (grid[i] + 1);
 
     int count = 0;
     for (int i = 1; i <= n; i++) {
@@ -40,6 +44,6 @@ int main() {
         }
     }
 
-    printf("%d\n", count);
+    cout << count << "\n";
     return 0;
 }

@@ -1,16 +1,21 @@
-#include <cstdio>
-#include <cstring>
-#include <queue>
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//   <queue>    —— queue
+//   <cstring>  —— memset
 
 const int MAXX = 100005;
 int dist[MAXX];
 
 int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
     int n, k;
-    scanf("%d %d", &n, &k);
+    cin >> n >> k;
 
     memset(dist, -1, sizeof(dist));
-    std::queue<int> q;
+    queue<int> q;
     dist[n] = 0;
     q.push(n);
 
@@ -29,6 +34,6 @@ int main() {
         }
     }
 
-    printf("%d\n", dist[k]);
+    cout << dist[k] << "\n";
     return 0;
 }

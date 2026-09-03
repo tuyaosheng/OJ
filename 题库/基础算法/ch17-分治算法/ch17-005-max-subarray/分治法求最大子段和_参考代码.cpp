@@ -1,6 +1,8 @@
-#include <cstdio>
-#include <algorithm>
-
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
+//   <algorithm> —— max
 typedef long long ll;
 
 const int MAXN = 100005;
@@ -12,13 +14,13 @@ ll crossMax(int l, int mid, int r) {
     ll leftMax = -4e18, sum = 0;
     for (int i = mid; i >= l; i--) {
         sum += a[i];
-        leftMax = std::max(leftMax, sum);
+        leftMax = max(leftMax, sum);
     }
     ll rightMax = -4e18;
     sum = 0;
     for (int i = mid + 1; i <= r; i++) {
         sum += a[i];
-        rightMax = std::max(rightMax, sum);
+        rightMax = max(rightMax, sum);
     }
     return leftMax + rightMax;
 }
@@ -30,12 +32,12 @@ ll maxSubarray(int l, int r) {
     ll leftBest = maxSubarray(l, mid);       // 子问题：完全在左半
     ll rightBest = maxSubarray(mid + 1, r);  // 子问题：完全在右半
     ll cross = crossMax(l, mid, r);          // 合并：横跨中点
-    return std::max({leftBest, rightBest, cross});
+    return max({leftBest, rightBest, cross});
 }
 
 int main() {
-    scanf("%d", &n);
-    for (int i = 1; i <= n; i++) scanf("%lld", &a[i]);
-    printf("%lld\n", maxSubarray(1, n));
+    cin >> n;
+    for (int i = 1; i <= n; i++) cin >> a[i];
+    cout << maxSubarray(1, n) << "\n";
     return 0;
 }

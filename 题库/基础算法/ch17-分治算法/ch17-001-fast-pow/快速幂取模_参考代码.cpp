@@ -1,5 +1,7 @@
-#include <cstdio>
-
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
 typedef long long ll;
 
 // 分治求 a^b mod p：把指数 b 不断减半，规模减半即分治的“分”，
@@ -14,8 +16,8 @@ ll fastPow(ll a, ll b, ll p) {
 
 int main() {
     ll a, b, p;
-    scanf("%lld %lld %lld", &a, &b, &p);
+    cin >> a >> b >> p;
     a %= p;
-    printf("%lld\n", fastPow(a, b, p));
+    cout << fastPow(a, b, p) << "\n";
     return 0;
 }
