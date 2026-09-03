@@ -1,9 +1,13 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
+//   <algorithm> —— max
+//
 // 阶乘之和：S = 1! + 2! + ... + n!，n ≤ 100，100! 有 158 位，必须高精度。
 // 关键：利用递推 k! = (k-1)! * k，边乘边加，不必每个阶乘都从头算。
 // 用到两个高精度工具：① 高精度 × 单精度（算 fac）② 高精度 + 高精度（累加 sum）
 // 复杂度：O(n * 位数)，100 * 200 级别，瞬间出结果。
-#include <iostream>
-using namespace std;
 
 const int N = 300;      // 100! 约 158 位，开 300 绰绰有余
 

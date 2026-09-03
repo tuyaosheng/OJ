@@ -1,10 +1,13 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
+//   <string>    —— string
+//   <algorithm> —— max
+//
 // 高精度加法：用数组模拟小学列竖式，逐位相加、逢十进一。
 // 思路：字符串读入 -> 倒序存进 int 数组（下标 0 = 个位）-> 逐位加带进位 -> 倒序输出。
 // 复杂度：O(n)，n 为较长数的位数（本题 ≤ 500）。
-#include <iostream>
-#include <string>
-#include <algorithm>
-using namespace std;
 
 const int N = 600;      // 500 位，再留点余量（可能进位多出 1 位）
 

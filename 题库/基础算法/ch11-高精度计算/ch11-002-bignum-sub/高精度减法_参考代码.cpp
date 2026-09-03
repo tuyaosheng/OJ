@@ -1,9 +1,13 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream>  —— cin / cout
+//   <string>    —— string
+//   <algorithm> —— swap
+//
 // 高精度减法：数组模拟列竖式，逐位相减、不够就向高位借一。
 // 思路：先比大小 -> 保证"大减小" -> 逐位减带借位 -> 去前导零 -> 该加负号就加。
 // 复杂度：O(n)，n 为较长数的位数（本题 ≤ 500）。
-#include <iostream>
-#include <string>
-using namespace std;
 
 const int N = 600;
 

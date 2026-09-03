@@ -1,9 +1,12 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//   <string>   —— string
+//
 // 高精度乘单精度：大数 a 的每一位都乘以小数 b，再统一处理进位。
 // 思路：倒序存 a -> 每位乘 b 加进位 -> 本位留个位、其余进位 -> 末尾把剩余进位全部展开 -> 去前导零。
 // 复杂度：O(n)，n 为 a 的位数（本题 ≤ 500）。
-#include <iostream>
-#include <string>
-using namespace std;
 
 const int N = 600;
 

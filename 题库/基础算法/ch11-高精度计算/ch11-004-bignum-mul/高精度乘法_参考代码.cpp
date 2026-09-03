@@ -1,10 +1,13 @@
+#include <bits/stdc++.h>
+using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+//   <string>   —— string
+//
 // 高精度乘高精度：竖式错位相加。
 // 核心：倒序存数后，a 的第 i 位 乘 b 的第 j 位，结果加到答案的第 (i + j) 位上。
 // 策略：先只管把所有乘积累加到对应位（不管进位），最后再统一扫一遍处理进位。
 // 复杂度：O(la * lb)，本题 500 * 500 = 25 万次，很快。
-#include <iostream>
-#include <string>
-using namespace std;
 
 const int N = 1100;     // 结果最多 la + lb = 1000 位，留余量
 

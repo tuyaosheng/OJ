@@ -1,7 +1,8 @@
-// 金币翻倍：求 2^n 的精确值
-// 考点：高精度乘单精度（乘 2 做 n 次）、倒序存储、进位
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
+// 不用万能头时，需要单独引入：
+//   <iostream> —— cin / cout
+// 考点：高精度乘单精度（乘 2 做 n 次）、倒序存储、进位
 
 int a[350];   // 倒序存：a[0] 是个位。2^1000 有 302 位，350 足够
 
@@ -22,6 +23,6 @@ int main()
     }
     for (int i = len - 1; i >= 0; i--)     // 从最高位倒着输出
         cout << a[i];
-    cout << endl;
+    cout << "\n";
     return 0;
 }
