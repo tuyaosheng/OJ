@@ -1,0 +1,9 @@
+{
+  "id": "ch22-007",
+  "title": "【例4】双栈模拟队列",
+  "role": "example",
+  "tags": ["栈", "C++"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及-"
+}

@@ -1,9 +1,9 @@
 {
-  "id": "ch22-004",
-  "title": "【练1】中缀转后缀",
+  "id": "ch22-009",
+  "title": "【练5】带最小值查询的栈",
   "role": "practice",
   "tags": ["栈", "C++"],
   "time_limit": 1000,
   "memory_limit": 256,
-  "difficulty": "普及+"
+  "difficulty": "普及"
 }
