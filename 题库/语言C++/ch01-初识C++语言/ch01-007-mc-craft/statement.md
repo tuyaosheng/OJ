@@ -1,4 +1,4 @@
-<img src="/public/upload/minecraft/minecraft.png" alt="我的世界游戏画面" style="max-width:400px;border-radius:8px;display:block;margin:0 auto 12px;">
+<img src="/public/upload/minecraft/craft.png" alt="我的世界合成台：木板合成木门" style="max-width:400px;border-radius:8px;display:block;margin:0 auto 12px;">
 
 在《我的世界》(Minecraft) 里，**1 个木头**可以合成 **4 块木板**，而制作 **1 扇木门**需要消耗 **6 块木板**。
 

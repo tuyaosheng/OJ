@@ -1,6 +1,6 @@
 ## 题目描述
 
-<img src="/public/upload/pvz/pvz.png" alt="植物大战僵尸游戏画面" style="max-width:400px;border-radius:8px;display:block;margin:0 auto 12px;">
+<img src="/public/upload/pvz/pvz.png" alt="植物大战僵尸：多路僵尸同时从草坪不同位置逼近" style="max-width:400px;border-radius:8px;display:block;margin:0 auto 12px;">
 
 这是【例4】烂橘子的直接变式——同样是多源 BFS，换一个游戏皮肤，问法也稍微变一下。
 

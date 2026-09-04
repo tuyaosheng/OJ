@@ -1,4 +1,4 @@
-<img src="/public/upload/minecraft/minecraft.png" alt="我的世界游戏画面" style="max-width:400px;border-radius:8px;display:block;margin:0 auto 12px;">
+<img src="/public/upload/minecraft/mine.png" alt="我的世界矿洞挖矿场景" style="max-width:400px;border-radius:8px;display:block;margin:0 auto 12px;">
 
 你在《我的世界》服务器管理一片 n 行 m 列的矿区，第 i 行第 j 列的区块里埋着 a[i][j] 单位矿石。
 
