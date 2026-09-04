@@ -1,4 +1,6 @@
-放置游戏《金币大亨》里，你的金库第 0 天有 **1 枚**金币，之后**每天翻一倍**：第 1 天 2 枚、第 2 天 4 枚、第 3 天 8 枚……
+<img src="/public/upload/idle-heroes/icon.png" alt="放置奇兵游戏图标" style="max-width:200px;border-radius:16px;display:block;margin:0 auto 12px;">
+
+《放置奇兵》一类的放置游戏里，你的金库第 0 天有 **1 枚**金币，之后**每天翻一倍**：第 1 天 2 枚、第 2 天 4 枚、第 3 天 8 枚……
 
 请问第 **n 天**金库里有多少金币？请输出**精确值**。
 

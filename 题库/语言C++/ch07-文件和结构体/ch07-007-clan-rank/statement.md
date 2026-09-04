@@ -1,4 +1,6 @@
-赛季结束，游戏要发布战队排行榜。每支战队有三项数据：**队名**、**积分**、**总用时**（秒）。
+<img src="/public/upload/kpl/rank.png" alt="王者荣耀KPL战队积分榜" style="max-width:400px;border-radius:8px;display:block;margin:0 auto 12px;">
+
+赛季结束，《王者荣耀》一类的电竞游戏要发布战队排行榜。每支战队有三项数据：**队名**、**积分**、**总用时**（秒）。
 
 排序规则：
 

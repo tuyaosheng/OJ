@@ -1,4 +1,6 @@
-竞技游戏的匹配系统要给玩家找"实力最接近"的对手。
+<img src="/public/upload/lol/ranks.png" alt="英雄联盟排位天梯段位" style="max-width:400px;border-radius:8px;display:block;margin:0 auto 12px;">
+
+《英雄联盟》一类竞技游戏的排位匹配系统要给玩家找"天梯分最接近"的对手。
 
 对手池里有 n 名候选对手，第 i 名的天梯分是 b[i]。接下来有 m 名玩家排队匹配，第 j 名玩家的天梯分是 x[j]。
 
