@@ -1,0 +1,9 @@
+{
+  "id": "ch22-005",
+  "title": "【练2】单调栈——下一个更大元素",
+  "role": "practice",
+  "tags": ["栈", "C++"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及"
+}

@@ -1,0 +1,9 @@
+{
+  "id": "ch22-002",
+  "title": "【例2】括号匹配",
+  "role": "example",
+  "tags": ["栈", "C++"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及-"
+}

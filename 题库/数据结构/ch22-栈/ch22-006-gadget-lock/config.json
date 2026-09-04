@@ -1,0 +1,9 @@
+{
+  "id": "ch22-006",
+  "title": "【练3】地牢机关联动检测（游戏背景）",
+  "role": "practice",
+  "tags": ["栈", "C++"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及"
+}

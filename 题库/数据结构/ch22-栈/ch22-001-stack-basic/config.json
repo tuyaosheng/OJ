@@ -1,0 +1,9 @@
+{
+  "id": "ch22-001",
+  "title": "【例1】仓库栈式存取",
+  "role": "example",
+  "tags": ["栈", "C++"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及-"
+}
