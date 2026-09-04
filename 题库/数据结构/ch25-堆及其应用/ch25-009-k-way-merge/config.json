@@ -1,0 +1,10 @@
+{
+  "id": "ch25-009",
+  "title": "【练5】K 路归并",
+  "role": "practice",
+  "tags": ["C++", "堆", "归并", "综合题"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及+",
+  "scores": []
+}

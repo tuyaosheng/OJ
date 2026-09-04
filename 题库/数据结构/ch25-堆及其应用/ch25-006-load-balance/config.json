@@ -1,0 +1,10 @@
+{
+  "id": "ch25-006",
+  "title": "【练2】多机任务调度",
+  "role": "practice",
+  "tags": ["C++", "堆", "贪心", "模拟"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及-",
+  "scores": []
+}

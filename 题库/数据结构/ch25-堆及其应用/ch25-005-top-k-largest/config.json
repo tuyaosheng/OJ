@@ -1,0 +1,10 @@
+{
+  "id": "ch25-005",
+  "title": "【练1】Top-K 最大的 K 个数",
+  "role": "practice",
+  "tags": ["C++", "堆", "优先队列", "Top-K"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及-",
+  "scores": []
+}

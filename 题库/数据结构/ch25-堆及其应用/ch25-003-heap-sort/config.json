@@ -1,0 +1,10 @@
+{
+  "id": "ch25-003",
+  "title": "【例3】堆排序",
+  "role": "example",
+  "tags": ["C++", "堆", "排序"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及",
+  "scores": []
+}

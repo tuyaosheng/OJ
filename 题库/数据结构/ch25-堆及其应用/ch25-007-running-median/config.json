@@ -1,0 +1,10 @@
+{
+  "id": "ch25-007",
+  "title": "【练3】动态中位数（对顶堆）",
+  "role": "practice",
+  "tags": ["C++", "堆", "对顶堆"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及+",
+  "scores": []
+}

@@ -1,0 +1,10 @@
+{
+  "id": "ch25-002",
+  "title": "【例2】手写堆",
+  "role": "example",
+  "tags": ["C++", "堆", "数组模拟"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及",
+  "scores": []
+}
