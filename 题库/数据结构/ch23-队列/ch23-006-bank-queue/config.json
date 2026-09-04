@@ -1,0 +1,9 @@
+{
+  "id": "ch23-006",
+  "title": "【练2】银行排队叫号",
+  "role": "practice",
+  "tags": ["队列", "C++"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及"
+}

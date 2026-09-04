@@ -1,0 +1,9 @@
+{
+  "id": "ch23-007",
+  "title": "【练3】循环队列判满陷阱",
+  "role": "practice",
+  "tags": ["队列", "C++"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及-"
+}

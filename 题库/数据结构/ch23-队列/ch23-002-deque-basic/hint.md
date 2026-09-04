@@ -1,0 +1,3 @@
+- C++ 标准库自带 `deque<int>`，两端都有对应操作：`push_back`/`pop_back`/`back` 管队尾，`push_front`/`pop_front`/`front` 管队首。
+- 对照操作编号：`1 x` → `push_back(x)`；`2 x` → `push_front(x)`；`3` → 先 `back()` 记下来再 `pop_back()`；`4` → 先 `front()` 记下来再 `pop_front()`。
+- 普通 `queue` 只能"队尾进、队首出"，相当于只用到了 `deque` 一半的功能；如果一道题要求"两端都能进出"，就必须换成 `deque`。

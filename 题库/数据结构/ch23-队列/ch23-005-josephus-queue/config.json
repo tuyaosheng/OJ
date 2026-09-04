@@ -1,0 +1,9 @@
+{
+  "id": "ch23-005",
+  "title": "【练1】约瑟夫问题（队列版）",
+  "role": "practice",
+  "tags": ["队列", "C++"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及"
+}

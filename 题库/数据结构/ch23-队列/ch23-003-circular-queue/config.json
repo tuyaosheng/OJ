@@ -1,0 +1,9 @@
+{
+  "id": "ch23-003",
+  "title": "【例3】循环队列模拟",
+  "role": "example",
+  "tags": ["队列", "C++"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及"
+}

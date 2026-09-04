@@ -1,0 +1,9 @@
+{
+  "id": "ch23-008",
+  "title": "【练4】双端队列判断回文序列",
+  "role": "practice",
+  "tags": ["队列", "C++"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及"
+}
