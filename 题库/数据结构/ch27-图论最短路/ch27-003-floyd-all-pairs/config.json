@@ -1,0 +1,10 @@
+{
+  "id": "ch27-003",
+  "title": "【例3】多源最短路——Floyd",
+  "role": "example",
+  "tags": ["C++", "图论", "最短路", "Floyd", "动态规划"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及",
+  "scores": []
+}

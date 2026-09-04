@@ -1,0 +1,10 @@
+{
+  "id": "ch27-002",
+  "title": "【例2】单源最短路——堆优化 Dijkstra",
+  "role": "example",
+  "tags": ["C++", "图论", "最短路", "Dijkstra", "堆"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及-",
+  "scores": []
+}

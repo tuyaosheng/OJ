@@ -1,0 +1,10 @@
+{
+  "id": "ch27-004",
+  "title": "【例4】负权最短路与负环判定",
+  "role": "example",
+  "tags": ["C++", "图论", "最短路", "Bellman-Ford", "SPFA"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及+",
+  "scores": []
+}

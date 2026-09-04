@@ -1,0 +1,10 @@
+{
+  "id": "ch27-006",
+  "title": "【练2】必须经过某点的最短路",
+  "role": "practice",
+  "tags": ["C++", "图论", "最短路", "Dijkstra"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及",
+  "scores": []
+}

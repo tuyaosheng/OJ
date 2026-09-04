@@ -1,0 +1,10 @@
+{
+  "id": "ch27-001",
+  "title": "【例1】单源最短路——朴素 Dijkstra",
+  "role": "example",
+  "tags": ["C++", "图论", "最短路", "Dijkstra"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及-",
+  "scores": []
+}

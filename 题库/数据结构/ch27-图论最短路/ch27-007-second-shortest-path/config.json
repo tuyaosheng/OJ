@@ -1,0 +1,10 @@
+{
+  "id": "ch27-007",
+  "title": "【练3】严格次短路",
+  "role": "practice",
+  "tags": ["C++", "图论", "最短路", "Dijkstra", "次短路"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及+",
+  "scores": []
+}

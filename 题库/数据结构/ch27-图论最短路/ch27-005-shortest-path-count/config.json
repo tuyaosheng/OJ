@@ -1,0 +1,10 @@
+{
+  "id": "ch27-005",
+  "title": "【练1】最短路计数",
+  "role": "practice",
+  "tags": ["C++", "图论", "最短路", "BFS", "计数"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及",
+  "scores": []
+}

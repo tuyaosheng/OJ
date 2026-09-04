@@ -1,0 +1,10 @@
+{
+  "id": "ch27-009",
+  "title": "【练5】最近补给点（虚拟源点）",
+  "role": "practice",
+  "tags": ["C++", "图论", "最短路", "Dijkstra", "综合题"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及+",
+  "scores": []
+}
