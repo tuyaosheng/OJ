@@ -1,0 +1,10 @@
+{
+  "id": "ch26-003",
+  "title": "【例3】连通块计数",
+  "role": "example",
+  "tags": ["C++", "图论", "连通性", "DFS", "BFS"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及",
+  "scores": []
+}

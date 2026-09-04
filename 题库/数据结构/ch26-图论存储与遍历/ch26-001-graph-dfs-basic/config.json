@@ -1,0 +1,10 @@
+{
+  "id": "ch26-001",
+  "title": "【例1】图的存储与深度优先遍历",
+  "role": "example",
+  "tags": ["C++", "图论", "DFS", "邻接表"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及-",
+  "scores": []
+}

@@ -1,0 +1,10 @@
+{
+  "id": "ch26-004",
+  "title": "【例4】最大连通块大小",
+  "role": "example",
+  "tags": ["C++", "图论", "连通性", "BFS"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及",
+  "scores": []
+}

@@ -1,0 +1,10 @@
+{
+  "id": "ch26-002",
+  "title": "【例2】图的广度优先遍历",
+  "role": "example",
+  "tags": ["C++", "图论", "BFS", "队列"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及-",
+  "scores": []
+}

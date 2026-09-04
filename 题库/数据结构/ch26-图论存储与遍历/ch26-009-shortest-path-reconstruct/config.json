@@ -1,0 +1,10 @@
+{
+  "id": "ch26-009",
+  "title": "【练5】最短路径还原",
+  "role": "practice",
+  "tags": ["C++", "图论", "BFS", "最短路", "综合题"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及+",
+  "scores": []
+}

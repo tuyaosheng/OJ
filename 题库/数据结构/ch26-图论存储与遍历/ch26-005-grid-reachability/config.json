@@ -1,0 +1,10 @@
+{
+  "id": "ch26-005",
+  "title": "【练1】网格迷宫可达性",
+  "role": "practice",
+  "tags": ["C++", "图论", "网格图", "BFS", "DFS"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及-",
+  "scores": []
+}

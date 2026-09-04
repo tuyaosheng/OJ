@@ -1,0 +1,10 @@
+{
+  "id": "ch26-007",
+  "title": "【练3】单词接龙最短变换",
+  "role": "practice",
+  "tags": ["C++", "图论", "建图", "BFS"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及",
+  "scores": []
+}
