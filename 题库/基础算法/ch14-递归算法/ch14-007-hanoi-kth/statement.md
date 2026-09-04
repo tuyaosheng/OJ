@@ -1,3 +1,5 @@
+<img src="/public/upload/hanoi/hanoi_goal.png" alt="原神木偶齿轮谜题目标状态" style="max-width:360px;border-radius:8px;display:block;margin:0 auto 12px;">
+
 还记得《原神》里那个汉诺塔齿轮谜题吗（本章例4）？n 个齿轮的最优解恰好走 **2^n − 1** 步。
 
 木偶这次提出了一个更刁钻的问题：**最优解的第 k 步，移动的是几号齿轮？**（齿轮从小到大编号 1 ~ n，1 号最小。）

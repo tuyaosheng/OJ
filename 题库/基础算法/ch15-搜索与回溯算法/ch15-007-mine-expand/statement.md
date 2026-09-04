@@ -1,3 +1,5 @@
+<img src="/public/upload/minesweeper/minesweeper.png" alt="扫雷游戏画面" style="max-width:360px;border-radius:8px;display:block;margin:0 auto 12px;">
+
 玩过《扫雷》的同学都知道那个爽点：点开一个周围没雷的格子，会"哗啦"一下自动翻开一大片。它的规则是：
 
 1. 点击的格子被翻开；

@@ -1,3 +1,5 @@
+<img src="/public/upload/hanoi/hanoi_start.png" alt="原神木偶齿轮谜题" style="max-width:360px;border-radius:8px;display:block;margin:0 auto 12px;">
+
 《原神》里有一个木偶出的齿轮谜题：底座上有三根柱子，左边柱子上从大到小叠着 **n 个齿轮**。你要把它们**全部移到另一根柱子**上，规则是：
 
 1. 一次只能移动一个齿轮；

@@ -1,3 +1,5 @@
+<img src="/public/upload/snake/snake.png" alt="贪吃蛇游戏画面" style="max-width:320px;border-radius:8px;display:block;margin:0 auto 12px;">
+
 《贪吃蛇》里，蛇每吃下一个食物，就会在**头部**长出新的一节，新的一节记录着这个食物的编号。
 
 一条蛇从零开始，依次吃下了 n 个食物（按吃的先后给出编号）。请用**链表**模拟它的成长：每吃一个食物，就在链表**头部插入**一个新节点。

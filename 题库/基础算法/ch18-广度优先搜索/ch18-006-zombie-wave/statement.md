@@ -1,5 +1,7 @@
 ## 题目描述
 
+<img src="/public/upload/pvz/pvz.png" alt="植物大战僵尸游戏画面" style="max-width:400px;border-radius:8px;display:block;margin:0 auto 12px;">
+
 这是【例4】烂橘子的直接变式——同样是多源 BFS，换一个游戏皮肤，问法也稍微变一下。
 
 你在设计一款塔防游戏的地图。地图是 `n` 行 `m` 列的网格，每个格子是下面三种情况之一：
