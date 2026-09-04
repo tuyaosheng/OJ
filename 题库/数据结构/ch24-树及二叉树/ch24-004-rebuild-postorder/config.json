@@ -1,0 +1,10 @@
+{
+  "id": "ch24-004",
+  "title": "【例4】由前序和中序求后序",
+  "role": "example",
+  "tags": ["C++", "树", "二叉树", "递归", "哈希"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及+",
+  "scores": []
+}

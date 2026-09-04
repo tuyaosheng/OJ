@@ -1,0 +1,10 @@
+{
+  "id": "ch24-003",
+  "title": "【例3】二叉树的深度与节点数",
+  "role": "example",
+  "tags": ["C++", "树", "二叉树", "递归"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及",
+  "scores": []
+}

@@ -1,0 +1,10 @@
+{
+  "id": "ch24-009",
+  "title": "【练5】二叉树的最大路径和",
+  "role": "practice",
+  "tags": ["C++", "树", "二叉树", "递归", "综合题"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及+",
+  "scores": []
+}

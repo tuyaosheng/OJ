@@ -1,0 +1,10 @@
+{
+  "id": "ch24-005",
+  "title": "【练1】完全二叉树判断",
+  "role": "practice",
+  "tags": ["C++", "树", "二叉树", "队列", "BFS"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及-",
+  "scores": []
+}

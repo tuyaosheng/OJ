@@ -1,0 +1,10 @@
+{
+  "id": "ch24-002",
+  "title": "【例2】层序遍历",
+  "role": "example",
+  "tags": ["C++", "树", "二叉树", "队列", "BFS"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及-",
+  "scores": []
+}
