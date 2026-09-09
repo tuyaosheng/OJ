@@ -1,0 +1,10 @@
+{
+  "id": "ch28-003",
+  "title": "【例3】亲戚关系判断",
+  "role": "example",
+  "tags": ["C++", "并查集", "DSU"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及",
+  "scores": []
+}

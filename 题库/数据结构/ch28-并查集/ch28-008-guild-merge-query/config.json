@@ -1,0 +1,10 @@
+{
+  "id": "ch28-008",
+  "title": "【练4】战队合并与人数查询（游戏背景）",
+  "role": "practice",
+  "tags": ["C++", "并查集", "DSU", "按大小合并", "游戏背景"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及",
+  "scores": []
+}

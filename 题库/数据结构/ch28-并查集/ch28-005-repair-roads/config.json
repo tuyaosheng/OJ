@@ -1,0 +1,10 @@
+{
+  "id": "ch28-005",
+  "title": "【练1】修复公路——最早全部连通时间",
+  "role": "practice",
+  "tags": ["C++", "并查集", "DSU", "排序"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及",
+  "scores": []
+}

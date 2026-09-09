@@ -1,0 +1,10 @@
+{
+  "id": "ch28-009",
+  "title": "【练5】三元克制关系判定",
+  "role": "practice",
+  "tags": ["C++", "并查集", "带权并查集", "综合题"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及+",
+  "scores": []
+}

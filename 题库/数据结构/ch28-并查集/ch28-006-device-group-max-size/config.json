@@ -1,0 +1,10 @@
+{
+  "id": "ch28-006",
+  "title": "【练2】设备分组——最大连通块规模",
+  "role": "practice",
+  "tags": ["C++", "并查集", "DSU", "按大小合并"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及-",
+  "scores": []
+}

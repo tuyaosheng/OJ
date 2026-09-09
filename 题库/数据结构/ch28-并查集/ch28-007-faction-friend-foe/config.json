@@ -1,0 +1,10 @@
+{
+  "id": "ch28-007",
+  "title": "【练3】阵营敌友判断",
+  "role": "practice",
+  "tags": ["C++", "并查集", "带权并查集", "DSU"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及+",
+  "scores": []
+}

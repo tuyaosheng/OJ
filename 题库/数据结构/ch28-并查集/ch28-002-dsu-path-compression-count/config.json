@@ -1,0 +1,10 @@
+{
+  "id": "ch28-002",
+  "title": "【例2】按大小合并——好友圈计数",
+  "role": "example",
+  "tags": ["C++", "并查集", "DSU", "按大小合并"],
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "difficulty": "普及-",
+  "scores": []
+}
