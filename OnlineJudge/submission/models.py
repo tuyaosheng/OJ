@@ -59,6 +59,12 @@ class Submission(models.Model):
         return self.id
 
 
+class AIDiagnosisStatus:
+    PENDING = "pending"
+    SUCCESS = "success"
+    FAILED = "failed"
+
+
 class AICodeDiagnosis(models.Model):
     # 一条提交只诊断一次并缓存，重复点击不再消耗次数
     submission = models.OneToOneField(Submission, on_delete=models.CASCADE, related_name="ai_diagnosis")
@@ -67,8 +73,11 @@ class AICodeDiagnosis(models.Model):
     username = models.TextField()
     # 提交时的判题结果，便于教师端筛选/展示
     submission_result = models.IntegerField(default=JudgeStatus.WRONG_ANSWER)
-    # AI 返回的诊断文本（Markdown）
-    result = models.TextField()
+    # AI 返回的诊断文本（Markdown），诊断中/失败时为空
+    result = models.TextField(blank=True, default="")
+    # pending: 已提交给后台任务，正在等待大模型返回；success: 已完成；failed: 调用失败（可重新发起）
+    status = models.CharField(max_length=16, default=AIDiagnosisStatus.SUCCESS, db_index=True)
+    error = models.TextField(null=True, blank=True)
     create_time = models.DateTimeField(auto_now_add=True)
 
     class Meta:

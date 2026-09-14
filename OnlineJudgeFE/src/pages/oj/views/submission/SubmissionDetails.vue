@@ -19,13 +19,15 @@
 
     <Col v-if="canDiagnose && aiEnabled && aiResultAllowed" :span="20">
       <div id="ai-diagnosis-bar">
-        <Button :type="aiHasResult ? 'success' : 'info'"
-                :icon="aiHasResult ? 'ios-checkmark-outline' : 'ios-lightbulb-outline'"
-                :loading="aiLoading" @click="runAIDiagnosis">
-          {{ aiHasResult ? '查看已生成的 AI 诊断' : 'AI 诊断' }}
+        <Button :type="aiStatus === 'success' ? 'success' : 'info'"
+                :icon="aiStatus === 'success' ? 'ios-checkmark-outline' : 'ios-lightbulb-outline'"
+                :loading="aiStatus === 'pending'" @click="runAIDiagnosis">
+          {{ aiButtonText }}
         </Button>
         <span class="ai-tip">
-          <template v-if="aiHasResult">该提交已诊断，点击查看（不再消耗次数）</template>
+          <template v-if="aiStatus === 'success'">该提交已诊断，点击查看（不再消耗次数）</template>
+          <template v-else-if="aiStatus === 'pending'">AI 正在分析中，通常需要 10~30 秒，可以先做别的题，回来会自动出结果</template>
+          <template v-else-if="aiStatus === 'failed'">上次诊断失败：{{aiError}}，可重新尝试</template>
           <template v-else>代码没通过？让 AI 帮你分析错误原因</template>
           <template v-if="aiRemaining !== null"> · 今日剩余 {{aiRemaining}} 次</template>
         </span>
@@ -165,10 +167,11 @@
         tcModal: false,
         tcModalIndex: 0,
         aiModalVisible: false,
-        aiLoading: false,
+        aiStatus: null,
         aiDiagnosis: '',
+        aiError: '',
+        aiPollTimer: null,
         aiEnabled: false,
-        aiHasResult: false,
         aiRemaining: null,
         aiAllowedResults: []
       }
@@ -180,6 +183,7 @@
       if (this.refreshStatus) {
         clearTimeout(this.refreshStatus)
       }
+      clearTimeout(this.aiPollTimer)
     },
     methods: {
       getSubmission () {
@@ -250,11 +254,43 @@
           this.aiEnabled = d.enabled
           this.aiRemaining = d.remaining
           this.aiAllowedResults = d.allowed_results || []
-          if (d.result) {
-            this.aiDiagnosis = d.result
-            this.aiHasResult = true
+          if (d.status) {
+            this.handleAIStatusResponse(d)
           }
         }).catch(() => {})
+      },
+      handleAIStatusResponse (d) {
+        if (d.remaining !== undefined) {
+          this.aiRemaining = d.remaining
+        }
+        // 只有"之前在轮询中、刚刚才出结果"才自动弹窗；页面加载时发现早就诊断完成的历史记录不弹窗
+        const wasPending = this.aiStatus === 'pending'
+        if (d.status === 'success') {
+          clearTimeout(this.aiPollTimer)
+          this.aiStatus = 'success'
+          this.aiDiagnosis = d.result
+          if (wasPending) {
+            this.aiModalVisible = true
+          }
+        } else if (d.status === 'failed') {
+          clearTimeout(this.aiPollTimer)
+          this.aiStatus = 'failed'
+          this.aiError = d.error || 'AI 诊断失败，请重试'
+        } else {
+          // pending：继续轮询，刷新页面后也会从这里自动恢复
+          this.aiStatus = 'pending'
+          this.pollAIDiagnosis()
+        }
+      },
+      pollAIDiagnosis () {
+        clearTimeout(this.aiPollTimer)
+        this.aiPollTimer = setTimeout(() => {
+          api.getAIDiagnosis(this.submission.id).then(res => {
+            this.handleAIStatusResponse(res.data.data)
+          }, () => {
+            this.pollAIDiagnosis()
+          })
+        }, 2000)
       },
       openTCDetail (index) {
         this.tcModalIndex = index
@@ -280,21 +316,20 @@
       },
       runAIDiagnosis () {
         // 已有诊断：直接看缓存，不再请求、不扣次数
-        if (this.aiHasResult) {
+        if (this.aiStatus === 'success') {
           this.aiModalVisible = true
           return
         }
-        this.aiLoading = true
+        if (this.aiStatus === 'pending') {
+          return
+        }
+        this.aiError = ''
+        this.aiStatus = 'pending'
         api.requestAIDiagnosis(this.submission.id).then(res => {
-          this.aiLoading = false
-          this.aiDiagnosis = res.data.data.result
-          this.aiHasResult = true
-          if (res.data.data.remaining !== undefined) {
-            this.aiRemaining = res.data.data.remaining
-          }
-          this.aiModalVisible = true
-        }, () => {
-          this.aiLoading = false
+          this.handleAIStatusResponse(res.data.data)
+        }, (err) => {
+          this.aiStatus = 'failed'
+          this.aiError = (err.data && err.data.data) || 'AI 诊断请求失败'
         })
       }
     },
@@ -320,6 +355,12 @@
       },
       aiDiagnosisHtml () {
         return this.aiDiagnosis ? marked(this.aiDiagnosis) : ''
+      },
+      aiButtonText () {
+        if (this.aiStatus === 'success') return '查看已生成的 AI 诊断'
+        if (this.aiStatus === 'pending') return 'AI 诊断中...'
+        if (this.aiStatus === 'failed') return '重新诊断'
+        return 'AI 诊断'
       },
       isAdminRole () {
         return this.$store.getters.isAdminRole

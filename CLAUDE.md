@@ -310,6 +310,29 @@ docker-compose up -d --no-deps oj-backend
 
 ---
 
+## 生产环境部署（另一台独立服务器，重要）
+
+**开发机（本机 `E:\QingDaoOJ`）不是生产环境**，只是开发/构建机。真正对学生提供服务的是**另一台 Windows Server 2016 物理机**（`<内网IP，见本地私有笔记>`，Hyper-V 里跑了一个 Ubuntu 虚拟机 `<虚拟机IP，见本地私有笔记>`，OJ 部署在虚拟机里）。两台机器**不在同一局域网**，这里的 Claude Code 连不过去，只能 RDP 操作 Server + 网盘中转文件。
+
+**要往生产环境部署改动之前，先看这几份文件**：
+
+| 文件 | 内容 |
+|------|------|
+| `系统迁移.md` | 生产服务器的完整搭建过程、踩过的坑（网络/Docker 镜像拉取失败/文件权限）、关键 IP 和账号信息 |
+| `OnlineJudgeDeploy/README_Windows_Server_2016部署.md` | 迁移前写的操作手册（Hyper-V/虚拟机/Docker 安装步骤） |
+| `docker-images-export/VERSIONS.md` | `oj-backend-custom` 镜像的版本记录，导出新版本前先看这里确认下一个版本号该编几 |
+
+**日常增量部署流程**（不是重新搭机器，只是把改动同步过去）：
+1. 开发机按上面"构建说明"重新 build 出 `oj-backend-custom:latest`
+2. 导出：`docker save oj-backend-custom:latest -o docker-images-export/oj-backend-custom-v<N>-<日期>.tar`（先看 `VERSIONS.md` 确认 `<N>`，导出后记得在该文件里补一行）
+3. tar 文件走网盘中转传到 Windows Server → 拖进 Ubuntu 虚拟机
+4. 虚拟机里：**先 `pg_dump -Fc` 备份生产数据库**（有真实学生数据），再 `docker load -i` 导入新镜像，`docker compose up -d --no-deps oj-backend` 重启——容器 `entrypoint.sh` 自带 `migrate --no-input`，新 migration 会在重启时自动应用，不用手动再跑
+5. `docker compose ps` / `docker compose logs oj-backend` 确认 4 个容器都健康，浏览器实测一遍改动的功能
+
+`redis` / `postgres` / `oj-judge` 三个镜像版本没有变过，一般只需要传 `oj-backend-custom` 这一个（它把后端代码 + 前端 `dist` 都打包在一起了，改前端也只需要传这一个镜像）。
+
+---
+
 ## 数据迁移记录
 
 从旧系统（`OnlineJudgeDeploy (旧系统，包括数据)`）迁移：

@@ -62,34 +62,42 @@
       </div>
     </Modal>
 
+    <div class="section-title">学籍信息</div>
+    <div class="enrollment-info">
+      <span class="enrollment-item">身份：{{ identityText }}</span>
+      <span class="enrollment-item">年级：{{ enrollment.grade ? enrollment.grade + '年级' : '未设置' }}</span>
+      <span class="enrollment-item">班级：{{ enrollment.class_name || '未设置' }}</span>
+      <span class="enrollment-tip">如需修改身份/年级/班级，请联系管理员</span>
+    </div>
+
     <div class="section-title">{{$t('m.Profile_Setting')}}</div>
     <Form ref="formProfile" :model="formProfile">
       <Row type="flex" :gutter="30" justify="space-around">
         <Col :span="11">
-          <FormItem label="Real Name">
+          <FormItem label="真实姓名">
             <Input v-model="formProfile.real_name"/>
           </FormItem>
-          <Form-item label="School">
+          <Form-item label="学校">
             <Input v-model="formProfile.school"/>
           </Form-item>
-          <Form-item label="Major">
+          <Form-item label="专业">
             <Input v-model="formProfile.major"/>
           </Form-item>
-          <FormItem label="Language">
+          <FormItem label="语言">
             <Select v-model="formProfile.language">
               <Option v-for="lang in languages" :key="lang.value" :value="lang.value">{{lang.label}}</Option>
             </Select>
           </FormItem>
           <Form-item>
-            <Button type="primary" @click="updateProfile" :loading="loadingSaveBtn">Save All</Button>
+            <Button type="primary" @click="updateProfile" :loading="loadingSaveBtn">保存</Button>
           </Form-item>
         </Col>
 
         <Col :span="11">
-          <Form-item label="Mood">
+          <Form-item label="个性签名">
             <Input v-model="formProfile.mood"/>
           </Form-item>
-          <Form-item label="Blog">
+          <Form-item label="博客">
             <Input v-model="formProfile.blog"/>
           </Form-item>
           <Form-item label="Github">
@@ -133,6 +141,11 @@
           school: '',
           github: '',
           language: ''
+        },
+        enrollment: {
+          identity: '',
+          grade: null,
+          class_name: ''
         }
       }
     },
@@ -143,6 +156,9 @@
           this.formProfile[element] = profile[element]
         }
       })
+      this.enrollment.identity = profile.identity
+      this.enrollment.grade = profile.grade
+      this.enrollment.class_name = profile.class_name
     },
     methods: {
       checkFileType (file) {
@@ -243,6 +259,11 @@
           'height': this.preview.h + 'px',
           'overflow': 'hidden'
         }
+      },
+      identityText () {
+        if (this.enrollment.identity === 'student') return '学生'
+        if (this.enrollment.identity === 'teacher') return '教师'
+        return '未设置'
       }
     }
   }
@@ -256,6 +277,18 @@
   .copper-img {
     width: 400px;
     height: 300px;
+  }
+
+  .enrollment-info {
+    margin-bottom: 20px;
+    .enrollment-item {
+      margin-right: 24px;
+      color: #515a6e;
+    }
+    .enrollment-tip {
+      color: #999;
+      font-size: 12px;
+    }
   }
 
   .flex-container {

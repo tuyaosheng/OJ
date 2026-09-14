@@ -363,7 +363,11 @@ export default {
   deleteIPBinding (id) { return ajax('admin/ip_binding', 'delete', { params: { id } }) },
   getAIDiagnosisConfig () { return ajax('admin/ai_diagnosis/config', 'get') },
   setAIDiagnosisConfig (data) { return ajax('admin/ai_diagnosis/config', 'post', { data }) },
-  getAIDiagnosisList (params) { return ajax('admin/ai_diagnosis/list', 'get', { params }) }
+  getAIDiagnosisList (params) { return ajax('admin/ai_diagnosis/list', 'get', { params }) },
+  getAIDiagnosisInProgress () { return ajax('admin/ai_diagnosis/in_progress', 'get') },
+  clearAIDiagnosisInProgress (id) { return ajax('admin/ai_diagnosis/in_progress', 'delete', { params: { id } }) },
+  // 已有班级列表，用于编辑用户弹窗里班级输入的联想
+  getClassNameList () { return ajax('class_name_list', 'get') }
 }
 
 /**

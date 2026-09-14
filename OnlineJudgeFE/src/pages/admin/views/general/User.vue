@@ -252,8 +252,8 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item :label="$t('m.User_Email')" required>
-              <el-input v-model="user.email"></el-input>
+            <el-form-item :label="$t('m.User_Email')">
+              <el-input v-model="user.email" placeholder="选填，新版注册不强制填邮箱"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -277,6 +277,27 @@
                 <el-option label="Own" value="Own"></el-option>
                 <el-option label="All" value="All"></el-option>
               </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="身份">
+              <el-select v-model="user.identity" placeholder="未设置" clearable>
+                <el-option label="学生" value="student"></el-option>
+                <el-option label="教师" value="teacher"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="年级">
+              <el-select v-model="user.grade" placeholder="未设置" clearable style="width:100%;">
+                <el-option v-for="g in [1,2,3,4,5,6,7,8]" :key="g" :label="`${g}年级`" :value="g"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="班级">
+              <el-autocomplete v-model="user.class_name" :fetch-suggestions="queryClassName"
+                               placeholder="如：计算机2301班" style="width:100%;"></el-autocomplete>
             </el-form-item>
           </el-col>
           <el-col :span="8">
@@ -359,13 +380,24 @@
           number_from: 0,
           number_to: 0,
           password_length: 8
-        }
+        },
+        classNameOptions: []
       }
     },
     mounted () {
       this.getUserList(1)
+      api.getClassNameList().then(res => {
+        this.classNameOptions = res.data.data
+      }, () => {})
     },
     methods: {
+      // 班级输入框联想，减少同一个班被打成好几种写法
+      queryClassName (queryString, callback) {
+        const results = this.classNameOptions
+          .filter(name => !queryString || name.includes(queryString))
+          .map(name => ({ value: name }))
+        callback(results)
+      },
       // 切换页码回调
       currentChange (page) {
         this.currentPage = page
@@ -373,6 +405,10 @@
       },
       // 提交修改用户的信息
       saveUser () {
+        // el-select 的 clearable 清空后会把值置为空字符串，年级是整数字段，空字符串要转成 null 再提交
+        if (this.user.grade === '') {
+          this.user.grade = null
+        }
         api.editUser(this.user).then(res => {
           // 更新列表
           this.getUserList(this.currentPage)

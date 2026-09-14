@@ -12,7 +12,7 @@ from utils.api.tests import APIClient, APITestCase
 from utils.shortcuts import rand_str
 from options.options import SysOptions
 
-from .models import AdminType, ProblemPermission, User
+from .models import AdminType, ProblemPermission, User, UserIdentity, UserProfile
 from utils.constants import ContestRuleType
 
 
@@ -176,7 +176,7 @@ class UserRegisterAPITest(CaptchaTest):
         self.captcha = rand_str(4)
 
         self.data = {"username": "test_user", "password": "testuserpassword",
-                     "real_name": "real_name", "email": "test@qduoj.com",
+                     "grade": 1, "class_name": "计算机2301班",
                      "captcha": self._set_captcha(self.client.session)}
 
     def test_website_config_limit(self):
@@ -197,21 +197,53 @@ class UserRegisterAPITest(CaptchaTest):
         response = self.client.post(self.register_url, data=self.data)
         self.assertDictEqual(response.data, {"error": None, "data": "Succeeded"})
 
+    def test_register_sets_student_identity_grade_class(self):
+        # 注册流程不采集邮箱，但应该把年级/班级存好、身份记成学生
+        self.test_register_with_correct_info()
+        user = User.objects.get(username="test_user")
+        self.assertIsNone(user.email)
+        profile = user.userprofile
+        self.assertEqual(profile.identity, UserIdentity.STUDENT)
+        self.assertEqual(profile.grade, 1)
+        self.assertEqual(profile.class_name, "计算机2301班")
+
     def test_username_already_exists(self):
         self.test_register_with_correct_info()
 
         self.data["captcha"] = self._set_captcha(self.client.session)
-        self.data["email"] = "test1@qduoj.com"
         response = self.client.post(self.register_url, data=self.data)
         self.assertDictEqual(response.data, {"error": "error", "data": "Username already exists"})
 
-    def test_email_already_exists(self):
-        self.test_register_with_correct_info()
+    def test_race_condition_returns_friendly_error_not_500(self):
+        # 并发注册：两个请求前后脚都通过了 exists() 检查，第二个落到唯一约束上，
+        # 应该被 IntegrityError 兜住返回友好提示，而不是让 500 抛出来
+        User.objects.create(username=self.data["username"])
+        with mock.patch("account.views.oj.User.objects.filter") as mock_filter:
+            mock_filter.return_value.exists.return_value = False
+            response = self.client.post(self.register_url, data=self.data)
+        self.assertDictEqual(response.data, {"error": "error", "data": "Username already exists"})
+        self.assertEqual(User.objects.filter(username=self.data["username"]).count(), 1)
 
-        self.data["captcha"] = self._set_captcha(self.client.session)
-        self.data["username"] = "test_user1"
-        response = self.client.post(self.register_url, data=self.data)
-        self.assertDictEqual(response.data, {"error": "error", "data": "Email already exists"})
+
+class ClassNameListAPITest(APITestCase):
+    def setUp(self):
+        self.url = self.reverse("class_name_list_api")
+
+    def test_list_distinct_class_names_ordered_by_frequency(self):
+        for i in range(3):
+            u = self.create_user(f"s{i}", "pass123", login=False)
+            u.userprofile.class_name = "计算机2301班"
+            u.userprofile.save()
+        u2 = self.create_user("s3", "pass123", login=False)
+        u2.userprofile.class_name = "计算机2302班"
+        u2.userprofile.save()
+        u3 = self.create_user("s4", "pass123", login=False)
+        u3.userprofile.class_name = ""
+        u3.userprofile.save()
+
+        resp = self.client.get(self.url)
+        self.assertSuccess(resp)
+        self.assertEqual(resp.data["data"], ["计算机2301班", "计算机2302班"])
 
 
 class SessionManagementAPITest(APITestCase):
@@ -599,6 +631,48 @@ class AdminUserTest(APITestCase):
         self.assertSuccess(resp)
         self.assertEqual(User.objects.all().count(), 2)
 
+    def test_import_users_sets_student_identity(self):
+        # 批量导入的账号应该被视为学生，这样才会出现在身份筛选/批量升年级里
+        self.test_import_users()
+        user = User.objects.get(username="user1")
+        self.assertEqual(user.userprofile.identity, UserIdentity.STUDENT)
+
+    def test_edit_user_without_email(self):
+        # 新注册流程不收集邮箱，管理员编辑这些账号时 email 必须允许为空
+        data = dict(self.data)
+        data["email"] = None
+        response = self.client.put(self.url, data=data)
+        self.assertSuccess(response)
+        self.assertIsNone(User.objects.get(id=self.regular_user.id).email)
+
+    def test_edit_two_users_with_blank_email_no_false_conflict(self):
+        # 两个都没填邮箱的账号不应该互相报"邮箱已存在"
+        data = dict(self.data)
+        data["email"] = None
+        response = self.client.put(self.url, data=data)
+        self.assertSuccess(response)
+
+        other = self.create_user(username="other_user", password="test123", login=False)
+        data2 = dict(self.data)
+        data2["id"] = other.id
+        data2["username"] = "other_user"
+        data2["email"] = None
+        response2 = self.client.put(self.url, data=data2)
+        self.assertSuccess(response2)
+
+    def test_edit_user_identity_grade_class_name(self):
+        # 管理员应该能在编辑弹窗里修正学生的年级/班级/身份
+        data = dict(self.data)
+        data["identity"] = UserIdentity.STUDENT
+        data["grade"] = 3
+        data["class_name"] = "计算机2301班"
+        response = self.client.put(self.url, data=data)
+        self.assertSuccess(response)
+        profile = UserProfile.objects.get(user_id=self.regular_user.id)
+        self.assertEqual(profile.identity, UserIdentity.STUDENT)
+        self.assertEqual(profile.grade, 3)
+        self.assertEqual(profile.class_name, "计算机2301班")
+
 
 class GenerateUserAPITest(APITestCase):
     def setUp(self):
@@ -628,6 +702,29 @@ class GenerateUserAPITest(APITestCase):
         resp = self.client.post(self.url, data=self.data)
         self.assertSuccess(resp)
         mock_workbook.assert_called()
+
+    @mock.patch("account.views.admin.xlsxwriter.Workbook")
+    def test_generate_user_sets_student_identity(self, mock_workbook):
+        # 批量生成的考试机账号应该被视为学生，这样才会出现在身份筛选/批量升年级里
+        resp = self.client.post(self.url, data=self.data)
+        self.assertSuccess(resp)
+        user = User.objects.get(username="pre100suf")
+        self.assertEqual(user.userprofile.identity, UserIdentity.STUDENT)
+
+
+class CreateTeacherAPITest(APITestCase):
+    def setUp(self):
+        self.create_super_admin()
+        self.url = self.reverse("create_teacher_api")
+        self.data = {"username": "teacher1", "password": "test123", "real_name": "teacher_name"}
+
+    def test_create_teacher_gets_admin_role(self):
+        # 教师账号必须拿到后台访问权限，否则打不开 AI 诊断记录/章节管理等 admin_role_required 接口
+        resp = self.client.post(self.url, data=self.data)
+        self.assertSuccess(resp)
+        user = User.objects.get(username="teacher1")
+        self.assertTrue(user.is_admin_role())
+        self.assertEqual(user.userprofile.identity, UserIdentity.TEACHER)
 
 
 class OpenAPIAppkeyAPITest(APITestCase):

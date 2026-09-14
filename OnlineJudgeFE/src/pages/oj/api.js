@@ -41,6 +41,10 @@ export default {
       data
     })
   },
+  // 已有班级列表，用于注册页班级输入的联想，减少同一个班打成好几种写法
+  getClassNameList () {
+    return ajax('class_name_list', 'get')
+  },
   logout () {
     return ajax('logout', 'get')
   },

@@ -1,6 +1,5 @@
 import ipaddress
 
-import requests
 from django.db import IntegrityError
 from django.utils import timezone
 
@@ -14,10 +13,12 @@ from utils.api import APIView, validate_serializer
 from utils.cache import cache
 from utils.captcha import Captcha
 from utils.throttling import TokenBucket
-from ..models import Submission, AICodeDiagnosis, JudgeStatus
+from ..ai_diagnosis import AI_DIAGNOSABLE_RESULTS, resolve_stale_diagnosis
+from ..models import Submission, AICodeDiagnosis, AIDiagnosisStatus, JudgeStatus
 from ..serializers import (CreateSubmissionSerializer, SubmissionModelSerializer,
                            ShareSubmissionSerializer)
 from ..serializers import SubmissionSafeModelSerializer, SubmissionListSerializer
+from ..tasks import ai_diagnosis_task
 
 
 class SubmissionAPI(APIView):
@@ -207,126 +208,37 @@ class SubmissionExistsAPI(APIView):
                                                       user_id=request.user.id).exists())
 
 
-# 可被诊断的（非 AC 的已判完）结果
-AI_DIAGNOSABLE_RESULTS = {
-    JudgeStatus.COMPILE_ERROR,
-    JudgeStatus.WRONG_ANSWER,
-    JudgeStatus.CPU_TIME_LIMIT_EXCEEDED,
-    JudgeStatus.REAL_TIME_LIMIT_EXCEEDED,
-    JudgeStatus.MEMORY_LIMIT_EXCEEDED,
-    JudgeStatus.RUNTIME_ERROR,
-    JudgeStatus.PARTIALLY_ACCEPTED,
-}
-
-RESULT_TEXT = {
-    JudgeStatus.COMPILE_ERROR: "编译错误(Compile Error)",
-    JudgeStatus.WRONG_ANSWER: "答案错误(Wrong Answer)",
-    JudgeStatus.CPU_TIME_LIMIT_EXCEEDED: "运行超时(Time Limit Exceeded)",
-    JudgeStatus.REAL_TIME_LIMIT_EXCEEDED: "运行超时(Time Limit Exceeded)",
-    JudgeStatus.MEMORY_LIMIT_EXCEEDED: "内存超限(Memory Limit Exceeded)",
-    JudgeStatus.RUNTIME_ERROR: "运行错误(Runtime Error)",
-    JudgeStatus.PARTIALLY_ACCEPTED: "部分正确(Partially Accepted)",
-}
-
-
-def build_diagnosis_prompt(submission):
-    problem = submission.problem
-    result_text = RESULT_TEXT.get(submission.result, "未通过")
-    err_info = submission.statistic_info.get("err_info") if submission.statistic_info else None
-
-    # 统计未通过的测试点（不泄露测试数据，仅给序号）
-    failed_cases = []
-    if isinstance(submission.info, dict):
-        for item in submission.info.get("data", []) or []:
-            if item.get("result") not in (None, JudgeStatus.ACCEPTED):
-                failed_cases.append(str(item.get("test_case", "?")))
-
-    parts = [
-        "# 题目",
-        f"标题：{problem.title}",
-        "",
-        "题目描述：",
-        problem.description or "",
-    ]
-    if problem.input_description:
-        parts += ["", "输入描述：", problem.input_description]
-    if problem.output_description:
-        parts += ["", "输出描述：", problem.output_description]
-    if problem.samples:
-        parts.append("\n样例：")
-        for i, s in enumerate(problem.samples, 1):
-            parts.append(f"样例{i} 输入：\n{s.get('input', '')}\n样例{i} 输出：\n{s.get('output', '')}")
-
-    parts += [
-        "",
-        "# 学生提交",
-        f"编程语言：{submission.language}",
-        f"判题结果：{result_text}",
-    ]
-    if failed_cases:
-        parts.append(f"未通过的测试点编号：{', '.join(failed_cases)}")
-    if err_info:
-        parts += ["", "错误/编译信息：", str(err_info)[:2000]]
-    parts += [
-        "",
-        "学生代码：",
-        f"```\n{submission.code}\n```",
-    ]
-    return "\n".join(parts)
-
-
-AI_SYSTEM_PROMPT = (
-    "你是一名编程教学助教，面向高校学生。学生提交的代码未通过判题，"
-    "请基于题目、判题结果和学生代码，用中文分析错误原因并给出修改方向。要求：\n"
-    "1. 明确指出最可能的 bug 所在（逻辑错误、边界、溢出、初始化、复杂度等），并说明为什么；\n"
-    "2. 给出修正思路或关键提示，可给出小段伪代码或关键代码行，但不要直接给出整道题的完整正确代码，保留学生独立完成的空间；\n"
-    "3. 语气鼓励、简洁，用 Markdown 分点表述。"
-)
-
-
-def call_openai_compatible(api_config, system_prompt, user_prompt):
-    api_base = (api_config.get("api_base") or "").rstrip("/")
-    api_key = api_config.get("api_key") or ""
-    model = api_config.get("model") or ""
-    if not api_base or not api_key or not model:
-        raise ValueError("AI 接口未配置完整，请联系管理员")
-
-    url = f"{api_base}/chat/completions"
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    payload = {
-        "model": model,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-        "temperature": 0.3,
-        "stream": False,
-    }
-    resp = requests.post(url, json=payload, headers=headers, timeout=60)
-    resp.raise_for_status()
-    data = resp.json()
-    return data["choices"][0]["message"]["content"]
+def _ai_diagnosis_remaining(user):
+    if user.is_admin_role():
+        return SysOptions.ai_daily_limit
+    used = AICodeDiagnosis.objects.filter(user_id=user.id,
+                                          create_time__date=timezone.localdate()).count()
+    return max(SysOptions.ai_daily_limit - used, 0)
 
 
 class AICodeDiagnosisAPI(APIView):
     @login_required
     def get(self, request):
-        """返回本人某条提交已有的诊断结果 + 剩余可用次数"""
-        result = None
+        """返回本人某条提交已有的诊断状态/结果 + 剩余可用次数，供前端轮询"""
+        status, result, error = None, None, None
         submission_id = request.GET.get("submission_id")
         if submission_id:
             diagnosis = AICodeDiagnosis.objects.filter(submission_id=submission_id).first()
-            # 本人或管理员可查看已生成的诊断（与 POST 缓存逻辑一致）
+            # 本人或管理员可查看该提交的诊断状态（与 POST 缓存逻辑一致）
             if diagnosis and (diagnosis.user_id == request.user.id or request.user.is_admin_role()):
-                result = diagnosis.result
-        limit = SysOptions.ai_daily_limit
-        used = AICodeDiagnosis.objects.filter(user_id=request.user.id,
-                                              create_time__date=timezone.localdate()).count()
+                diagnosis = resolve_stale_diagnosis(diagnosis)
+                status = diagnosis.status
+                if diagnosis.status == AIDiagnosisStatus.SUCCESS:
+                    result = diagnosis.result
+                elif diagnosis.status == AIDiagnosisStatus.FAILED:
+                    error = diagnosis.error
         return self.success({
             "enabled": SysOptions.ai_diagnosis_enabled,
+            "status": status,
             "result": result,
-            "daily_limit": limit,
-            "remaining": max(limit - used, 0),
+            "error": error,
+            "daily_limit": SysOptions.ai_daily_limit,
+            "remaining": _ai_diagnosis_remaining(request.user),
             "allowed_results": SysOptions.ai_allowed_results,
         })
 
@@ -356,12 +268,19 @@ class AICodeDiagnosisAPI(APIView):
         if submission.result not in set(SysOptions.ai_allowed_results or []):
             return self.error("该类型的提交未开放 AI 诊断")
 
-        # 已诊断过：直接返回缓存，不消耗次数
         existing = AICodeDiagnosis.objects.filter(submission_id=submission.id).first()
         if existing:
-            return self.success({"result": existing.result, "cached": True})
+            existing = resolve_stale_diagnosis(existing)
+            if existing.status == AIDiagnosisStatus.SUCCESS:
+                # 已诊断过：直接返回缓存，不消耗次数
+                return self.success({"status": "success", "result": existing.result, "cached": True})
+            if existing.status == AIDiagnosisStatus.PENDING:
+                # 已经在后台跑了（比如刷新页面后重新点击）：不要重复发起，让前端继续轮询
+                return self.success({"status": "pending"})
+            # 上次失败：允许重新发起，删掉旧记录后走下面的新建流程
+            existing.delete()
 
-        # 限流：管理员不限，学生按天计数
+        # 限流：管理员不限，学生按天计数（pending 状态也占用当天次数，防止靠反复点击绕过限流）
         limit = SysOptions.ai_daily_limit
         if not request.user.is_admin_role():
             used = AICodeDiagnosis.objects.filter(user_id=request.user.id,
@@ -370,33 +289,16 @@ class AICodeDiagnosisAPI(APIView):
                 return self.error(f"今日 AI 诊断次数已用完（上限 {limit} 次）")
 
         try:
-            content = call_openai_compatible(SysOptions.ai_api_config,
-                                             AI_SYSTEM_PROMPT,
-                                             build_diagnosis_prompt(submission))
-        except ValueError as e:
-            return self.error(str(e))
-        except requests.RequestException:
-            return self.error("AI 服务调用失败，请稍后重试或联系管理员")
-        except (KeyError, IndexError):
-            return self.error("AI 服务返回异常，请联系管理员检查接口配置")
-
-        try:
             diagnosis = AICodeDiagnosis.objects.create(submission=submission,
                                                        problem=submission.problem,
                                                        user_id=submission.user_id,
                                                        username=submission.username,
                                                        submission_result=submission.result,
-                                                       result=content)
+                                                       status=AIDiagnosisStatus.PENDING)
         except IntegrityError:
-            # 同一条提交被并发重复诊断（如多标签页同时点击）：另一个请求已抢先写入，直接返回其结果当缓存
-            existing = AICodeDiagnosis.objects.filter(submission_id=submission.id).first()
-            if existing:
-                return self.success({"result": existing.result, "cached": True})
-            raise
+            # 同一条提交被并发重复诊断（如多标签页同时点击）：另一个请求已抢先创建，让前端轮询它的结果
+            return self.success({"status": "pending"})
 
-        remaining = limit
-        if not request.user.is_admin_role():
-            used = AICodeDiagnosis.objects.filter(user_id=request.user.id,
-                                                  create_time__date=timezone.localdate()).count()
-            remaining = max(limit - used, 0)
-        return self.success({"result": diagnosis.result, "cached": False, "remaining": remaining})
+        # 真正调用大模型的耗时操作放到后台任务里跑，接口立即返回，避免请求被代理/客户端超时掐断
+        ai_diagnosis_task.send(diagnosis.id)
+        return self.success({"status": "pending", "remaining": _ai_diagnosis_remaining(request.user)})

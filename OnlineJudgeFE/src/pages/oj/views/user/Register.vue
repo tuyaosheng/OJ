@@ -13,10 +13,10 @@
       </Select>
     </FormItem>
     <FormItem prop="class_name">
-      <Input type="text" v-model="formRegister.class_name"
-             placeholder="班级（如：计算机2301班）" size="large" @on-enter="handleRegister">
-        <Icon type="ios-school-outline" slot="prepend"></Icon>
-      </Input>
+      <AutoComplete v-model="formRegister.class_name" :data="classNameOptions"
+                    placeholder="班级（如：计算机2301班，可从已有班级中选择）" size="large" icon="ios-school-outline"
+                    @on-enter="handleRegister">
+      </AutoComplete>
     </FormItem>
     <FormItem prop="password">
       <Input type="password" v-model="formRegister.password"
@@ -65,6 +65,9 @@
     mixins: [FormMixin],
     mounted () {
       this.getCaptchaSrc()
+      api.getClassNameList().then(res => {
+        this.classNameOptions = res.data.data
+      }, () => {})
     },
     data () {
       const CheckUsernameNotExist = (rule, value, callback) => {
@@ -91,6 +94,7 @@
 
       return {
         btnRegisterLoading: false,
+        classNameOptions: [],
         gradeOptions: [
           { value: 1, label: '大一 / 一年级' },
           { value: 2, label: '大二 / 二年级' },

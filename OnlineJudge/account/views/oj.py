@@ -1,10 +1,12 @@
 import os
+from collections import Counter
 from datetime import timedelta
 from importlib import import_module
 
 import qrcode
 from django.conf import settings
 from django.contrib import auth
+from django.db import IntegrityError, transaction
 from django.template.loader import render_to_string
 from django.utils.decorators import method_decorator
 from django.utils.timezone import now
@@ -218,7 +220,13 @@ class UserRegisterAPI(APIView):
             return self.error("Invalid captcha")
         if User.objects.filter(username=data["username"]).exists():
             return self.error("Username already exists")
-        user = User.objects.create(username=data["username"], email=None)
+        try:
+            with transaction.atomic():
+                user = User.objects.create(username=data["username"], email=None)
+        except IntegrityError:
+            # 并发注册撞了唯一约束：上面的 exists() 检查存在竞态窗口。
+            # 用 savepoint 包一层，避免这条 IntegrityError 把外层事务也弄坏
+            return self.error("Username already exists")
         user.set_password(data["password"])
         user.save()
         UserProfile.objects.create(
@@ -228,6 +236,16 @@ class UserRegisterAPI(APIView):
             class_name=data["class_name"]
         )
         return self.success("Succeeded")
+
+
+class ClassNameListAPI(APIView):
+    def get(self, request):
+        """给注册页/管理端的班级输入框做联想，减少同一个班被打成好几种写法"""
+        names = UserProfile.objects.exclude(class_name__isnull=True).exclude(class_name="") \
+            .values_list("class_name", flat=True)
+        counter = Counter(names)
+        ordered = [name for name, _ in counter.most_common()]
+        return self.success(ordered)
 
 
 class UserChangeEmailAPI(APIView):

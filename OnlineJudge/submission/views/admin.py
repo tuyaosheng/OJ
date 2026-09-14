@@ -2,13 +2,15 @@ import json
 import os
 
 from django.conf import settings
+from django.utils import timezone
 
 from account.decorators import super_admin_required, admin_role_required
 from judge.tasks import judge_task
 from options.options import SysOptions
 from utils.api import APIView
 from utils.shortcuts import datetime2str
-from ..models import Submission, AICodeDiagnosis
+from ..ai_diagnosis import resolve_stale_diagnosis
+from ..models import Submission, AICodeDiagnosis, AIDiagnosisStatus
 
 
 class SubmissionRejudgeAPI(APIView):
@@ -153,7 +155,9 @@ class AIDiagnosisConfigAPI(APIView):
 class AIDiagnosisListAPI(APIView):
     @admin_role_required
     def get(self, request):
-        diagnoses = AICodeDiagnosis.objects.select_related("problem", "submission").all()
+        # 历史记录只展示已生成结果的诊断，进行中/失败的在 AIDiagnosisInProgressAPI 里单独展示
+        diagnoses = AICodeDiagnosis.objects.select_related("problem", "submission") \
+            .filter(status=AIDiagnosisStatus.SUCCESS)
         username = request.GET.get("username")
         problem_keyword = request.GET.get("problem")
         if username:
@@ -176,3 +180,35 @@ class AIDiagnosisListAPI(APIView):
             "create_time": datetime2str(d.create_time),
         } for d in data["results"]]
         return self.success(data)
+
+
+class AIDiagnosisInProgressAPI(APIView):
+    """给管理端"AI 诊断记录"页展示当前正在跑 / 失败卡住的诊断，供实时面板轮询"""
+    @admin_role_required
+    def get(self, request):
+        diagnoses = AICodeDiagnosis.objects.select_related("problem") \
+            .filter(status__in=[AIDiagnosisStatus.PENDING, AIDiagnosisStatus.FAILED])
+        diagnoses = [resolve_stale_diagnosis(d) for d in diagnoses]
+        now = timezone.now()
+        results = [{
+            "id": d.id,
+            "username": d.username,
+            "problem_id": d.problem._id,
+            "problem_title": d.problem.title,
+            "submission_result": d.submission_result,
+            "status": d.status,
+            "error": d.error,
+            "create_time": datetime2str(d.create_time),
+            "elapsed_seconds": int((now - d.create_time).total_seconds()),
+        } for d in diagnoses]
+        return self.success(results)
+
+    @admin_role_required
+    def delete(self, request):
+        """手动清除卡住的 pending / 失败记录，清除后学生端可以重新发起诊断"""
+        diagnosis_id = request.GET.get("id")
+        if not diagnosis_id:
+            return self.error("参数错误：缺少 id")
+        AICodeDiagnosis.objects.filter(id=diagnosis_id,
+                                       status__in=[AIDiagnosisStatus.PENDING, AIDiagnosisStatus.FAILED]).delete()
+        return self.success()

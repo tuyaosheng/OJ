@@ -80,10 +80,11 @@
               <Alert type="warning" show-icon>{{$t('m.Contest_has_ended')}}</Alert>
             </div>
             <div v-if="canDiagnose" class="ai-diagnosis-entry">
-              <Button type="info" size="small" icon="ios-lightbulb-outline"
-                      :loading="aiLoading" @click="runAIDiagnosis">
-                AI 诊断
+              <Button :type="aiStatus === 'success' ? 'success' : 'info'" size="small" icon="ios-lightbulb-outline"
+                      :loading="aiStatus === 'pending'" @click="runAIDiagnosis">
+                {{ aiButtonText }}
               </Button>
+              <span v-if="aiStatus === 'failed'" class="ai-remaining ai-error">{{aiError}}，可重新尝试</span>
               <span v-if="aiRemaining !== null" class="ai-remaining">今日剩余 {{aiRemaining}} 次</span>
             </div>
           </Col>
@@ -270,8 +271,10 @@
         graphVisible: false,
         videoVisible: false,
         aiModalVisible: false,
-        aiLoading: false,
+        aiStatus: null,
         aiDiagnosis: '',
+        aiError: '',
+        aiPollTimer: null,
         aiRemaining: null,
         aiEnabled: false,
         aiAllowedResults: [],
@@ -338,6 +341,9 @@
           if (sessions.length > 0) this.classSessionId = sessions[0].id
         }).catch(() => {})
       }
+    },
+    beforeDestroy () {
+      clearTimeout(this.aiPollTimer)
     },
     methods: {
       ...mapActions(['changeDomTitle']),
@@ -475,6 +481,10 @@
         this.submissionId = ''
         this.result = {result: 9}
         this.submitting = true
+        clearTimeout(this.aiPollTimer)
+        this.aiStatus = null
+        this.aiDiagnosis = ''
+        this.aiError = ''
         let data = {
           problem_id: this.problem.id,
           language: this.language,
@@ -557,22 +567,59 @@
           this.aiEnabled = d.enabled
           this.aiAllowedResults = d.allowed_results || []
           this.aiRemaining = d.remaining
+          if (d.status) {
+            this.handleAIStatusResponse(d)
+          }
         }).catch(() => {})
       },
+      handleAIStatusResponse (d) {
+        if (d.remaining !== undefined) {
+          this.aiRemaining = d.remaining
+        }
+        // 只有"之前在轮询中、刚刚才出结果"才自动弹窗；页面加载时发现早就诊断完成的历史记录不弹窗
+        const wasPending = this.aiStatus === 'pending'
+        if (d.status === 'success') {
+          clearTimeout(this.aiPollTimer)
+          this.aiStatus = 'success'
+          this.aiDiagnosis = d.result
+          if (wasPending) {
+            this.aiModalVisible = true
+          }
+        } else if (d.status === 'failed') {
+          clearTimeout(this.aiPollTimer)
+          this.aiStatus = 'failed'
+          this.aiError = d.error || 'AI 诊断失败，请重试'
+        } else {
+          // pending：继续轮询，刷新页面后也会从这里自动恢复
+          this.aiStatus = 'pending'
+          this.pollAIDiagnosis()
+        }
+      },
+      pollAIDiagnosis () {
+        clearTimeout(this.aiPollTimer)
+        this.aiPollTimer = setTimeout(() => {
+          api.getAIDiagnosis(this.submissionId).then(res => {
+            this.handleAIStatusResponse(res.data.data)
+          }, () => {
+            this.pollAIDiagnosis()
+          })
+        }, 2000)
+      },
       runAIDiagnosis () {
-        if (!this.submissionId) {
+        if (!this.submissionId || this.aiStatus === 'pending') {
           return
         }
-        this.aiLoading = true
-        api.requestAIDiagnosis(this.submissionId).then(res => {
-          this.aiLoading = false
-          this.aiDiagnosis = res.data.data.result
-          if (res.data.data.remaining !== undefined) {
-            this.aiRemaining = res.data.data.remaining
-          }
+        if (this.aiStatus === 'success') {
           this.aiModalVisible = true
-        }, () => {
-          this.aiLoading = false
+          return
+        }
+        this.aiError = ''
+        this.aiStatus = 'pending'
+        api.requestAIDiagnosis(this.submissionId).then(res => {
+          this.handleAIStatusResponse(res.data.data)
+        }, (err) => {
+          this.aiStatus = 'failed'
+          this.aiError = (err.data && err.data.data) || 'AI 诊断请求失败'
         })
       }
     },
@@ -606,6 +653,12 @@
       },
       aiDiagnosisHtml () {
         return this.aiDiagnosis ? marked(this.aiDiagnosis) : ''
+      },
+      aiButtonText () {
+        if (this.aiStatus === 'success') return '查看已生成的 AI 诊断'
+        if (this.aiStatus === 'pending') return 'AI 诊断中...'
+        if (this.aiStatus === 'failed') return '重新诊断'
+        return 'AI 诊断'
       },
       submissionRoute () {
         if (this.contestID) {
@@ -722,6 +775,9 @@
         margin-left: 10px;
         font-size: 12px;
         color: #999;
+      }
+      .ai-error {
+        color: #ed4014;
       }
     }
   }

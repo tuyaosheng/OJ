@@ -35,7 +35,8 @@ class UserAdminAPI(APIView):
         try:
             with transaction.atomic():
                 ret = User.objects.bulk_create(user_list)
-                UserProfile.objects.bulk_create([UserProfile(user=ret[i], real_name=data[i][3]) for i in range(len(ret))])
+                UserProfile.objects.bulk_create([UserProfile(user=ret[i], real_name=data[i][3],
+                                                             identity=UserIdentity.STUDENT) for i in range(len(ret))])
             return self.success()
         except IntegrityError as e:
             # Extract detail from exception message
@@ -56,12 +57,14 @@ class UserAdminAPI(APIView):
             return self.error("User does not exist")
         if User.objects.filter(username=data["username"].lower()).exclude(id=user.id).exists():
             return self.error("Username already exists")
-        if User.objects.filter(email=data["email"].lower()).exclude(id=user.id).exists():
+        # 新版注册流程不收集邮箱，学生/教师账号可能一直没有邮箱，空邮箱不参与去重校验
+        new_email = data["email"].lower() if data["email"] else None
+        if new_email and User.objects.filter(email=new_email).exclude(id=user.id).exists():
             return self.error("Email already exists")
 
         pre_username = user.username
         user.username = data["username"].lower()
-        user.email = data["email"].lower()
+        user.email = new_email
         user.admin_type = data["admin_type"]
         user.is_disabled = data["is_disabled"]
 
@@ -96,7 +99,10 @@ class UserAdminAPI(APIView):
         if pre_username != user.username:
             Submission.objects.filter(username=pre_username).update(username=user.username)
 
-        UserProfile.objects.filter(user=user).update(real_name=data["real_name"])
+        UserProfile.objects.filter(user=user).update(real_name=data["real_name"],
+                                                     identity=data["identity"],
+                                                     grade=data["grade"],
+                                                     class_name=data["class_name"])
         return self.success(UserAdminSerializer(user).data)
 
     @super_admin_required
@@ -188,7 +194,7 @@ class GenerateUserAPI(APIView):
             with transaction.atomic():
 
                 ret = User.objects.bulk_create(user_list)
-                UserProfile.objects.bulk_create([UserProfile(user=user) for user in ret])
+                UserProfile.objects.bulk_create([UserProfile(user=user, identity=UserIdentity.STUDENT) for user in ret])
                 for item in user_list:
                     worksheet.write_string(i, 0, item.username)
                     worksheet.write_string(i, 1, item.raw_password)
@@ -210,7 +216,8 @@ class CreateTeacherAPI(APIView):
         username = data["username"].lower()
         if User.objects.filter(username=username).exists():
             return self.error("Username already exists")
-        user = User.objects.create(username=username, email=data.get("email") or None)
+        # 教师需要能进后台看 AI 诊断记录等 admin_role_required 接口，必须是 Admin，而不是默认的 Regular User
+        user = User.objects.create(username=username, email=data.get("email") or None, admin_type=AdminType.ADMIN)
         user.set_password(data["password"])
         user.save()
         UserProfile.objects.create(

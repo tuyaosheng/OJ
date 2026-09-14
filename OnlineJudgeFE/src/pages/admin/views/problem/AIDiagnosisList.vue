@@ -1,5 +1,35 @@
 <template>
   <div>
+    <panel title="正在进行的 AI 诊断" v-if="inProgressList.length">
+      <el-table :data="inProgressList" size="small">
+        <el-table-column label="学生" prop="username" width="140"></el-table-column>
+        <el-table-column label="题目">
+          <template slot-scope="{row}">{{row.problem_id}} - {{row.problem_title}}</template>
+        </el-table-column>
+        <el-table-column label="提交结果" width="120">
+          <template slot-scope="{row}">
+            <el-tag type="danger" size="small">{{resultText(row.submission_result)}}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="状态" width="160">
+          <template slot-scope="{row}">
+            <el-tag v-if="row.status === 'pending' && row.elapsed_seconds <= staleSeconds" type="primary" size="small">
+              诊断中 · 已运行 {{row.elapsed_seconds}}s
+            </el-tag>
+            <el-tag v-else-if="row.status === 'pending'" type="warning" size="small">
+              疑似卡住 · 已运行 {{row.elapsed_seconds}}s
+            </el-tag>
+            <el-tag v-else type="danger" size="small">诊断失败</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="100">
+          <template slot-scope="{row}">
+            <el-button size="small" type="text" @click="clearInProgress(row)">清除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </panel>
+
     <panel title="AI 诊断记录">
       <div slot="header">
         <el-row :gutter="20">
@@ -122,13 +152,38 @@
         current: null,
         problemDetailVisible: false,
         problemDetailLoading: false,
-        problemDetail: null
+        problemDetail: null,
+        inProgressList: [],
+        inProgressTimer: null,
+        staleSeconds: 120
       }
     },
     mounted () {
       this.getList()
+      this.pollInProgress()
+    },
+    beforeDestroy () {
+      clearTimeout(this.inProgressTimer)
     },
     methods: {
+      pollInProgress () {
+        clearTimeout(this.inProgressTimer)
+        api.getAIDiagnosisInProgress().then(res => {
+          this.inProgressList = res.data.data
+        }, () => {}).finally(() => {
+          this.inProgressTimer = setTimeout(this.pollInProgress, 5000)
+        })
+      },
+      clearInProgress (row) {
+        this.$confirm(`确定清除「${row.username} · ${row.problem_id}」的诊断记录吗？清除后该学生可重新发起诊断。`, '提示', {
+          type: 'warning'
+        }).then(() => {
+          api.clearAIDiagnosisInProgress(row.id).then(() => {
+            this.$message.success('已清除')
+            this.pollInProgress()
+          })
+        }).catch(() => {})
+      },
       getList () {
         this.loading = true
         let params = {
