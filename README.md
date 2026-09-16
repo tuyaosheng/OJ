@@ -104,8 +104,11 @@ docker-compose up -d
 
 | 地址 | 说明 |
 |------|------|
-| http://localhost | 用户前台 |
-| http://localhost/admin | 管理后台 |
+| http://127.0.0.1 | 用户前台 |
+| http://127.0.0.1/admin | 管理后台 |
+
+> **注意**：必须用 `http://127.0.0.1`，不能用 `http://localhost`。
+> Windows 上开了 WSL2 的话，`localhost` 会解析到 IPv6，端口却监听在 IPv4，页面打不开。
 
 默认超级管理员：`root` / `rootroot`（**请立即修改**）
 
@@ -156,6 +159,7 @@ docker exec onlinejudgedeploy-oj-backend-1 python manage.py migrate
 | problem | 0017 | ClassSession / StudentActivity / IPBinding 上课模式 |
 | account | 0013 | UserProfile 加 identity / grade / class_name |
 | submission | 0013 | AICodeDiagnosis AI 代码诊断记录 |
+| submission | 0014 | AICodeDiagnosis 加 status / error，诊断改成异步任务 |
 
 ---
 
