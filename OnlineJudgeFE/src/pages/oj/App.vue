@@ -9,6 +9,7 @@
         <p v-html="website.website_footer"></p>
         <p>Powered by <a href="https://github.com/QingdaoU/OnlineJudge" target="_blank">OnlineJudge</a>
           <span v-if="version">&nbsp;· 版本 {{ version }}</span>
+          <span v-if="buildDate">&nbsp;· 更新于 {{ buildDate }}</span>
         </p>
       </div>
     </div>
@@ -27,7 +28,8 @@
     },
     data () {
       return {
-        version: process.env.VERSION
+        version: process.env.VERSION,
+        buildDate: process.env.BUILD_DATE
       }
     },
     created () {

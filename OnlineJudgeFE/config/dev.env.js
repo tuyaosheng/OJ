@@ -1,11 +1,11 @@
-let date = require('moment')().format('YYYYMMDD')
-let commit = require('child_process').execSync('git rev-parse HEAD').toString().slice(0, 5)
-let version = `"${date}-${commit}"`
+let buildDate = require('moment')().format('YYYY-MM-DD')
+let { VERSION } = require('./version')
 
-console.log(`current version is ${version}`)
+console.log(`current version is ${VERSION} (built ${buildDate})`)
 
 module.exports = {
   NODE_ENV: '"development"',
-  VERSION: version,
+  VERSION: `"${VERSION}"`,
+  BUILD_DATE: `"${buildDate}"`,
   USE_SENTRY: '0'
 }

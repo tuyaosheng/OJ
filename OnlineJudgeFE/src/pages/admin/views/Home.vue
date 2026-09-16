@@ -18,7 +18,7 @@
         <router-view></router-view>
       </transition>
       <div class="footer">
-        Build Version: {{ version }}
+        Build Version: {{ version }}<span v-if="buildDate">&nbsp;· 更新于 {{ buildDate }}</span>
       </div>
     </div>
 
@@ -41,6 +41,7 @@
     data () {
       return {
         version: process.env.VERSION,
+        buildDate: process.env.BUILD_DATE,
         katexVisible: false
       }
     },
