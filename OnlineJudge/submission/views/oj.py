@@ -8,7 +8,7 @@ from contest.models import ContestStatus, ContestRuleType
 from judge.tasks import judge_task
 from options.options import SysOptions
 # from judge.dispatcher import JudgeDispatcher
-from problem.models import Problem, ProblemRuleType
+from problem.models import Problem, ProblemRuleType, ChapterProblem
 from utils.api import APIView, validate_serializer
 from utils.cache import cache
 from utils.captcha import Captcha
@@ -137,7 +137,7 @@ class SubmissionListAPI(APIView):
         if request.GET.get("contest_id"):
             return self.error("Parameter error")
 
-        submissions = Submission.objects.filter(contest_id__isnull=True).select_related("problem__created_by")
+        submissions = Submission.objects.select_related("problem__created_by", "contest")
         problem_id = request.GET.get("problem_id")
         myself = request.GET.get("myself")
         result = request.GET.get("result")
@@ -149,14 +149,33 @@ class SubmissionListAPI(APIView):
                 return self.error("Problem doesn't exist")
             submissions = submissions.filter(problem=problem)
         if (myself and myself == "1") or not SysOptions.submission_list_show_all:
+            # 只看自己：把"练习&比赛"（contest）里的提交也算进来，反正是本人的数据，不存在泄露问题
             submissions = submissions.filter(user_id=request.user.id)
-        elif username:
-            submissions = submissions.filter(username__icontains=username)
+        else:
+            # 看全站：不含练习/比赛提交，避免把还在进行中的比赛/练习提交暴露给非参赛者
+            submissions = submissions.filter(contest_id__isnull=True)
+            if username:
+                submissions = submissions.filter(username__icontains=username)
         if result:
             submissions = submissions.filter(result=result)
         data = self.paginate_data(request, submissions)
-        data["results"] = SubmissionListSerializer(data["results"], many=True, user=request.user).data
+        chapter_titles = self._build_chapter_source_map(data["results"])
+        data["results"] = SubmissionListSerializer(data["results"], many=True, user=request.user,
+                                                    chapter_titles=chapter_titles).data
         return self.success(data)
+
+    @staticmethod
+    def _build_chapter_source_map(submissions):
+        """不属于任何比赛/练习的提交，找它所在的章节标题给"来源"列用；批量查，避免逐行查询"""
+        problem_ids = {s.problem_id for s in submissions if not s.contest_id}
+        if not problem_ids:
+            return {}
+        chapter_problems = ChapterProblem.objects.filter(problem_id__in=problem_ids) \
+            .select_related("chapter").order_by("chapter__order")
+        titles = {}
+        for cp in chapter_problems:
+            titles.setdefault(cp.problem_id, cp.chapter.title)
+        return titles
 
 
 class ContestSubmissionListAPI(APIView):

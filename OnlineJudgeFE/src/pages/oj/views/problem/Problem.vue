@@ -111,12 +111,12 @@
 
     <div id="right-column">
       <VerticalMenu @on-click="handleRoute">
-        <template v-if="this.contestID">
-          <VerticalMenu-item :route="{name: 'contest-problem-list', params: {contestID: contestID}}">
-            <Icon type="ios-photos"></Icon>
-            {{$t('m.Problems')}}
-          </VerticalMenu-item>
+        <VerticalMenu-item :route="problemListRoute">
+          <Icon type="ios-photos"></Icon>
+          {{$t('m.Problems')}}
+        </VerticalMenu-item>
 
+        <template v-if="this.contestID">
           <VerticalMenu-item :route="{name: 'contest-announcement-list', params: {contestID: contestID}}">
             <Icon type="chatbubble-working"></Icon>
             {{$t('m.Announcements')}}
@@ -510,8 +510,13 @@
             }
             this.submitted = true
             // 提交成功后跳转到该提交的状态详情页（可查看测试点通过情况）
+            // 带上 contestID，状态详情页才能渲染"返回题目列表"按钮跳回正确的列表（比赛内/比赛外）
             if (this.submissionId) {
-              this.$router.push({name: 'submission-details', params: {id: this.submissionId}})
+              this.$router.push({
+                name: 'submission-details',
+                params: {id: this.submissionId},
+                query: this.contestID ? {contestID: this.contestID} : {}
+              })
             } else {
               this.checkSubmissionStatus()
             }
@@ -665,6 +670,13 @@
           return {name: 'contest-submission-list', query: {problemID: this.problemID}}
         } else {
           return {name: 'submission-list', query: {problemID: this.problemID}}
+        }
+      },
+      problemListRoute () {
+        if (this.contestID) {
+          return {name: 'contest-problem-list', params: {contestID: this.contestID}}
+        } else {
+          return {name: 'problem-list'}
         }
       }
     },

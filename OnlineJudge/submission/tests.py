@@ -1,9 +1,21 @@
 from copy import deepcopy
+from datetime import timedelta
 from unittest import mock
 
-from problem.models import Problem, ProblemTag
+from django.utils import timezone
+
+from contest.models import Contest, ContestRuleType
+from problem.models import Problem, ProblemTag, Chapter, ChapterProblem
 from utils.api.tests import APITestCase
 from .models import Submission, AICodeDiagnosis
+
+DEFAULT_CONTEST_DATA = {"title": "test contest", "description": "test description",
+                        "start_time": timezone.localtime(timezone.now()),
+                        "end_time": timezone.localtime(timezone.now()) + timedelta(days=1),
+                        "rule_type": ContestRuleType.ACM,
+                        "password": None,
+                        "allowed_ip_ranges": [],
+                        "visible": True, "real_time_rank": True}
 
 DEFAULT_PROBLEM_DATA = {"_id": "A-110", "title": "test", "description": "<p>test</p>", "input_description": "test",
                         "output_description": "test", "time_limit": 1000, "memory_limit": 256, "difficulty": "Low",
@@ -52,9 +64,67 @@ class SubmissionListTest(SubmissionPrepare):
         self.create_user("123", "345")
         self.url = self.reverse("submission_list_api")
 
+
+class SubmissionListContestVisibilityTest(SubmissionPrepare):
+    """"练习&比赛"（contest）提交本人应该能在总状态/我的提交里看到，但不该混进公开的"全部"列表"""
+    def setUp(self):
+        self._create_problem_and_submission()
+        self.user = self.create_user("stu1", "stu123")
+        self.contest = Contest.objects.create(created_by=self.user, **DEFAULT_CONTEST_DATA)
+        self.contest_submission_data = deepcopy(DEFAULT_SUBMISSION_DATA)
+        self.contest_submission_data["problem_id"] = self.problem.id
+        self.contest_submission_data["user_id"] = self.user.id
+        self.contest_submission_data["username"] = self.user.username
+        self.contest_submission_data["contest_id"] = self.contest.id
+        self.contest_submission = Submission.objects.create(**self.contest_submission_data)
+        self.url = self.reverse("submission_list_api")
+
+    def test_myself_filter_includes_contest_submission(self):
+        resp = self.client.get(self.url, data={"limit": "10", "myself": "1"})
+        self.assertSuccess(resp)
+        ids = [r["id"] for r in resp.data["data"]["results"]]
+        self.assertIn(self.contest_submission.id, ids)
+
+    def test_contest_submission_source_is_contest_title(self):
+        resp = self.client.get(self.url, data={"limit": "10", "myself": "1"})
+        self.assertSuccess(resp)
+        row = next(r for r in resp.data["data"]["results"] if r["id"] == self.contest_submission.id)
+        self.assertEqual(row["source"], self.contest.title)
+        self.assertEqual(row["contest_id"], self.contest.id)
+
+    def test_all_submissions_excludes_contest_submission(self):
+        resp = self.client.get(self.url, data={"limit": "10"})
+        self.assertSuccess(resp)
+        ids = [r["id"] for r in resp.data["data"]["results"]]
+        self.assertNotIn(self.contest_submission.id, ids)
+
     def test_get_submission_list(self):
         resp = self.client.get(self.url, data={"limit": "10"})
         self.assertSuccess(resp)
+
+
+class SubmissionSourceFieldTest(SubmissionPrepare):
+    """状态页"来源"列：有比赛就显示比赛名，没有比赛但在章节里就显示章节名，都没有就空着"""
+    def setUp(self):
+        self._create_problem_and_submission()
+        self.create_user("viewer", "viewer123")
+        self.url = self.reverse("submission_list_api")
+
+    def test_source_falls_back_to_chapter_when_no_contest(self):
+        admin = self.problem.created_by
+        chapter = Chapter.objects.create(title="第一章 高精度计算", created_by=admin)
+        ChapterProblem.objects.create(chapter=chapter, problem=self.problem)
+
+        resp = self.client.get(self.url, data={"limit": "10"})
+        self.assertSuccess(resp)
+        row = next(r for r in resp.data["data"]["results"] if r["id"] == self.submission.id)
+        self.assertEqual(row["source"], chapter.title)
+
+    def test_source_blank_when_neither_contest_nor_chapter(self):
+        resp = self.client.get(self.url, data={"limit": "10"})
+        self.assertSuccess(resp)
+        row = next(r for r in resp.data["data"]["results"] if r["id"] == self.submission.id)
+        self.assertEqual(row["source"], "")
 
 
 @mock.patch("submission.views.oj.judge_task.send")

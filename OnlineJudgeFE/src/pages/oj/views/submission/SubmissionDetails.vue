@@ -1,5 +1,9 @@
 <template>
   <Row type="flex" justify="space-around">
+    <Col :span="20" id="back-to-list">
+      <Button icon="ios-arrow-back" @click="$router.push(problemListRoute)">返回题目列表</Button>
+    </Col>
+
     <Col :span="20" id="status">
       <Alert :type="status.type" showIcon>
         <span class="title">{{$t('m.' + status.statusName.replace(/ /g, "_"))}}</span>
@@ -80,8 +84,7 @@
             实际输出
             <span v-if="currentDetail.actual_truncated" class="tc-truncated">（内容较长，已截断至 2000 字符）</span>
           </div>
-          <pre class="tc-pre" :class="{'tc-no-output': !currentDetail.actual_output}">
-            {{ currentDetail.actual_output || '（未保存，仅新提交有记录）' }}</pre>
+          <pre class="tc-pre" :class="{'tc-no-output': !currentDetail.actual_output}">{{ currentDetail.actual_output || '（未保存，仅新提交有记录）' }}</pre>
         </div>
       </div>
       <div v-else style="text-align:center;color:#999;padding:30px;">
@@ -334,6 +337,14 @@
       }
     },
     computed: {
+      problemListRoute () {
+        // 提交是在比赛/练习里做的（跳转时带了 contestID）就跳回那个比赛的题目列表，否则跳回全局题库
+        const contestID = this.$route.query.contestID
+        if (contestID) {
+          return {name: 'contest-problem-list', params: {contestID}}
+        }
+        return {name: 'problem-list'}
+      },
       status () {
         return {
           type: JUDGE_STATUS[this.submission.result].type,
@@ -373,6 +384,9 @@
 </script>
 
 <style scoped lang="less">
+  #back-to-list {
+    margin-bottom: 12px;
+  }
   #status {
     .title {
       font-size: 20px;

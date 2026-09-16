@@ -114,11 +114,13 @@
                   },
                   on: {
                     click: () => {
-                      if (this.contestID) {
+                      // 全局状态页现在也会混进比赛/练习提交，这种行要跳去它自己所属的比赛，不能当成全局题目
+                      const contestID = params.row.contest_id || this.contestID
+                      if (contestID) {
                         this.$router.push(
                           {
                             name: 'contest-problem-details',
-                            params: {problemID: params.row.problem, contestID: this.contestID}
+                            params: {problemID: params.row.problem, contestID: contestID}
                           })
                       } else {
                         this.$router.push({name: 'problem-details', params: {problemID: params.row.problem}})
@@ -179,11 +181,13 @@
         problemID: '',
         routeName: '',
         JUDGE_STATUS: '',
-        rejudge_column: false
+        rejudge_column: false,
+        source_column: false
       }
     },
     mounted () {
       this.init()
+      this.adjustSourceColumn()
       this.JUDGE_STATUS = Object.assign({}, JUDGE_STATUS)
       // 去除submitting的状态 和 两个
       delete this.JUDGE_STATUS['9']
@@ -245,6 +249,23 @@
       },
       goRoute (route) {
         this.$router.push(route)
+      },
+      adjustSourceColumn () {
+        // 只在全局"状态"页显示：来自哪个练习&比赛，没有就挂在哪一章，都没有就空着。
+        // 进到具体某个比赛看提交时，所有行本来就是同一个比赛，没必要再显示这一列
+        if (this.contestID || this.source_column) {
+          return
+        }
+        const sourceColumn = {
+          title: '来源',
+          align: 'center',
+          render: (h, params) => {
+            return h('span', params.row.source || '—')
+          }
+        }
+        const problemIndex = this.columns.findIndex(c => c.title === this.$i18n.t('m.Problem'))
+        this.columns.splice(problemIndex + 1, 0, sourceColumn)
+        this.source_column = true
       },
       adjustRejudgeColumn () {
         if (!this.rejudgeColumnVisible || this.rejudge_column) {
