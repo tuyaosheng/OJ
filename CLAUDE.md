@@ -318,7 +318,7 @@ docker-compose up -d --no-deps oj-backend
 
 | 文件 | 内容 |
 |------|------|
-| `系统迁移.md` | 生产服务器的完整搭建过程、踩过的坑（网络/Docker 镜像拉取失败/文件权限）、关键 IP 和账号信息 |
+| `系统迁移.md`（仅本地，不进仓库） | 生产服务器的完整搭建过程、踩过的坑（网络/Docker 镜像拉取失败/文件权限）、关键 IP 和账号信息。这份包含真实内网 IP/SSH 信息，只留在本地，已从 git 历史里彻底清掉，不要重新 add 进仓库 |
 | `OnlineJudgeDeploy/README_Windows_Server_2016部署.md` | 迁移前写的操作手册（Hyper-V/虚拟机/Docker 安装步骤） |
 | `docker-images-export/VERSIONS.md` | `oj-backend-custom` 镜像的版本记录，导出新版本前先看这里确认下一个版本号该编几 |
 
